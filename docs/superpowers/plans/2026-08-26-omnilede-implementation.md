@@ -652,7 +652,7 @@ git commit -m "feat: add manual draft review workflow"
 - Produces: `MarketQuote`, `MarketSnapshot`, `fetchMarketSnapshot({ fetchImpl?, apiKey?, now? })`.
 - Symbols: `^NSEI`, `^BSESN`, `^GSPC`, `^IXIC` mapped to Nifty 50, Sensex, S&P 500, and Nasdaq Composite.
 
-- [ ] **Step 1: Write failing normalization/fallback tests**
+- [x] **Step 1: Write failing normalization/fallback tests**
 
 ```ts
 it("normalizes all four requested indices in display order", async () => {
@@ -667,20 +667,20 @@ it("returns a truthful unavailable snapshot without credentials", async () => {
 });
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run: `npm test -- lib/market components/market`  
 Expected: FAIL because market modules are absent.
 
-- [ ] **Step 3: Implement Financial Modeling Prep provider and caching**
+- [x] **Step 3: Implement Financial Modeling Prep provider and caching**
 
 Use the stable quote endpoint with batched encoded symbols when supported, `next: { revalidate: 1800 }`, ten-second timeout, response shape validation, and no fake fallback. Normalize value/change/percent/timestamp and delayed label. The route returns `Cache-Control: public, s-maxage=1800, stale-while-revalidate=3600` without exposing the key.
 
-- [ ] **Step 4: Implement the server-rendered market strip**
+- [x] **Step 4: Implement the server-rendered market strip**
 
 Fetch directly in the homepage Server Component rather than client-fetching after hydration. Use tabular numerals, signed changes, accessible up/down text, unavailable labels, and the delayed/not-investment-advice disclosure.
 
-- [ ] **Step 5: Verify GREEN**
+- [x] **Step 5: Verify GREEN**
 
 Run: `npm test -- lib/market components/market app/api/market && npm run typecheck`  
 Expected: PASS.
