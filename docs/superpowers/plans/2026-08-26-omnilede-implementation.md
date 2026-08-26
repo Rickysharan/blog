@@ -531,7 +531,7 @@ export interface DraftRepository {
 }
 ```
 
-- [ ] **Step 1: Write failing path, local behavior, and Git commit tests**
+- [x] **Step 1: Write failing path, local behavior, and Git commit tests**
 
 ```ts
 it("rejects traversal before constructing a filesystem or Git path", () => {
@@ -553,24 +553,24 @@ it("constructs one Git tree containing the article addition and draft deletion",
 });
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run: `npm test -- lib/drafts`  
 Expected: FAIL because repositories are absent.
 
-- [ ] **Step 3: Implement strict references and local repository**
+- [x] **Step 3: Implement strict references and local repository**
 
 Accept only supported categories and `/^[a-z0-9]+(?:-[a-z0-9]+)*\.mdx$/`. Validate MDX before saving/publishing, require matching slug/category, compare expected version hashes, prevent overwrite of an existing published slug, and use same-filesystem rename for publish.
 
-- [ ] **Step 4: Implement GitHub Git Data repository**
+- [x] **Step 4: Implement GitHub Git Data repository**
 
 Use injectable fetch and API base. Read the configured branch ref/tree, create changed blobs, create a tree based on the current tree, create one commit, then PATCH the ref with `force:false`. Map 409/422 to a typed conflict and return the commit URL. Serialize mutations through the API handler; never log authorization headers.
 
-- [ ] **Step 5: Implement environment-based selection**
+- [x] **Step 5: Implement environment-based selection**
 
 Development/test defaults to local. Production selects GitHub only when `GITHUB_REPOSITORY`, `GITHUB_BRANCH`, and `GITHUB_TOKEN` are all present; otherwise it returns a configuration error instead of writing ephemeral storage.
 
-- [ ] **Step 6: Verify GREEN**
+- [x] **Step 6: Verify GREEN**
 
 Run: `npm test -- lib/drafts && npm run typecheck`  
 Expected: PASS.
