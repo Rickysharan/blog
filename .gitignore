@@ -1,1 +1,17 @@
 .worktrees/
+node_modules/
+.next/
+out/
+coverage/
+playwright-report/
+test-results/
+.env
+.env.local
+.env.*.local
+!.env.example
+# Serwist build output
+public/sw*
+public/swe-worker*
+*.tsbuildinfo
+.DS_Store
+npm-debug.log*

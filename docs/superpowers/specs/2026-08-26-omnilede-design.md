@@ -21,7 +21,7 @@ The shipped repository must work immediately with six original example articles,
 
 ## 3. Constraints and Explicit Caveats
 
-- Next.js 14 App Router, React 18, strict TypeScript, and Tailwind CSS 3 will be used. Exact patch versions will be locked in `package-lock.json`.
+- Next.js 16 App Router, React 19, strict TypeScript, and Tailwind CSS 3 will be used. Exact patch versions will be locked in `package-lock.json`. This supersedes the original Next.js 14 request because the locked Next.js 14/`next-pwa` combination has unresolved high-severity production advisories; the user explicitly approved the secure upgrade on 2026-08-26.
 - Vercel Hobby is suitable for the free, non-commercial deployment described in the brief. Its terms restrict Hobby to personal, non-commercial use. AdSense integration will therefore ship ready but disabled; enabling revenue requires hosting whose terms allow commercial use.
 - Anthropic API usage is not represented as free. `DRAFT_GENERATION_ENABLED=false` is the safe default, and the generation script exits successfully without making a network call when disabled.
 - GitHub Actions is the recommended scheduler. Vercel Cron is an opt-in alternative, not enabled simultaneously, because duplicate schedules could prepare duplicate drafts.
@@ -265,7 +265,7 @@ Consent is stored as a versioned local-storage record with `granted`, `denied`, 
 
 ## 17. PWA and Offline Behavior
 
-- `next-pwa` generates and registers the production service worker; it is disabled during normal development to prevent stale-cache confusion.
+- Serwist generates and registers the production service worker; it is disabled during normal development to prevent stale-cache confusion.
 - The web manifest uses `display: standalone`, OmniLede name/short name, `/` start URL, brand colors, orientation defaults, and 192px, 512px, and maskable PNG icons.
 - Android-compatible splash presentation derives from the manifest icon, background color, and theme color. Apple touch icons and common portrait `apple-touch-startup-image` assets provide an intentional iOS launch screen rather than a blank frame.
 - Navigation requests use Network First with an offline fallback.

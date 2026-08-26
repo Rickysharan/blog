@@ -6,13 +6,13 @@
 
 **Architecture:** Published content is statically generated from validated MDX while drafts remain in a separate, inaccessible tree. Server Components render public content; small Client Components own browser-only interactions. A `DraftRepository` boundary selects local filesystem or atomic GitHub commits, and shared pipeline modules serve both command-line automation and the optional Vercel cron route.
 
-**Tech Stack:** Next.js 14.2.35 App Router, React 18.3.1, TypeScript 5.9.x, Tailwind CSS 3.4.19, next-pwa 5.6.0, next-mdx-remote 6, Zod 4, Vitest 4, React Testing Library 16, and Playwright 1.62.
+**Tech Stack:** Next.js 16.3.3 App Router, React 19.2.0, TypeScript 5.9.x, Tailwind CSS 3.4.19, Serwist 9.5.12, next-mdx-remote 6, Zod 4, Vitest 4, React Testing Library 16, and Playwright 1.62.
 
 **Spec:** `docs/superpowers/specs/2026-08-26-omnilede-design.md`
 
 ## Global Constraints
 
-- Use Next.js 14 App Router, React 18, strict TypeScript, Tailwind CSS 3, and npm with a committed `package-lock.json`.
+- Use Next.js 16 App Router, React 19, strict TypeScript, Tailwind CSS 3, and npm with a committed `package-lock.json`. The user explicitly approved this security upgrade from the originally requested Next.js 14/`next-pwa` stack after its production dependency audit reported seven high-severity advisories.
 - Keep published MDX in `content/articles/{category}` and drafts in `content/drafts/{category}`; public readers never traverse drafts.
 - Support exactly `anime`, `movies`, `politics`, `sports`, `finance`, and `share-market` as category slugs.
 - AI generation is disabled unless `DRAFT_GENERATION_ENABLED=true`; manual drafts require no paid API.
@@ -66,7 +66,7 @@
 ### Task 1: Toolchain, strict project shell, and category registry
 
 **Files:**
-- Create: `package.json`, `package-lock.json`, `tsconfig.json`, `next-env.d.ts`, `next.config.mjs`, `tailwind.config.ts`, `postcss.config.mjs`, `.eslintrc.json`, `.gitignore`, `.env.example`
+- Create: `package.json`, `package-lock.json`, `tsconfig.json`, `next-env.d.ts`, `next.config.mjs`, `tailwind.config.ts`, `postcss.config.mjs`, `eslint.config.mjs`, `.gitignore`, `.env.example`
 - Create: `vitest.config.ts`, `vitest.setup.ts`, `playwright.config.ts`
 - Create: `app/layout.tsx`, `app/page.tsx`, `app/globals.css`
 - Create: `lib/config/categories.ts`, `lib/config/site.ts`, `lib/config/categories.test.ts`
@@ -75,17 +75,17 @@
 - Produces: `CategorySlug`, `CategoryDefinition`, `CATEGORIES`, `CATEGORY_SLUGS`, `isCategorySlug(value)`, and `SITE_CONFIG`.
 - Consumers: every content, route, market, navigation, and admin task.
 
-- [ ] **Step 1: Create the locked package manifest and framework configuration**
+- [x] **Step 1: Create the locked package manifest and framework configuration**
 
-Use `npm install --save-exact` for runtime packages and `npm install --save-dev --save-exact` for development packages. Pin `next@14.2.35`, `react@18.3.1`, `react-dom@18.3.1`, `tailwindcss@3.4.19`, and `next-pwa@5.6.0`. Include these scripts exactly:
+Use `npm install --save-exact` for runtime packages and `npm install --save-dev --save-exact` for development packages. Pin `next@16.3.3`, `react@19.2.0`, `react-dom@19.2.0`, `tailwindcss@3.4.19`, `@serwist/next@9.5.12`, and `serwist@9.5.12`. Include these scripts:
 
 ```json
 {
   "scripts": {
-    "dev": "next dev",
-    "build": "npm run validate:content && next build",
+    "dev": "next dev --webpack",
+    "build": "npm run validate:content && next build --webpack",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint . --max-warnings=0",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -97,9 +97,9 @@ Use `npm install --save-exact` for runtime packages and `npm install --save-dev 
 }
 ```
 
-Configure the `@/*` path alias, strict type-checking, jsdom tests, and Playwright’s web server on port 3100. Configure `next-pwa` to write `public/sw.js`, disable service workers in development/test, ignore generated service-worker/Workbox output in Git, and defer runtime-caching details to Task 13.
+Configure the `@/*` path alias, strict type-checking, jsdom tests, and Playwright’s web server on port 3100. Configure Serwist to write `public/sw.js`, disable service workers in development/test, ignore generated service-worker output in Git, and defer the service worker source and runtime-caching details to Task 13.
 
-- [ ] **Step 2: Write the failing category-registry test**
+- [x] **Step 2: Write the failing category-registry test**
 
 ```ts
 import { describe, expect, it } from "vitest";
@@ -122,12 +122,12 @@ describe("category registry", () => {
 });
 ```
 
-- [ ] **Step 3: Run the test and verify RED**
+- [x] **Step 3: Run the test and verify RED**
 
 Run: `npm test -- lib/config/categories.test.ts`  
 Expected: FAIL because `@/lib/config/categories` does not exist.
 
-- [ ] **Step 4: Implement the category registry and brand configuration**
+- [x] **Step 4: Implement the category registry and brand configuration**
 
 ```ts
 export const CATEGORIES = [
@@ -148,19 +148,19 @@ export const isCategorySlug = (value: string): value is CategorySlug =>
 
 Set `SITE_CONFIG.name` and `shortName` to `OmniLede`, default description to a global-news statement, and site URL to validated `NEXT_PUBLIC_SITE_URL` with `http://localhost:3000` fallback.
 
-- [ ] **Step 5: Build the accessible root shell and baseline design tokens**
+- [x] **Step 5: Build the accessible root shell and baseline design tokens**
 
 Create the skip link, root landmarks, serif/sans font variables via `next/font`, warm/dark color tokens, focus styles, reduced-motion rule, and a minimal homepage heading. Do not add final content sections yet.
 
-- [ ] **Step 6: Verify GREEN and mechanical configuration**
+- [x] **Step 6: Verify GREEN and mechanical configuration**
 
 Run: `npm test -- lib/config/categories.test.ts && npm run typecheck && npm run lint`  
 Expected: all commands exit 0.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
-git add package.json package-lock.json tsconfig.json next-env.d.ts next.config.mjs tailwind.config.ts postcss.config.mjs .eslintrc.json .gitignore .env.example vitest.config.ts vitest.setup.ts playwright.config.ts app lib/config
+git add package.json package-lock.json tsconfig.json next-env.d.ts next.config.mjs tailwind.config.ts postcss.config.mjs eslint.config.mjs .gitignore .env.example vitest.config.ts vitest.setup.ts playwright.config.ts app lib/config docs/superpowers/specs/2026-08-26-omnilede-design.md docs/superpowers/plans/2026-08-26-omnilede-implementation.md
 git commit -m "chore: scaffold OmniLede application"
 ```
 
@@ -812,7 +812,7 @@ git commit -m "feat: add SEO syndication and policy pages"
 - Modify: `next.config.mjs`, `app/layout.tsx`, `components/layout/site-header.tsx`
 
 **Interfaces:**
-- Produces: captured `BeforeInstallPromptEvent`, `promptInstall()`, standalone/iOS detection, versioned dismissal state, manifest/icons, and Workbox caching rules.
+- Produces: captured `BeforeInstallPromptEvent`, `promptInstall()`, standalone/iOS detection, versioned dismissal state, manifest/icons, and Serwist caching rules.
 
 - [ ] **Step 1: Write failing install-state tests**
 
@@ -851,7 +851,7 @@ Order rules from specific to broad: never cache `/admin` or `/api`; Network Firs
 - [ ] **Step 6: Verify GREEN and built assets**
 
 Run: `npm test -- components/pwa && npm run build`  
-Expected: PASS; build exits 0 and creates `public/sw.js` plus Workbox chunks. Check manifest JSON and all image dimensions.
+Expected: PASS; build exits 0 and creates `public/sw.js` plus Serwist chunks. Check manifest JSON and all image dimensions.
 
 - [ ] **Step 7: Commit**
 

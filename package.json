@@ -1,0 +1,57 @@
+{
+  "name": "omnilede",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "A global, MDX-first newsroom and installable PWA.",
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "scripts": {
+    "dev": "next dev --webpack",
+    "build": "npm run validate:content && next build --webpack",
+    "start": "next start",
+    "lint": "eslint . --max-warnings=0",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "validate:content": "tsx scripts/validate-content.ts",
+    "content:fetch": "tsx scripts/fetch-trending.ts",
+    "content:generate": "tsx scripts/generate-draft.ts"
+  },
+  "dependencies": {
+    "@serwist/next": "9.5.12",
+    "clsx": "2.1.1",
+    "date-fns": "4.4.0",
+    "gray-matter": "4.0.3",
+    "lucide-react": "1.34.0",
+    "next": "16.3.3",
+    "next-mdx-remote": "6.0.0",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "reading-time": "1.5.0",
+    "rss-parser": "3.13.0",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.62.1",
+    "@testing-library/dom": "10.4.1",
+    "@testing-library/jest-dom": "7.0.1",
+    "@testing-library/react": "16.3.2",
+    "@testing-library/user-event": "14.6.1",
+    "@types/node": "24.7.0",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.5",
+    "autoprefixer": "10.5.4",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.3.3",
+    "jsdom": "28.0.0",
+    "postcss": "8.5.26",
+    "serwist": "9.5.12",
+    "tailwindcss": "3.4.19",
+    "tsx": "4.20.6",
+    "typescript": "5.9.3",
+    "vitest": "4.1.11"
+  }
+}
