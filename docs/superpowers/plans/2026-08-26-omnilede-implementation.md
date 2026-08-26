@@ -470,7 +470,7 @@ git commit -m "feat: add optional Claude draft generation"
 - Produces: `verifyPassword`, `createSessionToken`, `verifySessionToken`, `readAdminSession`, `assertSameOrigin`, `checkLoginThrottle`.
 - Session payload: `{ version: 1; issuedAt: number; expiresAt: number }` signed with HMAC-SHA-256.
 
-- [ ] **Step 1: Write failing authentication tests**
+- [x] **Step 1: Write failing authentication tests**
 
 ```ts
 it("accepts the configured password without comparing variable-length secrets", () => {
@@ -486,20 +486,20 @@ it("rejects expired and modified session tokens", async () => {
 });
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run: `npm test -- lib/auth components/admin/login-form.test.tsx`  
 Expected: FAIL because auth modules/components are absent.
 
-- [ ] **Step 3: Implement password/session primitives and request guards**
+- [x] **Step 3: Implement password/session primitives and request guards**
 
 Hash both password inputs to SHA-256 before `timingSafeEqual`. Sign base64url payloads with Web Crypto-compatible HMAC. Enforce eight-hour expiry, JSON content type, 32KB login body, same-origin mutations, and stable errors. Production login refuses to operate without `ADMIN_PASSWORD` and `ADMIN_SESSION_SECRET`.
 
-- [ ] **Step 4: Implement login/logout routes and form**
+- [x] **Step 4: Implement login/logout routes and form**
 
 Set `omnilede_admin` as `HttpOnly`, `SameSite=Strict`, `Secure` in production, eight-hour max age. Rate-limit repeated IP hashes in memory, return `429` with retry advice, never echo credentials, and redirect successful login to `/admin/review`.
 
-- [ ] **Step 5: Verify GREEN**
+- [x] **Step 5: Verify GREEN**
 
 Run: `npm test -- lib/auth components/admin/login-form.test.tsx && npm run typecheck`  
 Expected: PASS.
