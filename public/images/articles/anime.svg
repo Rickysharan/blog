@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">Abstract anime release calendar</title>
+  <desc id="desc">Violet broadcast rings connect a sequence of editorial frames on a dark background.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#161225"/><stop offset="1" stop-color="#35235d"/></linearGradient>
+    <linearGradient id="ink" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#d7c4ff"/><stop offset="1" stop-color="#7c5cff"/></linearGradient>
+  </defs>
+  <rect width="1600" height="900" fill="url(#bg)"/>
+  <circle cx="1210" cy="210" r="320" fill="none" stroke="#9f82ff" stroke-width="3" opacity=".35"/>
+  <circle cx="1210" cy="210" r="230" fill="none" stroke="#d7c4ff" stroke-width="2" opacity=".3"/>
+  <path d="M160 620 C430 370 690 760 970 490 S1370 270 1510 410" fill="none" stroke="url(#ink)" stroke-width="18" stroke-linecap="round"/>
+  <g fill="#f8f3e8"><rect x="190" y="505" width="210" height="150" rx="16"/><rect x="500" y="520" width="210" height="150" rx="16" opacity=".86"/><rect x="810" y="440" width="210" height="150" rx="16" opacity=".72"/></g>
+  <g fill="#20172f"><path d="m274 548 70 32-70 32z"/><path d="m584 563 70 32-70 32z"/><path d="m894 483 70 32-70 32z"/></g>
+</svg>

@@ -179,7 +179,7 @@ git commit -m "chore: scaffold OmniLede application"
 - Produces: `ArticleFrontmatter`, `ArticleSummary`, `ArticleDocument`, `SearchEntry`, `parseArticleFile`, `getAllArticles`, `getArticleBySlug`, `getArticlesByCategory`, `paginateArticles`, `getRelatedArticles`, `buildSearchIndex`, and `renderArticleMdx`.
 - `getAllArticles({ rootDir? })` reads only `content/articles`; tests inject an isolated root.
 
-- [ ] **Step 1: Write failing schema and discovery tests**
+- [x] **Step 1: Write failing schema and discovery tests**
 
 ```ts
 it("rejects mismatched filenames and slugs", () => {
@@ -198,12 +198,12 @@ it("ranks related stories by shared tags then recency", () => {
 });
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run: `npm test -- lib/content`  
 Expected: FAIL because the content modules do not exist.
 
-- [ ] **Step 3: Implement Zod validation and public-only discovery**
+- [x] **Step 3: Implement Zod validation and public-only discovery**
 
 Use a strict schema with ISO dates, `https:` source URLs, positive integer read time, local `/` or `https:` cover image, non-empty tags, and `isCategorySlug`. Normalize parsed dates to strings but keep body source separate. Reject duplicate global slugs during discovery.
 
@@ -219,22 +219,22 @@ export function getRelatedArticles(subject: ArticleSummary, candidates: readonly
 export function buildSearchIndex(articles: readonly ArticleSummary[]): SearchEntry[];
 ```
 
-- [ ] **Step 4: Add deterministic search metadata and MDX rendering**
+- [x] **Step 4: Add deterministic search metadata and MDX rendering**
 
 Search normalization lowercases, Unicode-normalizes, removes punctuation, and matches title, excerpt, category label, author, and tags. `renderArticleMdx` uses `next-mdx-remote/rsc` with an allowlisted components map and no raw imports.
 
-- [ ] **Step 5: Write the six original fixture articles and cover illustrations**
+- [x] **Step 5: Write the six original fixture articles and cover illustrations**
 
 Create 700–1,000 word evergreen example pieces dated in August 2026, each with all required frontmatter, a “Why it matters” section, and a visible source link. Use clearly labelled demonstration sources and non-breaking factual topics; do not present invented breaking events as real. The cover SVGs use abstract editorial compositions, no third-party logos or copyrighted characters.
 
-- [ ] **Step 6: Implement and run content validation**
+- [x] **Step 6: Implement and run content validation**
 
 `scripts/validate-content.ts` validates articles and drafts, treats invalid articles as fatal, reports draft errors without exposing secrets, checks global published slug uniqueness, and exits non-zero on any invalid file.
 
 Run: `npm test -- lib/content && npm run validate:content`  
 Expected: PASS with six valid articles and zero invalid drafts.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add lib/content scripts/validate-content.ts tests/fixtures content public/images/articles

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">Abstract global economic forecast</title>
+  <desc id="desc">Amber forecast bands cross a grid of uncertain economic scenarios.</desc>
+  <defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#251908"/><stop offset="1" stop-color="#6b4211"/></linearGradient><linearGradient id="line" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#fef3c7"/><stop offset="1" stop-color="#f59e0b"/></linearGradient></defs>
+  <rect width="1600" height="900" fill="url(#bg)"/>
+  <g stroke="#fde68a" stroke-width="2" opacity=".2"><path d="M150 150h1300M150 300h1300M150 450h1300M150 600h1300M150 750h1300"/><path d="M250 90v720M500 90v720M750 90v720M1000 90v720M1250 90v720"/></g>
+  <path d="M130 690 C360 610 430 300 650 410 S970 640 1110 360 1370 180 1500 250" fill="none" stroke="#f59e0b" stroke-width="130" opacity=".2"/>
+  <path d="M130 690 C360 610 430 300 650 410 S970 640 1110 360 1370 180 1500 250" fill="none" stroke="url(#line)" stroke-width="18" stroke-linecap="round"/>
+  <g fill="#fff7ed"><circle cx="430" cy="369" r="28"/><circle cx="870" cy="513" r="28"/><circle cx="1290" cy="242" r="28"/></g>
+</svg>

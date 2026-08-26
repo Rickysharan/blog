@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">Abstract electoral systems and coalitions</title>
+  <desc id="desc">Blue ballot columns join into a balanced parliamentary arc.</desc>
+  <defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#0d1b35"/><stop offset="1" stop-color="#164e8a"/></linearGradient></defs>
+  <rect width="1600" height="900" fill="url(#bg)"/>
+  <g fill="none" stroke-linecap="round"><path d="M270 690 A530 530 0 0 1 1330 690" stroke="#93c5fd" stroke-width="74" opacity=".28"/><path d="M390 690 A410 410 0 0 1 1210 690" stroke="#60a5fa" stroke-width="74" opacity=".42"/><path d="M510 690 A290 290 0 0 1 1090 690" stroke="#dbeafe" stroke-width="74" opacity=".76"/></g>
+  <g fill="#f8f3e8"><rect x="190" y="170" width="250" height="310" rx="22"/><rect x="675" y="120" width="250" height="360" rx="22"/><rect x="1160" y="200" width="250" height="280" rx="22"/></g>
+  <g fill="#2563eb"><path d="m250 285 52 52 82-112 30 24-108 148-84-84z"/><path d="m735 260 52 52 82-112 30 24-108 148-84-84z"/><path d="m1220 295 52 52 82-112 30 24-108 148-84-84z"/></g>
+</svg>

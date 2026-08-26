@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">Abstract global cinema performance</title>
+  <desc id="desc">Rose cinema frames, ticket shapes and a sweeping globe arc form an editorial composition.</desc>
+  <defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#2a111a"/><stop offset="1" stop-color="#661f3a"/></linearGradient></defs>
+  <rect width="1600" height="900" fill="url(#bg)"/>
+  <path d="M120 680 Q800 40 1480 680" fill="none" stroke="#f7b2c8" stroke-width="5" opacity=".35"/>
+  <path d="M120 700 Q800 170 1480 700" fill="none" stroke="#fb7185" stroke-width="20" opacity=".8"/>
+  <g transform="translate(250 220) rotate(-8 240 170)"><rect width="480" height="340" rx="26" fill="#fff7ed"/><rect x="34" y="68" width="412" height="230" rx="12" fill="#3a1422"/><path d="m207 128 112 55-112 55z" fill="#fb7185"/><path d="M0 66h480" stroke="#3a1422" stroke-width="18" stroke-dasharray="42 28"/></g>
+  <g transform="translate(980 330) rotate(10 160 100)" fill="#f7b2c8"><path d="M0 0h320v72a42 42 0 0 0 0 84v72H0v-72a42 42 0 0 0 0-84z"/><path d="M110 30v168M210 30v168" stroke="#6b1735" stroke-width="8" stroke-dasharray="14 16"/></g>
+</svg>
