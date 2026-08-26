@@ -415,7 +415,7 @@ git commit -m "feat: add resilient RSS discovery pipeline"
 - Produces: `GenerationConfig`, `buildDraftPrompt`, `requestClaudeDraft`, `buildDraftMdx`, `generateDrafts`.
 - `generateDrafts({ fetchImpl?, env?, contentRoot?, queuePath? })` supports no-network tests.
 
-- [ ] **Step 1: Write failing safety tests**
+- [x] **Step 1: Write failing safety tests**
 
 ```ts
 it("performs no API request when generation is disabled", async () => {
@@ -433,20 +433,20 @@ it("adds validated frontmatter, why-it-matters, and final source attribution", (
 });
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run: `npm test -- lib/pipeline/generate.test.ts`  
 Expected: FAIL because generation module is absent.
 
-- [ ] **Step 3: Implement configuration, prompt, and Anthropic transport**
+- [x] **Step 3: Implement configuration, prompt, and Anthropic transport**
 
 Require `ANTHROPIC_API_KEY` and `ANTHROPIC_MODEL` only when enabled. POST to `/v1/messages` with the current required Anthropic version header, 25-second timeout, bounded tokens, and at most two retries for 429/5xx. The prompt prohibits copied phrasing, invented quotes, unsupported facts, and first-hand claims; it requires an original headline/body and “Why it matters.”
 
-- [ ] **Step 4: Implement validated draft persistence**
+- [x] **Step 4: Implement validated draft persistence**
 
 Sanitize slugs, estimate reading time, add the full required frontmatter, verify the source line is last, validate the output, and write only under `content/drafts/{category}`. Skip colliding slugs and retain failed queue items.
 
-- [ ] **Step 5: Verify disabled and mocked-enabled modes**
+- [x] **Step 5: Verify disabled and mocked-enabled modes**
 
 Run: `npm test -- lib/pipeline/generate.test.ts && DRAFT_GENERATION_ENABLED=false npm run content:generate`  
 Expected: tests pass; script exits 0 and states generation is disabled without an API call.
