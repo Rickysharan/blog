@@ -1,4 +1,4 @@
-# Atlas Wire — Product and Technical Design
+# OmniLede — Product and Technical Design
 
 **Status:** Approved in chat on 2026-08-26  
 **Project type:** Production-oriented global news website and installable PWA  
@@ -6,7 +6,7 @@
 
 ## 1. Purpose
 
-Atlas Wire is a global, multi-category news publication with an MDX-first editorial workflow. It publishes manually approved stories in six desks: Anime, Movies, Politics, Sports, Finance, and Share Market. Automated jobs discover source stories and may prepare original drafts, but no job may publish an article.
+OmniLede is a global, multi-category news publication with an MDX-first editorial workflow. It publishes manually approved stories in six desks: Anime, Movies, Politics, Sports, Finance, and Share Market. Automated jobs discover source stories and may prepare original drafts, but no job may publish an article.
 
 The shipped repository must work immediately with six original example articles, one for each desk. It must also include the production workflows, documentation, tests, PWA assets, legal templates, and deployment configuration needed to run the project on free tiers.
 
@@ -30,7 +30,9 @@ The shipped repository must work immediately with six original example articles,
 
 ## 4. Visual and Interaction Direction
 
-The working brand is **Atlas Wire**. The interface resembles a modern global newsroom rather than a generic dashboard.
+The approved working brand is **OmniLede**. “Omni” reflects the publication’s global, multi-desk scope, while “lede” identifies the opening of a news story. A preliminary screen on 2026-08-26 found no exact UK Companies House entry, established web business, or indexed exact UK, US, or EU trademark result for OmniLede; the `.com` registry also returned no registration. This is a product-name screen, not a formal legal opinion, and the operator should obtain professional trademark clearance before incorporation or material brand spending.
+
+The interface resembles a modern global newsroom rather than a generic dashboard.
 
 - Base palette: warm paper white, ink charcoal, cool neutral dividers, and a deep slate dark mode.
 - Typography: an editorial serif for display headlines and a highly legible sans serif for navigation, metadata, and body UI. Fonts are loaded through `next/font` so there is no client-side font request.
@@ -264,7 +266,7 @@ Consent is stored as a versioned local-storage record with `granted`, `denied`, 
 ## 17. PWA and Offline Behavior
 
 - `next-pwa` generates and registers the production service worker; it is disabled during normal development to prevent stale-cache confusion.
-- The web manifest uses `display: standalone`, Atlas Wire name/short name, `/` start URL, brand colors, orientation defaults, and 192px, 512px, and maskable PNG icons.
+- The web manifest uses `display: standalone`, OmniLede name/short name, `/` start URL, brand colors, orientation defaults, and 192px, 512px, and maskable PNG icons.
 - Android-compatible splash presentation derives from the manifest icon, background color, and theme color. Apple touch icons and common portrait `apple-touch-startup-image` assets provide an intentional iOS launch screen rather than a blank frame.
 - Navigation requests use Network First with an offline fallback.
 - Viewed article HTML is runtime-cached with bounded entries and expiration.
