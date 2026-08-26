@@ -17,6 +17,7 @@ import {
 } from "@/lib/content/articles";
 import { renderArticleMdx } from "@/lib/content/mdx";
 import { SITE_CONFIG } from "@/lib/config/site";
+import { buildNewsArticleJsonLd, serializeJsonLd } from "@/lib/seo/json-ld";
 
 type ArticlePageProps = { params: Promise<{ slug: string }> };
 
@@ -72,9 +73,14 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     renderArticleMdx(article.body),
     Promise.resolve(getRelatedArticles(article, allArticles, 3)),
   ]);
+  const jsonLd = buildNewsArticleJsonLd(article, SITE_CONFIG);
 
   return (
     <main id="main-content" className="mx-auto max-w-7xl px-5 py-10 sm:px-8 sm:py-14">
+      <script
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
+        type="application/ld+json"
+      />
       <article>
         <header className="mx-auto max-w-4xl text-center">
           <CategoryLabel category={article.category} />

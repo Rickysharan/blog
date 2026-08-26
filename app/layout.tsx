@@ -29,6 +29,24 @@ export const metadata: Metadata = {
     template: `%s | ${SITE_CONFIG.name}`,
   },
   description: SITE_CONFIG.description,
+  applicationName: SITE_CONFIG.name,
+  alternates: {
+    canonical: SITE_CONFIG.url,
+    types: { "application/rss+xml": `${SITE_CONFIG.url}/feed.xml` },
+  },
+  openGraph: {
+    type: "website",
+    siteName: SITE_CONFIG.name,
+    title: SITE_CONFIG.name,
+    description: SITE_CONFIG.description,
+    url: SITE_CONFIG.url,
+    locale: SITE_CONFIG.locale,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SITE_CONFIG.name,
+    description: SITE_CONFIG.description,
+  },
 };
 
 export const viewport: Viewport = {

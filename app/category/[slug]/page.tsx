@@ -54,6 +54,11 @@ export async function generateMetadata({
       description: category.description,
       url: canonical,
     },
+    twitter: {
+      card: "summary_large_image",
+      title: `${category.label} | ${SITE_CONFIG.name}`,
+      description: category.description,
+    },
   };
 }
 

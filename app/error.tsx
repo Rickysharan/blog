@@ -22,12 +22,16 @@ export default function ErrorPage({
         <p className="mt-3 text-xs text-muted">Reference: {error.digest}</p>
       ) : null}
       <button
+        aria-describedby="error-guidance"
         type="button"
         onClick={reset}
         className="mt-8 min-h-11 border border-ink px-5 font-semibold hover:bg-ink hover:text-paper"
       >
         Try again
       </button>
+      <p className="sr-only" id="error-guidance">
+        Retries the page without submitting editorial or account data.
+      </p>
     </main>
   );
 }

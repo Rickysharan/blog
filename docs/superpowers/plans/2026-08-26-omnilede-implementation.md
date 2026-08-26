@@ -757,7 +757,7 @@ git commit -m "feat: gate analytics and ads behind consent"
 **Interfaces:**
 - Produces: `buildNewsArticleJsonLd(article, siteConfig)`, `buildRssXml(articles, siteConfig)` and Next metadata/sitemap/robots handlers.
 
-- [ ] **Step 1: Write failing structured-data and RSS tests**
+- [x] **Step 1: Write failing structured-data and RSS tests**
 
 ```ts
 it("emits a canonical NewsArticle object with publisher and source URL", () => {
@@ -776,20 +776,20 @@ it("escapes XML while preserving absolute article links", () => {
 });
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run: `npm test -- lib/seo`  
 Expected: FAIL because SEO modules are absent.
 
-- [ ] **Step 3: Implement metadata, JSON-LD, sitemap, robots, and RSS**
+- [x] **Step 3: Implement metadata, JSON-LD, sitemap, robots, and RSS**
 
 Use absolute canonical URLs, Open Graph and Twitter cards, one JSON-LD script serialized with `<` escaped, recent RSS items, public-only sitemap entries, and robots disallow rules for `/admin/`, `/api/`, and `/_next/`.
 
-- [ ] **Step 4: Implement supporting/legal pages**
+- [x] **Step 4: Implement supporting/legal pages**
 
 Use clearly editable but structurally complete copy for cookies/ads, data collection, retention, external links, market/financial disclaimer, editorial process, and contact. Do not claim the placeholders are legal advice or final policies.
 
-- [ ] **Step 5: Verify GREEN**
+- [x] **Step 5: Verify GREEN**
 
 Run: `npm test -- lib/seo && npm run typecheck && npm run validate:content`  
 Expected: PASS.
