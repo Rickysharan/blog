@@ -596,7 +596,7 @@ git commit -m "feat: add Git-backed draft repositories"
 - Mutation body: `{ action: "save" | "publish" | "discard"; mdx?: string; expectedVersion?: string }`.
 - Response errors: `unauthorized`, `invalid_input`, `not_found`, `conflict`, `storage_unavailable`, `internal_error`.
 
-- [ ] **Step 1: Write failing admin component tests**
+- [x] **Step 1: Write failing admin component tests**
 
 ```tsx
 it("keeps invalid MDX in the editor and shows field errors", async () => {
@@ -615,20 +615,20 @@ it("requires explicit confirmation before discard", async () => {
 });
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run: `npm test -- components/admin`  
 Expected: FAIL because review components are absent.
 
-- [ ] **Step 3: Implement authenticated list/read/mutation handlers**
+- [x] **Step 3: Implement authenticated list/read/mutation handlers**
 
 Use Node runtime, `dynamic = "force-dynamic"`, session and origin guards, `no-store`, strict body/action validation, stable JSON errors, and `revalidatePath` after successful publish. Discard requires no MDX body; save/publish require a bounded string.
 
-- [ ] **Step 4: Implement the accessible editor workflow**
+- [x] **Step 4: Implement the accessible editor workflow**
 
 Group drafts by category, preserve unsaved text on failure, show version conflicts with refresh guidance, disable only the active mutation, focus status/error notices, and use a native textarea with monospace styling. Publish and discard confirmations state exact consequences.
 
-- [ ] **Step 5: Verify GREEN**
+- [x] **Step 5: Verify GREEN**
 
 Run: `npm test -- components/admin && npm run typecheck`  
 Expected: PASS.

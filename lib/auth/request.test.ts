@@ -75,6 +75,20 @@ describe("readBoundedJson", () => {
       ),
     ).rejects.toMatchObject({ status: 413 });
   });
+
+  it("allows an explicit larger bound for validated editorial documents", async () => {
+    const payload = { mdx: "x".repeat(40 * 1024) };
+    await expect(
+      readBoundedJson(
+        new Request("https://omnilede.test/api", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(payload),
+        }),
+        { maxBytes: 300 * 1024 },
+      ),
+    ).resolves.toEqual(payload);
+  });
 });
 
 describe("login throttling", () => {
