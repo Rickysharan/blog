@@ -4,6 +4,7 @@ import Script from "next/script";
 
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
+import { ConsentManager } from "@/components/privacy/consent-manager";
 import { THEME_BOOTSTRAP } from "@/components/theme/theme-script";
 import { SITE_CONFIG } from "@/lib/config/site";
 
@@ -49,12 +50,18 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <Script id="omnilede-theme-bootstrap" strategy="beforeInteractive">
           {THEME_BOOTSTRAP}
         </Script>
-        <a className="skip-link" href="#main-content">
-          Skip to content
-        </a>
-        <SiteHeader />
-        {children}
-        <SiteFooter />
+        <ConsentManager
+          adsenseClientId={process.env.ADSENSE_CLIENT_ID}
+          adsenseEnabled={process.env.ADSENSE_ENABLED === "true"}
+          ga4Id={process.env.GA4_ID}
+        >
+          <a className="skip-link" href="#main-content">
+            Skip to content
+          </a>
+          <SiteHeader />
+          {children}
+          <SiteFooter />
+        </ConsentManager>
       </body>
     </html>
   );

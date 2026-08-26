@@ -704,7 +704,7 @@ git commit -m "feat: add cached global market strip"
 - Consent storage key: `omnilede_consent_v1`; value `{ version: 1; choice: "granted" | "denied"; updatedAt: string }`.
 - Server passes `GA4_ID`, `ADSENSE_CLIENT_ID`, and `ADSENSE_ENABLED` as serialized props; client code does not read environment variables.
 
-- [ ] **Step 1: Write failing consent-gating tests**
+- [x] **Step 1: Write failing consent-gating tests**
 
 ```tsx
 it("loads neither GA4 nor AdSense before consent", () => {
@@ -721,20 +721,20 @@ it("loads configured scripts only after accepting", async () => {
 });
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run: `npm test -- components/privacy components/ads`  
 Expected: FAIL because modules are absent.
 
-- [ ] **Step 3: Implement versioned consent and script loading**
+- [x] **Step 3: Implement versioned consent and script loading**
 
 Provide equally prominent Accept and Decline controls, a footer settings button, safe localStorage parsing, and a custom event so settings update immediately. Inject GA4 setup only after consent and use stable script IDs to prevent duplicates.
 
-- [ ] **Step 4: Implement monetization-ready ad slots**
+- [x] **Step 4: Implement monetization-ready ad slots**
 
 Support `header`, `article`, `sidebar`, and `footer` variants. In development/disabled mode render a labelled non-tracking placeholder. Include the user-required code marker `// TODO(adsense): replace the placeholder data-ad-slot with the approved AdSense unit ID before enabling ads.` Keep `ADSENSE_ENABLED=false` in `.env.example` and document the Vercel Hobby restriction.
 
-- [ ] **Step 5: Verify GREEN**
+- [x] **Step 5: Verify GREEN**
 
 Run: `npm test -- components/privacy components/ads && npm run typecheck`  
 Expected: PASS.

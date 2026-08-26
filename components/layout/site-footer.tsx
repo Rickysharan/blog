@@ -2,6 +2,8 @@ import Link from "next/link";
 
 import { CATEGORIES } from "@/lib/config/categories";
 import { SITE_CONFIG } from "@/lib/config/site";
+import { AdSlot } from "@/components/ads/ad-slot";
+import { ConsentSettingsButton } from "@/components/privacy/consent-manager";
 
 const policyLinks = [
   ["About", "/about"],
@@ -49,7 +51,15 @@ export function SiteFooter() {
         </div>
       </div>
       <div className="border-t border-paper/15 px-5 py-4 text-center text-xs text-paper/60">
-        © {new Date().getUTCFullYear()} {SITE_CONFIG.name}. Example editorial content is provided for demonstration.
+        <div className="mx-auto mb-5 max-w-3xl">
+          <AdSlot
+            adsenseClientId={process.env.ADSENSE_CLIENT_ID}
+            adsenseEnabled={process.env.ADSENSE_ENABLED === "true"}
+            variant="footer"
+          />
+        </div>
+        <p>© {new Date().getUTCFullYear()} {SITE_CONFIG.name}. Example editorial content is provided for demonstration.</p>
+        <div className="mt-2"><ConsentSettingsButton /></div>
       </div>
     </footer>
   );

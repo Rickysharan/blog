@@ -9,6 +9,7 @@ import { CategoryLabel } from "@/components/articles/category-label";
 import { RelatedArticles } from "@/components/articles/related-articles";
 import { ShareActions } from "@/components/articles/share-actions";
 import { SourceAttribution } from "@/components/articles/source-attribution";
+import { AdSlot } from "@/components/ads/ad-slot";
 import {
   getAllArticles,
   getArticleBySlug,
@@ -110,6 +111,13 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
         <div className="mx-auto mt-10 max-w-3xl">
           <ArticleBody>{body}</ArticleBody>
           <SourceAttribution name={article.sourceName} url={article.sourceUrl} />
+          <div className="mt-12">
+            <AdSlot
+              adsenseClientId={process.env.ADSENSE_CLIENT_ID}
+              adsenseEnabled={process.env.ADSENSE_ENABLED === "true"}
+              variant="article"
+            />
+          </div>
         </div>
       </article>
 

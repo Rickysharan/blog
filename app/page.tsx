@@ -2,6 +2,7 @@ import { CategorySection } from "@/components/articles/category-section";
 import { LatestFeed } from "@/components/articles/latest-feed";
 import { LeadStory } from "@/components/articles/lead-story";
 import { MarketStrip } from "@/components/market/market-strip";
+import { AdSlot } from "@/components/ads/ad-slot";
 import { CATEGORIES } from "@/lib/config/categories";
 import { getAllArticles } from "@/lib/content/articles";
 import { selectHomepageStories } from "@/lib/content/homepage";
@@ -17,6 +18,13 @@ export default async function HomePage() {
   return (
     <main id="main-content">
       <MarketStrip snapshot={marketSnapshot} />
+      <div className="mx-auto max-w-7xl px-5 pt-6 sm:px-8">
+        <AdSlot
+          adsenseClientId={process.env.ADSENSE_CLIENT_ID}
+          adsenseEnabled={process.env.ADSENSE_ENABLED === "true"}
+          variant="header"
+        />
+      </div>
       <div className="mx-auto max-w-7xl px-5 py-8 sm:px-8 sm:py-12">
         <section aria-labelledby="newsroom-heading">
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted">
