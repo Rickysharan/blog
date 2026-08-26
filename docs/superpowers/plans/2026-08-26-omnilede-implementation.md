@@ -301,7 +301,7 @@ git commit -m "feat: build public newsroom experience"
 **Files:**
 - Create: `components/search/search-experience.tsx`, `components/search/search-experience.test.tsx`
 - Create: `components/articles/share-actions.tsx`, `components/articles/share-actions.test.tsx`
-- Create: `components/theme/theme-script.tsx`, `components/theme/theme-toggle.tsx`, `components/theme/theme-toggle.test.tsx`
+- Create: `components/theme/theme-script.ts`, `components/theme/theme-toggle.tsx`, `components/theme/theme-toggle.test.tsx`
 - Create: `app/search/page.tsx`
 - Modify: `app/layout.tsx`, `app/article/[slug]/page.tsx`, `components/layout/site-header.tsx`
 
@@ -309,7 +309,7 @@ git commit -m "feat: build public newsroom experience"
 - Consumes: compact result of `buildSearchIndex`; canonical article URL.
 - Produces: accessible client search, copy/WhatsApp/X links, and pre-hydration theme selection.
 
-- [ ] **Step 1: Write failing interaction tests**
+- [x] **Step 1: Write failing interaction tests**
 
 ```tsx
 it("searches title, tags, author, and category without case sensitivity", async () => {
@@ -326,21 +326,21 @@ it("copies the canonical URL and announces success", async () => {
 });
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run: `npm test -- components/search components/articles/share-actions.test.tsx components/theme`  
 Expected: FAIL because modules are absent.
 
-- [ ] **Step 3: Implement compact interaction components**
+- [x] **Step 3: Implement compact interaction components**
 
 Debounce is unnecessary for six-to-hundreds of metadata records; derive results during render, cap initial display, and use `useDeferredValue` for input responsiveness. Build share URLs with `URLSearchParams`. Theme initialization uses a tiny `beforeInteractive`-equivalent inline script with a stable `id` to set `.dark` before paint, while the toggle persists `light`, `dark`, or system preference.
 
-- [ ] **Step 4: Verify GREEN and hydration safety**
+- [x] **Step 4: Verify GREEN and hydration safety**
 
 Run: `npm test -- components/search components/articles/share-actions.test.tsx components/theme && npm run typecheck`  
 Expected: PASS with no act or hydration warnings.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add app/search app/layout.tsx app/article components/search components/articles/share-actions* components/theme components/layout/site-header.tsx

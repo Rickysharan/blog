@@ -7,6 +7,7 @@ import { ArticleBody } from "@/components/articles/article-body";
 import { ArticleMeta } from "@/components/articles/article-meta";
 import { CategoryLabel } from "@/components/articles/category-label";
 import { RelatedArticles } from "@/components/articles/related-articles";
+import { ShareActions } from "@/components/articles/share-actions";
 import { SourceAttribution } from "@/components/articles/source-attribution";
 import {
   getAllArticles,
@@ -89,6 +90,10 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
               readTime={article.readTime}
             />
           </div>
+          <ShareActions
+            title={article.title}
+            url={`${SITE_CONFIG.url}/article/${article.slug}`}
+          />
         </header>
 
         <div className="relative mt-10 aspect-[16/9] overflow-hidden bg-line/30">

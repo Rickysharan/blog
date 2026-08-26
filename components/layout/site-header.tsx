@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { CategoryNav } from "@/components/layout/category-nav";
 import { MobileMenu } from "@/components/layout/mobile-menu";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { SITE_CONFIG } from "@/lib/config/site";
 
 export function SiteHeader() {
@@ -19,6 +20,7 @@ export function SiteHeader() {
             </span>
           </Link>
           <div className="flex items-center gap-3">
+            <ThemeToggle />
             <Link
               href="/search"
               aria-label="Search OmniLede"

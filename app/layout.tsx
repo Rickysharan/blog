@@ -1,8 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Newsreader } from "next/font/google";
+import Script from "next/script";
 
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
+import { THEME_BOOTSTRAP } from "@/components/theme/theme-script";
 import { SITE_CONFIG } from "@/lib/config/site";
 
 import "./globals.css";
@@ -38,8 +40,15 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${sans.variable} ${serif.variable}`}>
+    <html
+      lang="en"
+      className={`${sans.variable} ${serif.variable}`}
+      suppressHydrationWarning
+    >
       <body>
+        <Script id="omnilede-theme-bootstrap" strategy="beforeInteractive">
+          {THEME_BOOTSTRAP}
+        </Script>
         <a className="skip-link" href="#main-content">
           Skip to content
         </a>
