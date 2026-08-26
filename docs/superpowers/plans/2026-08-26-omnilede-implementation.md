@@ -254,7 +254,7 @@ git commit -m "feat: add validated MDX content engine"
 - Consumes: `CATEGORIES`, `getAllArticles`, `getArticleBySlug`, `getArticlesByCategory`, `paginateArticles`, `getRelatedArticles`, `renderArticleMdx`.
 - Produces: complete public browsing and reading routes; later tasks inject market, share, advertising, consent, theme, and install controls.
 
-- [ ] **Step 1: Write failing component behavior tests**
+- [x] **Step 1: Write failing component behavior tests**
 
 ```tsx
 it("renders a category label and responsive image metadata", () => {
@@ -271,25 +271,25 @@ it("marks the current page and disables impossible pagination", () => {
 });
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run: `npm test -- components/articles components/layout`  
 Expected: FAIL because components are absent.
 
-- [ ] **Step 3: Implement the mobile-first shell and cards**
+- [x] **Step 3: Implement the mobile-first shell and cards**
 
 Use semantic header/nav/main/footer, the approved category accents, `next/image` with explicit `sizes`, one priority LCP image, restrained separators, no nested card chrome, and `content-visibility` for long feeds. Keep navigation server-rendered; isolate only the menu disclosure as a Client Component.
 
-- [ ] **Step 4: Implement public routes and metadata hooks**
+- [x] **Step 4: Implement public routes and metadata hooks**
 
 Homepage selects the newest story as lead, then newest per-category stories and a latest feed without duplicate lead IDs. Category pages validate slug and positive page number, return `notFound()` for unsupported categories or pages above `pageCount`, and expose canonical metadata without query pollution. Article pages compile MDX, render immutable source attribution after the body, and select three related stories.
 
-- [ ] **Step 5: Verify routes and production types**
+- [x] **Step 5: Verify routes and production types**
 
 Run: `npm test -- components/articles components/layout && npm run typecheck`  
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add app components/layout components/articles
