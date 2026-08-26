@@ -359,7 +359,7 @@ git commit -m "feat: add search sharing and theme controls"
 - Produces: `QueueStory`, `FeedDefinition`, `FEEDS`, `canonicalizeSourceUrl`, `normalizeTitle`, `dedupeStories`, `fetchTrendingStories`, and `writeTrendingQueue`.
 - `fetchTrendingStories({ fetchImpl?, now?, contentRoot? })` supports deterministic tests.
 
-- [ ] **Step 1: Write failing deduplication tests**
+- [x] **Step 1: Write failing deduplication tests**
 
 ```ts
 it("collapses tracking variants and near-identical cross-source headlines", () => {
@@ -376,20 +376,20 @@ it("does not merge similar titles from different categories", () => {
 });
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run: `npm test -- lib/pipeline/dedupe.test.ts lib/pipeline/fetch.test.ts`  
 Expected: FAIL because pipeline modules are absent.
 
-- [ ] **Step 3: Implement feed definitions and bounded retrieval**
+- [x] **Step 3: Implement feed definitions and bounded retrieval**
 
 Centralize the requested outlets. Use the current official/public RSS endpoints verified during implementation, a ten-second `AbortSignal.timeout`, a descriptive OmniLede user agent, a two-megabyte response limit, `rss-parser`, and `Promise.allSettled`. Strip markup from snippets, require absolute HTTPS story URLs, and emit per-source summaries.
 
-- [ ] **Step 4: Implement deterministic dedupe and queue writes**
+- [x] **Step 4: Implement deterministic dedupe and queue writes**
 
 Canonicalize tracking parameters, title punctuation, outlet suffixes, and stop words. Use Jaccard token similarity of at least `0.72` within the same category and 72-hour window. Skip URLs/titles already found in article or draft frontmatter. Sort by descending date, then category and normalized title. Write pretty JSON with a final newline.
 
-- [ ] **Step 5: Verify script behavior without relying on live feeds**
+- [x] **Step 5: Verify script behavior without relying on live feeds**
 
 Run: `npm test -- lib/pipeline/dedupe.test.ts lib/pipeline/fetch.test.ts`  
 Expected: PASS using RSS fixtures and injected fetch.

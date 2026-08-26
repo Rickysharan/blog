@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Test World Feed</title>
+    <link>https://news.test/world</link>
+    <description>World test stories</description>
+    <item>
+      <title>Leaders agree a new cross-border framework</title>
+      <link>https://news.test/world/framework?utm_source=rss&amp;a=1</link>
+      <pubDate>Tue, 25 Aug 2026 10:30:00 GMT</pubDate>
+      <description><![CDATA[<p>Leaders agreed a framework &amp; published a timetable.</p><script>ignore()</script>]]></description>
+      <guid>framework-1</guid>
+    </item>
+    <item>
+      <title>Insecure URL is ignored</title>
+      <link>http://news.test/world/insecure</link>
+      <pubDate>Tue, 25 Aug 2026 11:30:00 GMT</pubDate>
+      <description>Not safe to queue.</description>
+    </item>
+    <item>
+      <title>Old item is ignored</title>
+      <link>https://news.test/world/old</link>
+      <pubDate>Tue, 11 Aug 2026 11:30:00 GMT</pubDate>
+      <description>No longer trending.</description>
+    </item>
+  </channel>
+</rss>
