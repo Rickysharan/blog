@@ -1,2 +1,2 @@
 # No authorized advertising sellers are configured yet.
-# Add the exact approved AdSense seller record before setting ADSENSE_ENABLED=true.
+# Replace this placeholder with the exact approved AdSense seller record before setting ADSENSE_ENABLED=true.

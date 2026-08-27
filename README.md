@@ -139,6 +139,19 @@ Netlify Free is the recommended launch host for a commercial OmniLede publicatio
 
 The existing Vercel Hobby deployment remains useful as a rollback target, but Vercel documents Hobby as personal, non-commercial use. Do not use it as the primary host for advertising, sponsorships, affiliate revenue, or other business activity.
 
+## AdSense approval and Indian payout checklist
+
+AdSense is deliberately disabled in this repository until the site has approval, an exact seller record, consent checks, and a host whose terms permit commercial use. Complete these steps in the operator-owned dashboards:
+
+1. Apply for AdSense using the real site owner and business/contact details. Keep the article library original, useful and manually reviewed; do not submit scraped or unreviewed generated copy.
+2. After Google approves the site, replace the placeholder in `public/ads.txt` with Google's exact publisher seller line. Never guess or edit the publisher ID or seller relationship.
+3. Add `ADSENSE_CLIENT_ID`, each approved numeric `ADSENSE_SLOT_*`, and only then set `ADSENSE_ENABLED=true` in Netlify Production. Redeploy after saving the variables; keep them server-side unless a provider integration explicitly requires the client identifier.
+4. Test with optional consent denied and granted. Confirm no AdSense script or unit loads before consent, every live placement is labelled, and the house-ad fallback remains when any approved value is missing.
+5. For an Indian bank account, use AdSense **Payments → Payments info → Manage payment methods → Transfer to bank account**. Enter the account-holder name, bank name, account number, IFSC, and SWIFT/BIC exactly as the bank records them. Keep PAN, income-tax, GST, foreign-remittance, and business-structure decisions with an Indian chartered accountant.
+6. Keep `ADSENSE_ENABLED=false` until every preceding step is complete and the production route/privacy checks pass. Approval and payout setup are not the same as guaranteed revenue; Google can still withhold or adjust payments under its policies.
+
+The committed `public/ads.txt` file intentionally contains only a placeholder. The operator must replace it after approval and review the result at `https://<production-domain>/ads.txt` before enabling ads.
+
 ## Deploy to a brand-new Vercel account
 
 This procedure intentionally avoids reusing local or existing account state:

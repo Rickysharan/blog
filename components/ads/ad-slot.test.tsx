@@ -66,4 +66,15 @@ describe("AdSlot", () => {
       screen.getByRole("link", { name: /advertise with omnilede/i }),
     ).toBeVisible();
   });
+
+  it("keeps the house ad when approval values are absent", () => {
+    render(
+      <ConsentManager adsenseEnabled adsenseClientId="">
+        <AdSlot variant="header" adsenseEnabled slotId="" />
+      </ConsentManager>,
+    );
+
+    expect(screen.getByText(/reach globally curious readers/i)).toBeInTheDocument();
+    expect(document.querySelector("ins.adsbygoogle")).toBeNull();
+  });
 });
