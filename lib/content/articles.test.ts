@@ -57,6 +57,20 @@ describe("public article discovery", () => {
 });
 
 describe("article collection helpers", () => {
+  it("keeps at least two published explainers in every global desk", async () => {
+    const articles = await getAllArticles();
+    const counts = new Map<string, number>();
+
+    for (const article of articles) {
+      counts.set(article.category, (counts.get(article.category) ?? 0) + 1);
+    }
+
+    expect(articles.length).toBeGreaterThanOrEqual(12);
+    for (const category of ["anime", "movies", "politics", "sports", "finance", "share-market"]) {
+      expect(counts.get(category)).toBeGreaterThanOrEqual(2);
+    }
+  });
+
   it("ranks related stories by shared tags and then recency", () => {
     const candidates: ArticleSummary[] = [
       {
