@@ -1,28 +1,28 @@
-# OmniLede Signal Ledger design QA
+# OmniLede Billboard-inspired design QA
 
 ## Comparison target
 
 - Source visual truth: `.audit/04-billboard-reference-top2.png` (Billboard reference capture supplied by the product brief), with the original OmniLede baseline in `.audit/01-home-top.png`.
-- Rendered implementation: `.audit/07-signal-ledger-home-refined.png` and focused route captures `.audit/08-signal-ledger-home-hero.png`, `.audit/09-signal-ledger-anime.png`, `.audit/10-signal-ledger-article.png`, and `.audit/12-signal-ledger-article-reading.png`.
-- Composite comparison: `.audit/13-design-qa-comparison.png` places the original, reference, and refined implementation side by side at the same viewport.
-- Viewport: 1265 × 712 CSS px, desktop browser capture, device scale factor 1. Source and implementation captures are each 1265 × 712 px; no density normalization was needed. The composite is 3795 × 712 px.
-- State: light theme, consent banner settled, published six-article content set, house-ad fallback visible, homepage/category/article routes rendered.
+- Current rendered implementation: `.audit/20-billboard-style-home.png`, `.audit/21-billboard-style-anime.png`, and `.audit/22-billboard-style-article.png` (full viewport captures); unobstructed top-fold crops are `.audit/23-billboard-style-home-top.png`, `.audit/23-billboard-style-anime-top.png`, and `.audit/23-billboard-style-article-top.png`.
+- The focused route captures cover the homepage, Anime desk, and a published article so the same treatment is checked across the primary reading journey.
+- Viewport: 1265 × 712 CSS px, desktop in-app browser capture, device scale factor 1. The top-fold crops use the same viewport width and a 480 px height to isolate the masthead, navigation, ad treatment, and lead content.
+- State: light theme, published six-article content set, house-ad fallback visible. Full captures retain the consent UI because consent is intentionally opt-in; the crops keep the fixed banner out of the visual comparison area without changing application behavior.
 
 ## Evidence
 
-The composite comparison shows the intended Billboard-like editorial rhythm—strong masthead, compact utility navigation, prominent lead story, clear section dividers, and dense story scanning—while keeping OmniLede's own deep-navy/lime identity, global desks, sourcing language, and market status treatment. The refined first fold replaces the baseline's muted template feel and oversized unavailable market cards with a sharper news hierarchy and a compact market pulse.
+The current retune follows the supplied Billboard reference with a white editorial canvas, black typography and controls, and a high-energy mint navigation signal. It keeps OmniLede's own wordmark, global desks, sourcing language, market status treatment, and moderation/PWA workflows intact.
 
 Focused comparisons confirm that:
 
-- The homepage hero and “Latest signals” rail preserve a clear primary/secondary reading order (`.audit/08-signal-ledger-home-hero.png`).
-- The Anime desk explains its editorial purpose, keeps global navigation available, and uses the same featured/latest structure (`.audit/09-signal-ledger-anime.png`).
-- Article reading separates headline context, body copy, source attribution, editorial standards, and the advertising CTA without crowding (`.audit/10-signal-ledger-article.png`, `.audit/12-signal-ledger-article-reading.png`).
+- The homepage uses a white masthead, black wordmark, mint strapline, mint category rail, labelled house ad, black market pulse, and a clear lead-story hierarchy (`.audit/23-billboard-style-home-top.png`).
+- The Anime desk carries the same masthead and category rail into a desk-specific archive with a featured/latest split (`.audit/23-billboard-style-anime-top.png`).
+- Article reading keeps the same navigation system while separating headline context, summary, metadata, source attribution, and the reading canvas (`.audit/23-billboard-style-article-top.png`).
 
 ## Required fidelity surfaces
 
 - Fonts and typography: Newsreader supplies the display/editorial voice and Inter supplies utility text. Display scale, tight tracking, readable body line-height, and small uppercase labels establish a consistent hierarchy across homepage, desk, and article routes.
-- Spacing and layout rhythm: the max-width frame, two-column lead, ruled section headers, lime signal rails, article body measure, and responsive single-column fallback are consistent with the editorial reference. The mobile Pixel 7 journey passes without overlap or collapsed image containers.
-- Colors and visual tokens: the implementation uses explicit canvas/panel/ink/brand/signal tokens. Deep navy masthead and lime desk bar create strong contrast and a distinct identity; no gradients or decorative CSS art are used.
+- Spacing and layout rhythm: the max-width frame, two-column lead, ruled section headers, mint signal rails, article body measure, and responsive single-column fallback remain consistent with the editorial reference. The mobile Pixel 7 journey passes without overlap or collapsed image containers.
+- Colors and visual tokens: the light implementation uses a white canvas (`#ffffff`), near-white paper/panels, black ink (`#000000`), and Billboard-inspired mint signal (`#00ff9a`). Black reverse surfaces remain deliberate for the market pulse, consent actions, and footer. Dark mode retains the same mint accent against a dark canvas.
 - Image quality and asset fidelity: article artwork uses the existing local category assets with stable aspect-ratio containers and `next/image` optimization. A mobile regression test verifies all rendered Anime image containers have non-zero height before entering the viewport.
 - Copy and content: interface copy is self-explanatory (“The stories shaping culture, power and capital”, desk descriptions, visible source links, editorial standard, and “Advertise with OmniLede”). Market empties are truthful (“Market update pending”) rather than fabricated figures.
 - Icons and controls: existing icon components remain consistent for theme, install, search, and share actions. Header links, ad CTA, navigation, search, theme, consent, moderation, PWA metadata, and source attribution were exercised.
@@ -30,13 +30,13 @@ Focused comparisons confirm that:
 
 ## Findings
 
-No actionable P0, P1, or P2 design findings remain.
+No actionable P0, P1, or P2 design findings remain for the Billboard-inspired retune. The visual target is a reference-led adaptation rather than a pixel clone: OmniLede keeps its own brand name, content model, and editorial voice.
 
 ## Comparison history
 
-1. Initial refined comparison identified the baseline's muted palette, oversized unavailable market cards, generic ad placeholder, and weak lead-story hierarchy as P1/P2 design drift. The implementation introduced the Signal Ledger masthead, navy/lime tokens, compact market pulse, editorial lead rail, labelled house ads, and self-explanatory desk sections.
-2. Post-fix comparison at the same 1265 × 712 viewport is recorded in `.audit/13-design-qa-comparison.png` and the focused captures above. No P0/P1/P2 differences remain.
-3. Mobile verification then exposed a zero-height off-screen image container caused by `content-visibility:auto` on `CategorySection`. The class was removed and `tests/e2e/image-layout.spec.ts` was added. The focused Pixel 7 regression passed with no image warning; all 12 browser tests now pass.
+1. Initial Signal Ledger comparison identified the baseline's muted palette, oversized unavailable market cards, generic ad placeholder, and weak lead-story hierarchy as P1/P2 design drift. The implementation introduced a stronger editorial masthead, compact market pulse, lead rail, labelled house ads, and self-explanatory desk sections.
+2. The current retune moved the light theme from deep navy/lime to the supplied reference's white/black/mint foundation while preserving the established layouts, content, consent gating, dark mode, and PWA surfaces.
+3. Same-width desktop captures and focused route checks are recorded above. Mobile verification remains covered by the Pixel 7 E2E journey and the image-layout regression test.
 
 ## Follow-up polish (P3)
 
@@ -45,10 +45,11 @@ No actionable P0, P1, or P2 design findings remain.
 
 ## Implementation checklist
 
-- [x] Signal Ledger homepage, desk archive, and article layouts implemented.
-- [x] House-ad and consent-gated ad slots are explicit and labelled.
-- [x] Market empty state is honest and visually compact.
-- [x] Desktop reference and focused route captures compared at the same viewport.
+- [x] Billboard-inspired white/black/mint editorial theme applied to light mode.
+- [x] Masthead, utility links, search, theme, install, mobile menu, and category navigation retuned together.
+- [x] House-ad and consent-gated ad slots remain explicit and labelled.
+- [x] Market empty state remains honest and visually compact.
+- [x] Homepage, desk archive, and article top folds captured at the same desktop viewport width.
 - [x] Desktop Chromium and Pixel 7 E2E journeys pass.
 - [x] No app console errors or persistent browser warnings remain after the mobile image fix.
 

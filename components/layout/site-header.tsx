@@ -9,21 +9,21 @@ import { SITE_CONFIG } from "@/lib/config/site";
 
 export function SiteHeader() {
   return (
-    <header className="relative z-30 bg-brand text-brandInk">
-      <div className="border-b border-brandInk/15">
-        <div className="mx-auto flex min-h-9 max-w-7xl items-center justify-between gap-4 px-5 text-[0.65rem] font-bold uppercase tracking-[0.16em] text-brandInk/65 sm:px-8">
+    <header className="relative z-30 bg-canvas text-ink">
+      <div className="border-b border-line/70">
+        <div className="mx-auto flex min-h-9 max-w-7xl items-center justify-between gap-4 px-5 text-[0.65rem] font-bold uppercase tracking-[0.16em] text-muted sm:px-8">
           <p>Independent global briefing</p>
           <nav aria-label="Publication links" className="hidden items-center gap-5 sm:flex">
-            <Link className="hover:text-signal" href="/about">About</Link>
-            <Link className="hover:text-signal" href="/contact?subject=advertising">Advertise</Link>
-            <Link className="hover:text-signal" href="/feed.xml">RSS</Link>
+            <Link className="hover:text-ink" href="/about">About</Link>
+            <Link className="hover:text-ink" href="/contact?subject=advertising">Advertise</Link>
+            <Link className="hover:text-ink" href="/feed.xml">RSS</Link>
           </nav>
         </div>
       </div>
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
-        <div className="flex min-h-24 items-center justify-between gap-5 py-5">
+        <div className="flex min-h-28 items-center justify-between gap-5 py-6">
           <Link href="/" className="group inline-flex flex-col">
-            <span className="font-serif text-4xl font-semibold leading-none tracking-[-0.055em] group-hover:text-signal sm:text-5xl">
+            <span className="font-serif text-4xl font-semibold leading-none tracking-[-0.055em] group-hover:text-signal sm:text-6xl">
               {SITE_CONFIG.name}
             </span>
             <span className="mt-2 text-[0.62rem] font-black uppercase tracking-[0.24em] text-signal">
@@ -36,7 +36,7 @@ export function SiteHeader() {
             <Link
               href="/search"
               aria-label="Search OmniLede"
-              className="hidden min-h-11 min-w-11 items-center justify-center border border-brandInk/30 transition-colors hover:border-signal hover:text-signal md:inline-flex"
+              className="hidden min-h-11 min-w-11 items-center justify-center border border-ink/20 transition-colors hover:border-signal hover:bg-signal md:inline-flex"
             >
               <Search aria-hidden="true" size={18} />
             </Link>
@@ -46,7 +46,7 @@ export function SiteHeader() {
       </div>
       <div className="bg-signal text-signalInk">
         <div className="mx-auto max-w-7xl px-5 sm:px-8">
-          <CategoryNav className="hidden py-3 md:block" />
+          <CategoryNav className="hidden py-4 md:block" />
         </div>
       </div>
     </header>

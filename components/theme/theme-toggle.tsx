@@ -78,7 +78,7 @@ export function ThemeToggle() {
       type="button"
       onClick={cycleTheme}
       aria-label={`Theme: ${preference}. Change theme`}
-      className="inline-flex min-h-11 min-w-11 items-center justify-center border border-brandInk/30 text-brandInk transition-colors hover:border-signal hover:text-signal"
+      className="inline-flex min-h-11 min-w-11 items-center justify-center border border-ink/20 text-ink transition-colors hover:border-signal hover:bg-signal"
     >
       <Icon aria-hidden="true" size={18} />
     </button>
