@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1290 2796" role="img" aria-labelledby="title">
+  <title id="title">OmniLede launch screen</title>
+  <rect width="1290" height="2796" fill="#f6f2e9"/>
+  <g transform="translate(389 1110) scale(1)" aria-hidden="true">
+    <rect width="512" height="512" rx="52" fill="#111516"/>
+    <circle cx="174" cy="256" r="106" fill="#f6f2e9"/>
+    <circle cx="174" cy="256" r="54" fill="#111516"/>
+    <path d="M292 136h58v214h112v58H292z" fill="#f6f2e9"/>
+  </g>
+  <text x="645" y="1765" fill="#111516" font-family="Georgia, serif" font-size="60" font-weight="600" text-anchor="middle" letter-spacing="2">OMNILEDE</text>
+  <text x="645" y="1832" fill="#667070" font-family="Arial, sans-serif" font-size="19" font-weight="600" text-anchor="middle" letter-spacing="6">THE WORLD, CLEARLY EDITED</text>
+</svg>

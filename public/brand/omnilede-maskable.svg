@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">OmniLede maskable editorial monogram</title>
+  <desc id="desc">A high-contrast geometric O and L with generous maskable safe zones.</desc>
+  <rect width="512" height="512" fill="#111516"/>
+  <circle cx="188" cy="256" r="78" fill="#f6f2e9"/>
+  <circle cx="188" cy="256" r="39" fill="#111516"/>
+  <path d="M286 178h43v154h82v43H286z" fill="#f6f2e9"/>
+</svg>

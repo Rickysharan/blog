@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { CategoryNav } from "@/components/layout/category-nav";
 import { MobileMenu } from "@/components/layout/mobile-menu";
+import { InstallAppButton } from "@/components/pwa/install-app-button";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { SITE_CONFIG } from "@/lib/config/site";
 
@@ -21,6 +22,7 @@ export function SiteHeader() {
           </Link>
           <div className="flex items-center gap-3">
             <ThemeToggle />
+            <InstallAppButton />
             <Link
               href="/search"
               aria-label="Search OmniLede"

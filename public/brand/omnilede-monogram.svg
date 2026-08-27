@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">OmniLede editorial monogram</title>
+  <desc id="desc">A geometric O and L set in deep ink on a warm paper field.</desc>
+  <rect width="512" height="512" fill="#f6f2e9"/>
+  <rect x="28" y="28" width="456" height="456" rx="48" fill="#111516"/>
+  <circle cx="174" cy="256" r="106" fill="#f6f2e9"/>
+  <circle cx="174" cy="256" r="54" fill="#111516"/>
+  <path d="M292 136h58v214h112v58H292z" fill="#f6f2e9"/>
+</svg>

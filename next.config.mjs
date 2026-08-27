@@ -5,6 +5,7 @@ const serviceWorkerSource = new URL("./app/sw.ts", import.meta.url);
 const withSerwist = withSerwistInit({
   swSrc: "app/sw.ts",
   swDest: "public/sw.js",
+  additionalPrecacheEntries: [{ url: "/offline", revision: "omnilede-offline-v1" }],
   disable:
     process.env.NODE_ENV !== "production" || !existsSync(serviceWorkerSource),
   register: true,
