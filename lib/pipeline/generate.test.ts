@@ -213,4 +213,34 @@ describe("generateDrafts", () => {
     ).rejects.toMatchObject({ code: "ENOENT" });
     expect(JSON.parse(await fs.readFile(queuePath, "utf8"))).toEqual([stories[1]]);
   });
+
+  it("retains unprocessed queue items when a runtime draft cap is applied", async () => {
+    const contentRoot = await temporaryContentRoot();
+    const stories = [
+      queueStory(),
+      queueStory({
+        title: "A deferred source item",
+        sourceUrl: "https://example.com/deferred",
+        category: "politics",
+      }),
+    ];
+    const queuePath = path.join(contentRoot, "queue", "trending.json");
+    await fs.writeFile(queuePath, `${JSON.stringify(stories, null, 2)}\n`);
+
+    const result = await generateDrafts({
+      env: {
+        DRAFT_GENERATION_ENABLED: "true",
+        ANTHROPIC_API_KEY: "test-key",
+        ANTHROPIC_MODEL: "test-model",
+      },
+      fetchImpl: vi.fn().mockResolvedValue(claudeResponse(generatedDraft())),
+      sleepImpl: vi.fn().mockResolvedValue(undefined),
+      contentRoot,
+      queuePath,
+      maxDrafts: 1,
+    });
+
+    expect(result.remaining).toBe(1);
+    expect(JSON.parse(await fs.readFile(queuePath, "utf8"))).toEqual([stories[1]]);
+  });
 });

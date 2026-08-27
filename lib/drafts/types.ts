@@ -42,6 +42,7 @@ export interface PublishResult {
 export interface DraftRepository {
   list(): Promise<DraftSummary[]>;
   read(ref: DraftRef): Promise<DraftDocument>;
+  create(ref: DraftRef, mdx: string): Promise<DraftDocument>;
   save(ref: DraftRef, mdx: string, expectedVersion?: string): Promise<DraftDocument>;
   publish(
     ref: DraftRef,

@@ -119,6 +119,20 @@ export class LocalDraftRepository implements DraftRepository {
     }
   }
 
+  async create(refInput: DraftRef, mdx: string): Promise<DraftDocument> {
+    const ref = validateDraftRef(refInput);
+    validateDraftMdx(ref, mdx);
+    const draftPath = this.draftPath(ref);
+
+    try {
+      await fs.mkdir(path.dirname(draftPath), { recursive: true });
+      await fs.writeFile(draftPath, mdx, { encoding: "utf8", flag: "wx" });
+      return await this.read(ref);
+    } catch (error) {
+      throw repositoryError(error, "Local draft could not be created");
+    }
+  }
+
   private async assertVersion(ref: DraftRef, expectedVersion?: string): Promise<DraftDocument> {
     const current = await this.read(ref);
     if (expectedVersion && expectedVersion !== current.version) {

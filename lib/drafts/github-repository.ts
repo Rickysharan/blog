@@ -305,6 +305,30 @@ export class GitHubDraftRepository implements DraftRepository {
     return this.document(ref, await this.readBlob(entry.sha as string), snapshot.headSha);
   }
 
+  async create(refInput: DraftRef, mdx: string): Promise<DraftDocument> {
+    const ref = validateDraftRef(refInput);
+    validateDraftMdx(ref, mdx);
+    const snapshot = await this.snapshot();
+    const draftPath = draftGitPath(ref);
+    if (snapshot.entries.some((entry) => entry.path === draftPath)) {
+      throw new DraftRepositoryError("conflict", "A draft with this slug already exists");
+    }
+    const articlePath = articleGitPath(ref);
+    if (snapshot.entries.some((entry) => entry.path === articlePath)) {
+      throw new DraftRepositoryError(
+        "conflict",
+        "A published article with this slug already exists",
+      );
+    }
+    const blobSha = await this.createBlob(mdx);
+    const commit = await this.commitMutation(
+      snapshot,
+      [{ path: draftPath, mode: "100644", type: "blob", sha: blobSha }],
+      `Create draft: ${path.basename(ref.filename, ".mdx")}`,
+    );
+    return this.document(ref, mdx, commit.sha as string);
+  }
+
   private async createBlob(mdx: string): Promise<string> {
     const blob = await this.api<GitHubBlobResponse>("git/blobs", {
       method: "POST",

@@ -9,6 +9,8 @@ import {
   isCategorySlug,
 } from "@/lib/config/categories";
 import { parseArticleFile } from "@/lib/content/schema";
+import { getDraftRepository } from "@/lib/drafts/repository";
+import type { DraftRepository } from "@/lib/drafts/types";
 import { canonicalizeSourceUrl } from "@/lib/pipeline/dedupe";
 import type { FetchLike, QueueStory } from "@/lib/pipeline/types";
 
@@ -55,12 +57,16 @@ export interface GenerationConfig {
   sleepImpl?: (milliseconds: number) => Promise<void>;
 }
 
-interface GenerateDraftsOptions {
+export interface GenerateDraftsOptions {
   fetchImpl?: FetchLike;
   sleepImpl?: (milliseconds: number) => Promise<void>;
   env?: Record<string, string | undefined>;
   contentRoot?: string;
   queuePath?: string;
+  /** Limit work for short-lived runtimes such as Vercel Hobby functions. */
+  maxDrafts?: number;
+  /** Override storage in tests or a custom worker; production defaults to GitHub. */
+  draftRepository?: DraftRepository;
 }
 
 interface GenerationFailure extends QueueStory {
@@ -72,6 +78,8 @@ export interface GenerateDraftsResult {
   created: string[];
   skipped: QueueStory[];
   failed: GenerationFailure[];
+  /** Number of queue stories intentionally left for a later run. */
+  remaining?: number;
 }
 
 type AnthropicResponse = {
@@ -341,7 +349,7 @@ export async function generateDrafts(
 ): Promise<GenerateDraftsResult> {
   const env = options.env ?? process.env;
   if (!generationEnabled(env)) {
-    return { status: "disabled", created: [], skipped: [], failed: [] };
+    return { status: "disabled", created: [], skipped: [], failed: [], remaining: 0 };
   }
 
   const apiKey = env.ANTHROPIC_API_KEY?.trim();
@@ -353,6 +361,7 @@ export async function generateDrafts(
   }
 
   const contentRoot = options.contentRoot ?? path.join(process.cwd(), "content");
+  const draftRepository = options.draftRepository ?? getDraftRepository({ env, contentRoot });
   const queuePath = options.queuePath ?? path.join(contentRoot, "queue", "trending.json");
   let queueSource: string;
   try {
@@ -365,11 +374,16 @@ export async function generateDrafts(
     }
   }
   const queue = z.array(queueStorySchema).parse(JSON.parse(queueSource)) as QueueStory[];
+  const maxDrafts = options.maxDrafts === undefined
+    ? queue.length
+    : Math.max(0, Math.min(Math.floor(options.maxDrafts), queue.length));
+  const selectedQueue = queue.slice(0, maxDrafts);
+  const deferredQueue = queue.slice(maxDrafts);
   const created: string[] = [];
   const skipped: QueueStory[] = [];
   const failed: GenerationFailure[] = [];
 
-  for (const story of queue) {
+  for (const story of selectedQueue) {
     try {
       const generated = await requestClaudeDraft(story, {
         apiKey,
@@ -386,9 +400,17 @@ export async function generateDrafts(
       const mdx = buildDraftMdx(story, generated);
       const draftDirectory = path.join(contentRoot, "drafts", story.category);
       const draftPath = path.join(draftDirectory, `${slug}.mdx`);
-      await fs.mkdir(draftDirectory, { recursive: true });
-      await fs.writeFile(draftPath, mdx, { encoding: "utf8", flag: "wx" });
-      created.push(draftPath);
+      if (env.NODE_ENV === "production") {
+        await draftRepository.create(
+          { category: story.category, filename: `${slug}.mdx` },
+          mdx,
+        );
+        created.push(`content/drafts/${story.category}/${slug}.mdx`);
+      } else {
+        await fs.mkdir(draftDirectory, { recursive: true });
+        await fs.writeFile(draftPath, mdx, { encoding: "utf8", flag: "wx" });
+        created.push(draftPath);
+      }
     } catch (error) {
       failed.push({ ...story, error: safeError(error) });
     }
@@ -396,8 +418,17 @@ export async function generateDrafts(
 
   await writeJsonAtomically(
     queuePath,
-    failed.map(failedStoryToQueueStory),
+    [
+      ...failed.map(failedStoryToQueueStory),
+      ...deferredQueue,
+    ],
   );
 
-  return { status: "completed", created, skipped, failed };
+  return {
+    status: "completed",
+    created,
+    skipped,
+    failed,
+    remaining: failed.length + deferredQueue.length,
+  };
 }
