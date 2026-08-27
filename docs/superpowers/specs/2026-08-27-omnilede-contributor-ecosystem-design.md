@@ -1,7 +1,7 @@
 # OmniLede Contributor Ecosystem — Product and Technical Design
 
-**Status:** Approved in chat on 2026-08-27  
-**Scope:** Extend the existing OmniLede news/PWA repository with a contributor platform, regional delivery, and a separate operations dashboard.  
+**Status:** Approved in chat on 2026-08-27
+**Scope:** Extend the existing OmniLede news/PWA repository with a contributor platform, regional delivery, and a separate operations dashboard.
 **Primary constraint:** The launch configuration must cost $0, require no payment card, and stop or fall back safely when a free allowance is exhausted.
 
 ## 1. Context
