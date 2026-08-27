@@ -8,18 +8,45 @@ import { ConsentManager } from "@/components/privacy/consent-manager";
 describe("AdSlot", () => {
   beforeEach(() => localStorage.clear());
 
-  it("renders a labelled non-tracking placeholder when advertising is disabled", () => {
+  it("renders a labelled house ad when third-party advertising is disabled", () => {
     render(
       <ConsentManager adsenseEnabled={false}>
         <AdSlot variant="header" adsenseEnabled={false} />
       </ConsentManager>,
     );
 
-    expect(screen.getByText("Advertisement placeholder")).toBeVisible();
+    expect(
+      screen.getByRole("link", { name: /advertise with omnilede/i }),
+    ).toHaveAttribute("href", "/contact?subject=advertising");
+    expect(screen.getByText(/reach globally curious readers/i)).toBeVisible();
+    expect(screen.queryByText("Advertisement placeholder")).toBeNull();
     expect(document.querySelector("ins.adsbygoogle")).toBeNull();
   });
 
   it("creates an ad unit only after consent when advertising is enabled", async () => {
+    const user = userEvent.setup();
+    render(
+      <ConsentManager adsenseClientId="ca-pub-test" adsenseEnabled>
+        <AdSlot
+          variant="article"
+          adsenseClientId="ca-pub-test"
+          slotId="1234567890"
+          adsenseEnabled
+        />
+      </ConsentManager>,
+    );
+
+    expect(document.querySelector("ins.adsbygoogle")).toBeNull();
+    await user.click(
+      screen.getByRole("button", { name: /accept optional cookies/i }),
+    );
+    expect(document.querySelector("ins.adsbygoogle")).toHaveAttribute(
+      "data-ad-slot",
+      "1234567890",
+    );
+  });
+
+  it("keeps the house ad when an approved slot id is missing", async () => {
     const user = userEvent.setup();
     render(
       <ConsentManager adsenseClientId="ca-pub-test" adsenseEnabled>
@@ -31,10 +58,12 @@ describe("AdSlot", () => {
       </ConsentManager>,
     );
 
-    expect(document.querySelector("ins.adsbygoogle")).toBeNull();
     await user.click(
       screen.getByRole("button", { name: /accept optional cookies/i }),
     );
-    expect(document.querySelector("ins.adsbygoogle")).not.toBeNull();
+    expect(document.querySelector("ins.adsbygoogle")).toBeNull();
+    expect(
+      screen.getByRole("link", { name: /advertise with omnilede/i }),
+    ).toBeVisible();
   });
 });

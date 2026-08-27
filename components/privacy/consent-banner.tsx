@@ -12,7 +12,7 @@ export function ConsentBanner({
   return (
     <section
       aria-labelledby="consent-heading"
-      className="fixed inset-x-3 bottom-3 z-50 mx-auto max-w-3xl rounded-2xl border border-line bg-panel p-5 shadow-2xl sm:inset-x-6 sm:p-6"
+      className="fixed inset-x-3 bottom-3 z-50 mx-auto max-w-3xl border border-line border-t-4 border-t-signal bg-canvas p-5 shadow-2xl sm:inset-x-6 sm:p-6"
     >
       <h2 className="text-lg font-black text-ink" id="consent-heading">
         Your privacy choices
@@ -26,14 +26,14 @@ export function ConsentBanner({
       </p>
       <div className="mt-5 grid gap-3 sm:grid-cols-2">
         <button
-          className="min-h-11 rounded-xl bg-ink px-5 py-3 font-bold text-canvas"
+          className="min-h-11 bg-brand px-5 py-3 font-bold text-brandInk transition-colors hover:text-signal"
           onClick={onAccept}
           type="button"
         >
           Accept optional cookies
         </button>
         <button
-          className="min-h-11 rounded-xl border-2 border-ink px-5 py-3 font-bold text-ink"
+          className="min-h-11 border-2 border-ink px-5 py-3 font-bold text-ink transition-colors hover:border-signal"
           onClick={onDecline}
           type="button"
         >

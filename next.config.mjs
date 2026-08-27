@@ -15,6 +15,7 @@ const withSerwist = withSerwistInit({
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  outputFileTracingRoot: process.cwd(),
   images: {
     formats: ["image/avif", "image/webp"],
     remotePatterns: [

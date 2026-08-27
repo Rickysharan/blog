@@ -71,8 +71,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   colorScheme: "light dark",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f6f2e9" },
-    { media: "(prefers-color-scheme: dark)", color: "#111516" },
+    { media: "(prefers-color-scheme: light)", color: "#071723" },
+    { media: "(prefers-color-scheme: dark)", color: "#030d15" },
   ],
 };
 
@@ -81,6 +81,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html
       lang="en"
       className={`${sans.variable} ${serif.variable}`}
+      data-scroll-behavior="smooth"
       suppressHydrationWarning
     >
       <body>

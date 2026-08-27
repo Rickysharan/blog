@@ -14,7 +14,7 @@ export function InstallAppButton() {
   return (
     <button
       aria-label="Install app"
-      className="inline-flex min-h-11 items-center gap-2 border border-line px-3 text-xs font-semibold uppercase tracking-[0.12em] transition-colors hover:bg-line/30"
+    className="inline-flex min-h-11 items-center gap-2 border border-brandInk/30 px-3 text-xs font-black uppercase tracking-[0.12em] text-brandInk transition-colors hover:border-signal hover:text-signal"
       onClick={() => void promptInstall()}
       type="button"
     >

@@ -17,7 +17,13 @@ const config: Config = {
         paper: "rgb(var(--paper) / <alpha-value>)",
         ink: "rgb(var(--ink) / <alpha-value>)",
         muted: "rgb(var(--muted) / <alpha-value>)",
-        line: "rgb(var(--line) / <alpha-value>)"
+        line: "rgb(var(--line) / <alpha-value>)",
+        canvas: "rgb(var(--canvas) / <alpha-value>)",
+        panel: "rgb(var(--panel) / <alpha-value>)",
+        brand: "rgb(var(--brand) / <alpha-value>)",
+        brandInk: "rgb(var(--brand-ink) / <alpha-value>)",
+        signal: "rgb(var(--signal) / <alpha-value>)",
+        signalInk: "rgb(var(--signal-ink) / <alpha-value>)"
       }
     }
   },

@@ -12,15 +12,41 @@ function configuredEmail(): string | null {
   return value && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) ? value : null;
 }
 
-export default function ContactPage() {
+type ContactPageProps = {
+  searchParams: Promise<{ subject?: string | string[] }>;
+};
+
+export default async function ContactPage({ searchParams }: ContactPageProps) {
+  const query = await searchParams;
+  const subject = Array.isArray(query.subject) ? query.subject[0] : query.subject;
+  const commercial = subject === "advertising" || subject === "partnerships";
   const email = configuredEmail();
   return (
     <InfoPage
       eyebrow="Publication"
-      intro="Use the monitored editorial address for correction requests, source questions, rights concerns and privacy enquiries."
+      intro={commercial
+        ? "Talk to OmniLede about responsible advertising, sponsorships and editorially independent partnerships."
+        : "Use the monitored editorial address for correction requests, source questions, rights concerns and privacy enquiries."}
       title="Contact"
       templateNotice={!email}
     >
+      {commercial ? (
+        <>
+          <h2>Advertising and partnerships</h2>
+          <p>
+            Share your campaign goals, target desks and flight dates. Advertising must be clearly labelled, privacy-respecting and separate from editorial decisions.
+          </p>
+          {email ? (
+            <p>
+              Email <a href={`mailto:${email}?subject=${encodeURIComponent("OmniLede advertising enquiry")}`}>{email}</a> with your organisation name and preferred placement.
+            </p>
+          ) : (
+            <p>
+              A commercial inbox is not configured yet. Set <code>NEXT_PUBLIC_CONTACT_EMAIL</code> to a monitored address before inviting enquiries.
+            </p>
+          )}
+        </>
+      ) : null}
       <h2>Editorial and corrections</h2>
       {email ? (
         <p>

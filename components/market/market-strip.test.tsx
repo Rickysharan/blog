@@ -35,21 +35,19 @@ describe("MarketStrip", () => {
     expect(screen.getByText("25,001.1")).toBeVisible();
     expect(screen.getByLabelText(/Nifty 50 up 0.4 percent/i)).toBeVisible();
     expect(screen.getByLabelText(/S&P 500 down 0.07 percent/i)).toBeVisible();
-    expect(screen.getAllByText("Unavailable")).toHaveLength(2);
+    expect(screen.getAllByText("Pending")).toHaveLength(2);
     expect(screen.getByText(/delayed/i)).toBeVisible();
     expect(screen.getByText(/not investment advice/i)).toBeVisible();
   });
 
-  it("renders all requested labels without fake values when unavailable", () => {
+  it("collapses unavailable market data into one honest status message", () => {
     render(
       <MarketStrip
         snapshot={{ status: "unavailable", quotes: [], asOf: null, delayed: true }}
       />,
     );
 
-    for (const label of ["Nifty 50", "Sensex", "S&P 500", "Nasdaq Composite"]) {
-      expect(screen.getByText(label)).toBeVisible();
-    }
-    expect(screen.getAllByText("Unavailable")).toHaveLength(4);
+    expect(screen.getByText("Market update pending")).toBeVisible();
+    expect(screen.queryByText("Unavailable")).toBeNull();
   });
 });

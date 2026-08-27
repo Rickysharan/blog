@@ -21,7 +21,7 @@ export function InfoPage({
         <p className="mt-5 max-w-3xl text-lg leading-8 text-muted">{intro}</p>
       </header>
       {templateNotice ? (
-        <aside className="mt-8 rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm leading-6 text-ink">
+        <aside className="mt-8 border border-amber-500/50 border-l-4 bg-amber-500/10 p-4 text-sm leading-6 text-ink">
           Policy status: operational template. The site operator must add its legal identity and contact details, choose retention periods, and obtain qualified legal review for the launch jurisdictions.
         </aside>
       ) : null}

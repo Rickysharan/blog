@@ -14,22 +14,22 @@ export function CategorySection({
   const definition = getCategory(category);
 
   return (
-    <section aria-labelledby={`${category}-heading`} className="[content-visibility:auto]">
-      <div className="mb-4 flex items-end justify-between gap-4">
+    <section aria-labelledby={`${category}-heading`}>
+      <div className="mb-5 flex items-start justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">
-            Desk
-          </p>
           <h2
             id={`${category}-heading`}
-            className="mt-1 font-serif text-3xl font-semibold tracking-[-0.03em]"
+            className="font-serif text-3xl font-semibold tracking-[-0.04em]"
           >
             {definition.label}
           </h2>
+          <p className="mt-2 max-w-xs text-xs leading-5 text-muted">
+            {definition.description}
+          </p>
         </div>
         <Link
           href={`/category/${category}`}
-          className="text-sm font-semibold underline decoration-line underline-offset-4 hover:decoration-current"
+          className="mt-1 text-[0.65rem] font-black uppercase tracking-[0.14em] underline decoration-signal decoration-2 underline-offset-4"
         >
           View desk
         </Link>

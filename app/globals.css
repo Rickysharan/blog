@@ -3,18 +3,30 @@
 @tailwind utilities;
 
 :root {
-  --paper: 246 242 233;
-  --ink: 24 27 27;
-  --muted: 89 94 93;
-  --line: 204 199 188;
+  --paper: 247 248 244;
+  --canvas: 255 255 252;
+  --panel: 231 235 229;
+  --ink: 8 24 35;
+  --muted: 82 95 101;
+  --line: 195 204 201;
+  --brand: 7 23 35;
+  --brand-ink: 248 250 246;
+  --signal: 173 255 91;
+  --signal-ink: 7 23 35;
   color-scheme: light;
 }
 
 .dark {
-  --paper: 17 21 22;
-  --ink: 239 236 227;
-  --muted: 164 170 168;
-  --line: 61 67 68;
+  --paper: 9 18 26;
+  --canvas: 13 25 34;
+  --panel: 22 36 45;
+  --ink: 241 246 242;
+  --muted: 164 178 181;
+  --line: 54 72 78;
+  --brand: 3 13 21;
+  --brand-ink: 248 250 246;
+  --signal: 173 255 91;
+  --signal-ink: 7 23 35;
   color-scheme: dark;
 }
 
@@ -76,11 +88,12 @@ a {
 }
 
 ::selection {
-  background: rgb(14 116 144 / 0.2);
+  background: rgb(var(--signal));
+  color: rgb(var(--signal-ink));
 }
 
 :focus-visible {
-  outline: 3px solid rgb(8 145 178);
+  outline: 3px solid rgb(var(--signal));
   outline-offset: 3px;
 }
 
@@ -92,7 +105,7 @@ a {
   transform: translateY(-200%);
   border-radius: 999px;
   background: rgb(var(--ink));
-  color: rgb(var(--paper));
+  color: rgb(var(--canvas));
   padding: 0.75rem 1rem;
   transition: transform 150ms ease;
 }

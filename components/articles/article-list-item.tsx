@@ -6,13 +6,13 @@ import type { ArticleSummary } from "@/lib/content/schema";
 
 export function ArticleListItem({ article }: { article: ArticleSummary }) {
   return (
-    <article className="grid gap-3 border-t border-line py-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end sm:gap-8">
+    <article className="grid gap-3 border-t border-line py-6 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end sm:gap-8">
       <div>
         <CategoryLabel category={article.category} />
-        <h3 className="mt-2 font-serif text-2xl font-semibold leading-tight tracking-[-0.02em]">
+        <h3 className="mt-2 font-serif text-2xl font-semibold leading-tight tracking-[-0.03em] sm:text-3xl">
           <Link
             href={`/article/${article.slug}`}
-            className="underline-offset-4 hover:underline"
+            className="decoration-signal underline-offset-4 hover:underline"
           >
             {article.title}
           </Link>

@@ -53,10 +53,15 @@ Copy `.env.example` to `.env.local` and replace only values you own. Never expos
 | `STOCK_API_KEY` | optional | Financial Modeling Prep key for delayed market quotes. |
 | `GA4_ID` | optional | Consent-gated Google Analytics measurement ID. |
 | `ADSENSE_CLIENT_ID` | optional | Consent-gated AdSense client ID; keep ads disabled until approved. |
-| `ADSENSE_ENABLED` | optional | Set `true` only after replacing ad placeholders and `public/ads.txt`. |
+| `ADSENSE_SLOT_HEADER` | optional | Approved numeric AdSense slot for the top leaderboard placement. |
+| `ADSENSE_SLOT_IN_FEED` | optional | Approved numeric AdSense slot for homepage/category feed placements. |
+| `ADSENSE_SLOT_ARTICLE` | optional | Approved numeric AdSense slot within article content. |
+| `ADSENSE_SLOT_SIDEBAR` | optional | Approved numeric AdSense slot for the desktop article rail. |
+| `ADSENSE_SLOT_FOOTER` | optional | Approved numeric AdSense slot for the footer placement. |
+| `ADSENSE_ENABLED` | optional | Set `true` only after AdSense approval, valid slot IDs, consent review, `public/ads.txt`, and commercial hosting terms are ready. |
 | `CRON_SECRET` | optional | 16+ character bearer secret for the opt-in Vercel Cron endpoint. |
 
-The market strip remains truthful when `STOCK_API_KEY` is absent. GA4 and AdSense scripts do not load until the reader grants consent. Manual drafts never need an API key.
+The market strip remains truthful when `STOCK_API_KEY` is absent. When third-party ads are disabled or incomplete, the labelled placements show privacy-safe OmniLede house ads rather than empty placeholders. GA4 and AdSense scripts do not load until the reader grants consent, and an AdSense unit is created only when both its client ID and that placement's approved numeric slot ID are valid. Manual drafts never need an API key.
 
 ## Editorial content
 

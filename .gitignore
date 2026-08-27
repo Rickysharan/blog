@@ -5,6 +5,7 @@ out/
 coverage/
 playwright-report/
 test-results/
+.audit/
 .env
 .env.local
 .env.*.local

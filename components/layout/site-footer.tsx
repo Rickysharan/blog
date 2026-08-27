@@ -8,6 +8,7 @@ import { ConsentSettingsButton } from "@/components/privacy/consent-manager";
 const policyLinks = [
   ["About", "/about"],
   ["Contact", "/contact"],
+  ["Advertise", "/contact?subject=advertising"],
   ["Privacy", "/privacy"],
   ["Terms", "/terms"],
   ["Disclaimer", "/disclaimer"],
@@ -15,19 +16,22 @@ const policyLinks = [
 
 export function SiteFooter() {
   return (
-    <footer className="mt-20 border-t border-line bg-ink text-paper">
+    <footer className="mt-20 border-t border-brandInk/15 bg-brand text-brandInk">
       <div className="mx-auto grid max-w-7xl gap-10 px-5 py-12 sm:px-8 md:grid-cols-[1fr_2fr]">
         <div>
           <Link href="/" className="font-serif text-3xl font-semibold tracking-[-0.035em]">
             {SITE_CONFIG.name}
           </Link>
-          <p className="mt-3 max-w-sm text-sm leading-6 text-paper/70">
-            Independent-format global explainers, reviewed before publication and always linked to their source.
+          <p className="mt-3 max-w-sm text-sm leading-6 text-brandInk/65">
+            Global reporting with context, reviewed before publication and always linked to the original source.
           </p>
+          <Link className="mt-6 inline-flex border-b-2 border-signal pb-1 text-xs font-black uppercase tracking-[0.14em]" href="/contact?subject=partnerships">
+            Partner with OmniLede
+          </Link>
         </div>
         <div className="grid gap-8 sm:grid-cols-2">
           <nav aria-label="Footer news desks">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-paper/60">Desks</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brandInk/55">Desks</p>
             <ul className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
               {CATEGORIES.map((category) => (
                 <li key={category.slug}>
@@ -39,7 +43,7 @@ export function SiteFooter() {
             </ul>
           </nav>
           <nav aria-label="Publication information">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-paper/60">Information</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brandInk/55">Information</p>
             <ul className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
               {policyLinks.map(([label, href]) => (
                 <li key={href}>
@@ -50,15 +54,16 @@ export function SiteFooter() {
           </nav>
         </div>
       </div>
-      <div className="border-t border-paper/15 px-5 py-4 text-center text-xs text-paper/60">
+      <div className="border-t border-brandInk/15 px-5 py-5 text-center text-xs text-brandInk/55">
         <div className="mx-auto mb-5 max-w-3xl">
           <AdSlot
             adsenseClientId={process.env.ADSENSE_CLIENT_ID}
             adsenseEnabled={process.env.ADSENSE_ENABLED === "true"}
+            slotId={process.env.ADSENSE_SLOT_FOOTER}
             variant="footer"
           />
         </div>
-        <p>© {new Date().getUTCFullYear()} {SITE_CONFIG.name}. Example editorial content is provided for demonstration.</p>
+        <p>© {new Date().getUTCFullYear()} {SITE_CONFIG.name}. Global context with visible sourcing and human review.</p>
         <div className="mt-2"><ConsentSettingsButton /></div>
       </div>
     </footer>
