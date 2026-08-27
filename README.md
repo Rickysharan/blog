@@ -58,7 +58,7 @@ Copy `.env.example` to `.env.local` and replace only values you own. Never expos
 | `ADSENSE_SLOT_ARTICLE` | optional | Approved numeric AdSense slot within article content. |
 | `ADSENSE_SLOT_SIDEBAR` | optional | Approved numeric AdSense slot for the desktop article rail. |
 | `ADSENSE_SLOT_FOOTER` | optional | Approved numeric AdSense slot for the footer placement. |
-| `ADSENSE_ENABLED` | optional | Set `true` only after AdSense approval, valid slot IDs, consent review, `public/ads.txt`, and commercial hosting terms are ready. |
+| `ADSENSE_ENABLED` | optional | Set `true` only after AdSense approval, the exact `public/ads.txt` seller record, valid slot IDs, consent review, and commercial hosting terms are ready. |
 | `CRON_SECRET` | optional | 16+ character bearer secret for the opt-in Vercel Cron endpoint. |
 
 The market strip remains truthful when `STOCK_API_KEY` is absent. When third-party ads are disabled or incomplete, the labelled placements show privacy-safe OmniLede house ads rather than empty placeholders. GA4 and AdSense scripts do not load until the reader grants consent, and an AdSense unit is created only when both its client ID and that placement's approved numeric slot ID are valid. Manual drafts never need an API key.
@@ -125,6 +125,19 @@ git push -u origin main
 ```
 
 Create a fine-grained GitHub token scoped to that one repository with Contents: Read and write. Do not grant organization administration, workflows, issues, or all-repository access. Store it only as `GITHUB_TOKEN` in the deployment environment. Enable the included Actions workflow and use `workflow_dispatch` for the first controlled run.
+
+## Deploy to Netlify Free for commercial use
+
+Netlify Free is the recommended launch host for a commercial OmniLede publication because its free plan permits commercial projects without requiring a credit card. It has hard monthly usage limits and can pause a project when those limits are reached, so treat it as a launch-tier host and monitor usage.
+
+1. Create or sign in to Netlify and connect `Rickysharan/blog` on the `main` branch.
+2. Use `npm run build` as the build command and `.next` as the publish directory; the root `netlify.toml` supplies these defaults.
+3. Copy only the production runtime values into Netlify's Production environment. Keep `DRAFT_GENERATION_ENABLED=false` and `ADSENSE_ENABLED=false` initially.
+4. Keep GitHub Actions as the daily content scheduler; Netlify Git deploys do not replace the workflow in `.github/workflows/content-pipeline.yml`.
+5. Verify all public, PWA, admin, and API routes before changing the primary domain. Keep the existing Vercel deployment available as rollback until those checks pass.
+6. Netlify Free uses a hard usage limit and can pause the project. Leave auto-recharge disabled and do not add a payment card for this launch tier.
+
+The existing Vercel Hobby deployment remains useful as a rollback target, but Vercel documents Hobby as personal, non-commercial use. Do not use it as the primary host for advertising, sponsorships, affiliate revenue, or other business activity.
 
 ## Deploy to a brand-new Vercel account
 
