@@ -23,6 +23,37 @@ describe("assertSameOrigin", () => {
     ).not.toThrow();
   });
 
+  it("accepts the public origin when a platform forwards an internal request URL", () => {
+    expect(() =>
+      assertSameOrigin(
+        new Request("https://internal-deploy-runtime/api/admin/login", {
+          method: "POST",
+          headers: {
+            origin: "https://omnilede.test",
+            host: "omnilede.test",
+            "x-forwarded-proto": "https",
+          },
+        }),
+      ),
+    ).not.toThrow();
+  });
+
+  it("prefers the first forwarded host and protocol when proxies add a chain", () => {
+    expect(() =>
+      assertSameOrigin(
+        new Request("https://internal-deploy-runtime/api/admin/login", {
+          method: "POST",
+          headers: {
+            origin: "https://omnilede.test",
+            host: "internal-deploy-runtime",
+            "x-forwarded-host": "omnilede.test, internal-deploy-runtime",
+            "x-forwarded-proto": "https, http",
+          },
+        }),
+      ),
+    ).not.toThrow();
+  });
+
   it("rejects missing, malformed and cross-origin mutation requests", () => {
     for (const origin of [undefined, "not-a-url", "https://evil.test"]) {
       const headers = origin ? { origin } : undefined;

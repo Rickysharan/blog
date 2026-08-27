@@ -13,6 +13,26 @@ export class RequestGuardError extends Error {
   }
 }
 
+function firstHeaderValue(value: string | null): string | null {
+  const first = value?.split(",", 1)[0]?.trim();
+  return first || null;
+}
+
+function requestOrigin(request: Request): string {
+  const forwardedHost = firstHeaderValue(request.headers.get("x-forwarded-host"));
+  const host = forwardedHost ?? firstHeaderValue(request.headers.get("host"));
+  if (!host) {
+    return new URL(request.url).origin;
+  }
+
+  const forwardedProto = firstHeaderValue(request.headers.get("x-forwarded-proto"));
+  const protocol =
+    forwardedProto === "http" || forwardedProto === "https"
+      ? forwardedProto
+      : new URL(request.url).protocol.slice(0, -1);
+  return `${protocol}://${host}`;
+}
+
 export function assertSameOrigin(request: Request): void {
   const origin = request.headers.get("origin");
   if (!origin) {
@@ -20,9 +40,9 @@ export function assertSameOrigin(request: Request): void {
   }
 
   try {
-    const requestOrigin = new URL(request.url).origin;
+    const expectedOrigin = requestOrigin(request);
     const suppliedOrigin = new URL(origin).origin;
-    if (suppliedOrigin !== requestOrigin || suppliedOrigin !== origin) {
+    if (suppliedOrigin !== expectedOrigin || suppliedOrigin !== origin) {
       throw new Error("Origin mismatch");
     }
   } catch {
