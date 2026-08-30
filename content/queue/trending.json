@@ -1,43 +1,619 @@
 [
   {
-    "title": "Gaza farmer returns to the grapevines he couldn’t bear to abandon",
-    "source": "Al Jazeera",
-    "sourceUrl": "https://www.aljazeera.com/features/longform/2026/8/29/gaza-farmer-returns-to-the-grapevines-he-couldnt-bear-to-abandon?traffic_source=rss",
-    "date": "2026-08-29T12:56:27.000Z",
-    "snippet": "After nearly three years of war, a farmer returns to Sheikh Ijlin’s renowned grape fields.",
-    "category": "politics"
-  },
-  {
-    "title": "Indonesia sets up shelters for babies, children affected by wildfire smoke",
-    "source": "Al Jazeera",
-    "sourceUrl": "https://www.aljazeera.com/video/newsfeed/2026/8/29/indonesia-sets-up-shelters-for-babies-children-affected-by-wildfire-smoke?traffic_source=rss",
-    "date": "2026-08-29T12:45:48.000Z",
-    "snippet": "Indonesia sets up shelters for babies, children affected by wildfire smoke",
-    "category": "politics"
-  },
-  {
-    "title": "The 1 Thing Every Investor Needs to Know About Surviving a Bear Market",
-    "source": "Yahoo Finance",
-    "sourceUrl": "https://finance.yahoo.com/markets/stocks/articles/1-thing-every-investor-needs-124500630.html",
-    "date": "2026-08-29T12:45:00.000Z",
-    "snippet": "The 1 Thing Every Investor Needs to Know About Surviving a Bear Market",
-    "category": "finance"
-  },
-  {
-    "title": "Forest to bid £40m for Everton teenager Armstrong",
+    "title": "Man Utd pay tribute to 'proud Red' crash death officer",
     "source": "BBC Sport",
-    "sourceUrl": "https://www.bbc.co.uk/sport/football/articles/cy0znn7lg51o?at_campaign=rss&at_medium=RSS",
-    "date": "2026-08-29T12:41:06.000Z",
-    "snippet": "Nottingham Forest launch an ambitious bid to sign Everton's teenage midfielder Harrison Armstrong.",
+    "sourceUrl": "https://www.bbc.co.uk/sport/football/articles/ckg8x0ex8gno?at_campaign=rss&at_medium=RSS",
+    "date": "2026-08-30T12:46:10.000Z",
+    "snippet": "The widow and two children of PC Matthew Blades will be at Old Trafford for Manchester United's Premier League game with Ipswich.",
     "category": "sports"
   },
   {
-    "title": "Formula One champion Lando Norris extends McLaren contract until 2030",
+    "title": "Rascal Does Not Dream of a Dear Friend Anime Film Shares New Trailer, Visual and Theme Song Information",
+    "source": "Crunchyroll News",
+    "sourceUrl": "https://crunchyroll.com/news/latest/2026/8/30/rascal-does-not-dream-of-a-dear-friend-anime-film-new-trailer-visual-theme-song",
+    "date": "2026-08-30T12:15:00.000Z",
+    "snippet": "The film premieres in Japan on October 16",
+    "category": "anime"
+  },
+  {
+    "title": "Road collapses in Nepal landslide four days after floods",
     "source": "Al Jazeera",
-    "sourceUrl": "https://www.aljazeera.com/sports/2026/8/29/formula-one-champion-lando-norris-extends-mclaren-contract-until-2030?traffic_source=rss",
-    "date": "2026-08-29T12:34:03.000Z",
-    "snippet": "Last season, 26-year-old Norris delivered McLaren's first drivers' title since Lewis Hamilton won it in 2008.",
+    "sourceUrl": "https://www.aljazeera.com/video/newsfeed/2026/8/30/road-collapses-in-nepal-landslide-four-days-after-floods?traffic_source=rss",
+    "date": "2026-08-30T12:14:53.000Z",
+    "snippet": "A vital highway weakened by Nepal’s floodwaters has collapsed four days after the catastrophic glacial outburst.",
     "category": "politics"
+  },
+  {
+    "title": "How has life changed for Iranians six months into the war?",
+    "source": "Al Jazeera",
+    "sourceUrl": "https://www.aljazeera.com/economy/2026/8/30/how-has-life-changed-for-iranians-six-months-into-the-war?traffic_source=rss",
+    "date": "2026-08-30T12:08:12.000Z",
+    "snippet": "Common Iranians are under increasing pressure, with no relief expected in the short term.",
+    "category": "politics"
+  },
+  {
+    "title": "Infantino must go by 2027 in FIFA overhaul, Dutch football body says",
+    "source": "Al Jazeera",
+    "sourceUrl": "https://www.aljazeera.com/sports/2026/8/30/infantino-must-go-by-2027-in-fifa-overhaul-dutch-football-body-says?traffic_source=rss",
+    "date": "2026-08-30T12:06:57.000Z",
+    "snippet": "KNVB invites associations and confederations to a summit to discuss the overhaul of FIFA and how it runs football.",
+    "category": "politics"
+  },
+  {
+    "title": "Coventry sign Mfuni on loan from Man City",
+    "source": "BBC Sport",
+    "sourceUrl": "https://www.bbc.co.uk/sport/football/articles/c4g73yvjz9do?at_campaign=rss&at_medium=RSS",
+    "date": "2026-08-30T11:55:34.000Z",
+    "snippet": "Coventry City sign English defender Stephen Mfuni on a season-long loan deal from Manchester City.",
+    "category": "sports"
+  },
+  {
+    "title": "Israel’s Ben-Gvir lauds harsh conditions for Palestinian female prisoners",
+    "source": "Al Jazeera",
+    "sourceUrl": "https://www.aljazeera.com/news/2026/8/30/israels-ben-gvir-lauds-harsh-conditions-for-palestinian-female-prisoners?traffic_source=rss",
+    "date": "2026-08-30T11:52:27.000Z",
+    "snippet": "Palestinian groups condemn prison footage as humiliation and intimidation.",
+    "category": "politics"
+  },
+  {
+    "title": "Ferry carrying 260 people capsizes off coast of northern Cyprus",
+    "source": "Al Jazeera",
+    "sourceUrl": "https://www.aljazeera.com/news/2026/8/30/ferry-carrying-260-people-capsizes-off-northern-cyprus-coast?traffic_source=rss",
+    "date": "2026-08-30T11:52:12.000Z",
+    "snippet": "A catamaran carrying around 260 people has capsized off the Cyprus coast.",
+    "category": "politics"
+  },
+  {
+    "title": "Sagrada Reset Author Yutaka Kōno's Sayonara no Iikata Nante Shiranai Novel Series Gets Manga Adaptation",
+    "source": "Anime News Network",
+    "sourceUrl": "https://www.animenewsnetwork.com/news/2026-08-30/sagrada-reset-author-yutaka-kono-sayonara-no-iikata-nante-shiranai-novel-series-gets-manga-/.241119",
+    "date": "2026-08-30T11:30:00.000Z",
+    "snippet": "5 cm/s manga artist Yukiko Seike launches manga this fall",
+    "category": "anime"
+  },
+  {
+    "title": "Hamburg in advanced talks for Arsenal's Vieira",
+    "source": "BBC Sport",
+    "sourceUrl": "https://www.bbc.co.uk/sport/football/articles/c5ymvz83dy1o?at_campaign=rss&at_medium=RSS",
+    "date": "2026-08-30T11:27:02.000Z",
+    "snippet": "Hamburg are in advanced talks to buy Arsenal midfielder Fabio Vieira in a 10m euro (£8.6m) deal.",
+    "category": "sports"
+  },
+  {
+    "title": "Six months on, what did the strikes on Iran achieve?",
+    "source": "Al Jazeera",
+    "sourceUrl": "https://www.aljazeera.com/video/by-the-numbers-3/2026/8/30/six-months-on-what-did-the-strikes-on-iran-achieve?traffic_source=rss",
+    "date": "2026-08-30T11:24:21.000Z",
+    "snippet": "The US-Israeli bombing of Iran became a fight for the Strait of Hormuz. AJLabs counts the cost of the war.",
+    "category": "politics"
+  },
+  {
+    "title": "Tearful Federer inducted into Hall of Fame",
+    "source": "BBC Sport",
+    "sourceUrl": "https://www.bbc.co.uk/sport/tennis/articles/cvgy6zzgwlgo?at_campaign=rss&at_medium=RSS",
+    "date": "2026-08-30T11:20:37.000Z",
+    "snippet": "Roger Federer says being inducted into the International Tennis Hall of Fame is \"one of the greatest honours\" of his life.",
+    "category": "sports"
+  },
+  {
+    "title": "Abbas on Lord's honours board with five-wicket haul",
+    "source": "BBC Sport",
+    "sourceUrl": "https://www.bbc.co.uk/sport/cricket/videos/cn74r5rv0dpo?at_campaign=rss&at_medium=RSS",
+    "date": "2026-08-30T11:20:24.000Z",
+    "snippet": "Pakistan bowler Muhammad Abbas puts himself on the Lord's honours board after finishing with figures of 5-57 as he helps bowl England out for 208 early on day four of the second Test.",
+    "category": "sports"
+  },
+  {
+    "title": "Protesters in Argentina urge tech billionaire Peter Thiel to leave",
+    "source": "Al Jazeera",
+    "sourceUrl": "https://www.aljazeera.com/video/newsfeed/2026/8/30/protesters-in-argentina-urge-tech-billionaire-peter-thiel-to-leave?traffic_source=rss",
+    "date": "2026-08-30T11:15:51.000Z",
+    "snippet": "Dozens of protesters in Argentina have demonstrated against Palantir co-founder Peter Thiel, outside his new mansion.",
+    "category": "politics"
+  },
+  {
+    "title": "Wrexham boss Parkinson 'probably under pressure' for first time",
+    "source": "BBC Sport",
+    "sourceUrl": "https://www.bbc.co.uk/sport/football/articles/ce87epm56n0o?at_campaign=rss&at_medium=RSS",
+    "date": "2026-08-30T11:05:21.000Z",
+    "snippet": "With no wins yet this season, ex-Wales striker Iwan Roberts believes Phil Parkinson is probably under pressure for the first time as Wrexham boss.",
+    "category": "sports"
+  },
+  {
+    "title": "'Direct hit!' - Tongue brilliantly run out to end England innings",
+    "source": "BBC Sport",
+    "sourceUrl": "https://www.bbc.co.uk/sport/cricket/videos/c70d8y3613yo?at_campaign=rss&at_medium=RSS",
+    "date": "2026-08-30T10:57:26.000Z",
+    "snippet": "Josh Tongue is brilliantly run out by Pakistan captain Babar Azam for 12 to bring England's innings to an end, with the home side bowled out for 208, setting Pakistan 389 to win the second Test at Lord's.",
+    "category": "sports"
+  },
+  {
+    "title": "Hrgovic makes history with stunning world title win against Itauma",
+    "source": "BBC Sport",
+    "sourceUrl": "https://www.bbc.co.uk/sport/boxing/videos/cgjq6p9yzj9o?at_campaign=rss&at_medium=RSS",
+    "date": "2026-08-30T10:45:45.000Z",
+    "snippet": "British heavyweight Moses Itauma misses the chance to become world heavyweight champion after an \"extraordinary\" defeat by Filip Hrgovic at London's O2 Arena.",
+    "category": "sports"
+  },
+  {
+    "title": "Medalist Anime Film Premieres on February 19, 2027",
+    "source": "Crunchyroll News",
+    "sourceUrl": "https://crunchyroll.com/news/latest/2026/8/30/medalist-anime-film-february-19-2027-release-date-trailer-teaser-visual",
+    "date": "2026-08-30T10:42:00.000Z",
+    "snippet": "A new trailer and visual were also unveiled",
+    "category": "anime"
+  },
+  {
+    "title": "Tottenham make Ndiaye move with Richarlison set for Everton",
+    "source": "BBC Sport",
+    "sourceUrl": "https://www.bbc.co.uk/sport/football/articles/crl631pgxj7o?at_campaign=rss&at_medium=RSS",
+    "date": "2026-08-30T10:39:54.000Z",
+    "snippet": "Tottenham are in advanced talks to sign Iliman Ndiaye from Everton, with Richarlison set to move in the opposite direction as part of separate negotiations.",
+    "category": "sports"
+  },
+  {
+    "title": "Iran’s Khamenei calls for Gulf unity as Hormuz tensions persist",
+    "source": "Al Jazeera",
+    "sourceUrl": "https://www.aljazeera.com/news/2026/8/30/irans-khamenei-calls-for-gulf-unity-as-hormuz-tensions-persist?traffic_source=rss",
+    "date": "2026-08-30T10:30:57.000Z",
+    "snippet": "Khamenei urges Gulf rulers to confront their 'real enemy' as Iran keeps Hormuz restricted amid stalled diplomacy.",
+    "category": "politics"
+  },
+  {
+    "title": "Tearful Roger Federer inducted into Tennis Hall of Fame",
+    "source": "Al Jazeera",
+    "sourceUrl": "https://www.aljazeera.com/sports/2026/8/30/tearful-roger-federer-inducted-into-tennis-hall-of-fame?traffic_source=rss",
+    "date": "2026-08-30T10:18:28.000Z",
+    "snippet": "'I'm still writing my love letter to tennis,' Swiss legend says as he is applauded by former tennis rivals and friends.",
+    "category": "politics"
+  },
+  {
+    "title": "Durham take six balls and 105 seconds to beat Gloucestershire",
+    "source": "BBC Sport",
+    "sourceUrl": "https://www.bbc.co.uk/sport/cricket/articles/cj06rvnrm5go?at_campaign=rss&at_medium=RSS",
+    "date": "2026-08-30T10:16:09.000Z",
+    "snippet": "Division Two leaders Durham beat Gloucestershire by 10 wickets, needing just six balls to complete a final day victory.",
+    "category": "sports"
+  },
+  {
+    "title": "Chelsea signs Argentinian goalkeeper Emiliano Martinez from Aston Villa",
+    "source": "Al Jazeera",
+    "sourceUrl": "https://www.aljazeera.com/sports/2026/8/30/chelsea-sign-argentina-goalkeeper-emiliano-martinez-from-aston-villa?traffic_source=rss",
+    "date": "2026-08-30T10:11:16.000Z",
+    "snippet": "Martinez joins the London club on a reported three-year deal worth $10m after spending five years at Villa.",
+    "category": "politics"
+  },
+  {
+    "title": "LIVE: Chelsea vs Brighton – Premier League",
+    "source": "Al Jazeera",
+    "sourceUrl": "https://www.aljazeera.com/sports/liveblog/2026/8/30/live-chelsea-vs-brighton-premier-league?traffic_source=rss",
+    "date": "2026-08-30T10:00:12.000Z",
+    "snippet": "Follow updates from the Premier League clash - including the build-up, analysis and live text commentary of the game.",
+    "category": "politics"
+  },
+  {
+    "title": "Photos: Nepal issues alerts as region’s flash flood death toll reaches 750",
+    "source": "Al Jazeera",
+    "sourceUrl": "https://www.aljazeera.com/gallery/2026/8/30/photos-nepal-issues-fresh-flood-alerts-as-regional-death-toll-hits-750?traffic_source=rss",
+    "date": "2026-08-30T09:51:17.000Z",
+    "snippet": "Nepal warns of more flooding as the death toll rises to 750, with more than 3,000 people still missing in the region.",
+    "category": "politics"
+  },
+  {
+    "title": "Israel says Netanyahu’s son ‘urgently evacuated’ from the US after threat",
+    "source": "Al Jazeera",
+    "sourceUrl": "https://www.aljazeera.com/news/2026/8/30/israel-says-netanyahus-son-urgently-evacuated-from-the-us-after-threat?traffic_source=rss",
+    "date": "2026-08-30T09:47:56.000Z",
+    "snippet": "Right-wing activist and podcaster Yair Netanyahu lived in the US for several years before his hasty departure.",
+    "category": "politics"
+  },
+  {
+    "title": "The home front: How Israel, Iran, and US leaders have been hit by the war",
+    "source": "Al Jazeera",
+    "sourceUrl": "https://www.aljazeera.com/news/2026/8/30/the-home-front-how-israel-iran-and-us-leaders-have-been-hit-by-the-war?traffic_source=rss",
+    "date": "2026-08-30T09:32:26.000Z",
+    "snippet": "Six months into the US-Israel war on Iran, the governments in the three countries are fighting political wars at home.",
+    "category": "politics"
+  },
+  {
+    "title": "Delcy Rodriguez says Venezuela ‘retains sovereignty’ despite US oil deal",
+    "source": "Al Jazeera",
+    "sourceUrl": "https://www.aljazeera.com/video/newsfeed/2026/8/30/delcy-rodriguez-says-venezuela-retains-sovereignty-despite-us-oil-deal?traffic_source=rss",
+    "date": "2026-08-30T09:32:02.000Z",
+    "snippet": "Venezuela’s interim President has given a televised address to defend a deal of Venezuelan oil for the United States.",
+    "category": "politics"
+  },
+  {
+    "title": "Sankaku Head's My Darling Devilish Daughter Manga Ends in 6th Volume",
+    "source": "Anime News Network",
+    "sourceUrl": "https://www.animenewsnetwork.com/news/2026-08-30/sankaku-head-my-darling-devilish-daughter-manga-ends-in-6th-volume/.241120",
+    "date": "2026-08-30T09:30:00.000Z",
+    "snippet": "Series about half-devil daughter debuted in 2024",
+    "category": "anime"
+  },
+  {
+    "title": "Nepal-China flood disaster: What’s the latest toll, how many are missing?",
+    "source": "Al Jazeera",
+    "sourceUrl": "https://www.aljazeera.com/news/2026/8/30/nepal-china-flood-disaster-whats-the-latest-toll-how-many-are-missing?traffic_source=rss",
+    "date": "2026-08-30T09:24:46.000Z",
+    "snippet": "Over 3,000 people remain missing days after a glacier collapse triggered devastating floods near China-Nepal border.",
+    "category": "politics"
+  },
+  {
+    "title": "Boreham Wood accept Vardy-beating record fee for Abdulmalik",
+    "source": "BBC Sport",
+    "sourceUrl": "https://www.bbc.co.uk/sport/football/articles/cx2zvw14e8zo?at_campaign=rss&at_medium=RSS",
+    "date": "2026-08-30T09:19:27.000Z",
+    "snippet": "Swedish club Djurgardens agree a National League record fee thought to be in excess of £1.5m to sign winger Abdul Abdulmalik from Boreham Wood.",
+    "category": "sports"
+  },
+  {
+    "title": "Syria sandstorm blankets Homs in eerie orange haze",
+    "source": "Al Jazeera",
+    "sourceUrl": "https://www.aljazeera.com/video/newsfeed/2026/8/30/syria-sandstorm-blankets-homs-in-eerie-orange-haze?traffic_source=rss",
+    "date": "2026-08-30T09:02:36.000Z",
+    "snippet": "Syria sandstorm blankets Homs in eerie orange haze",
+    "category": "politics"
+  },
+  {
+    "title": "Everton call off Armstrong sale after fan backlash",
+    "source": "BBC Sport",
+    "sourceUrl": "https://www.bbc.co.uk/sport/football/articles/c0lrge3dwklo?at_campaign=rss&at_medium=RSS",
+    "date": "2026-08-30T08:58:28.000Z",
+    "snippet": "Everton have called off a proposed deal to sell midfielder Harrison Armstrong to Nottingham Forest following a backlash from the club's supporters.",
+    "category": "sports"
+  },
+  {
+    "title": "Martinez is eighth Chelsea-Villa deal in four years",
+    "source": "BBC Sport",
+    "sourceUrl": "https://www.bbc.co.uk/sport/football/articles/cvgy0qjl0xno?at_campaign=rss&at_medium=RSS",
+    "date": "2026-08-30T08:51:08.000Z",
+    "snippet": "After Emiliano Martinez's move, BBC Sport looks at why Aston Villa and Chelsea have become one of the Premier League’s busiest transfer partnerships since 2022.",
+    "category": "sports"
+  },
+  {
+    "title": "Canada unveils huge new Lake Ontario sign in snub to Trump",
+    "source": "Al Jazeera",
+    "sourceUrl": "https://www.aljazeera.com/video/newsfeed/2026/8/30/canada-unveils-huge-new-lake-ontario-sign-in-snub-to-trump?traffic_source=rss",
+    "date": "2026-08-30T08:44:03.000Z",
+    "snippet": "Canada unveils huge new Lake Ontario sign in snub to Trump",
+    "category": "politics"
+  },
+  {
+    "title": "Aerial video shows devastation in flood-hit Nepal",
+    "source": "Al Jazeera",
+    "sourceUrl": "https://www.aljazeera.com/video/newsfeed/2026/8/30/aerial-video-shows-devastation-in-flood-hit-nepal?traffic_source=rss",
+    "date": "2026-08-30T08:41:15.000Z",
+    "snippet": "Aerial video shows devastation in flood-hit Nepal",
+    "category": "politics"
+  },
+  {
+    "title": "‘Sea of Glass’ Review: A Widow’s Coastal Healing Retreat Turns Into a Stately, Moody Greek Tragedy",
+    "source": "Variety",
+    "sourceUrl": "https://variety.com/2026/film/news/sea-of-glass-review-1236846714",
+    "date": "2026-08-30T08:31:55.000Z",
+    "snippet": "There are Greek waves aplenty lapping at the forlorn beachside setting of “Sea of Glass,” though they’re not especially weird ones. Amid a national cinema that has become internationally recognized for perverse plotting and deadpan absurdism, writer-director Alexis Alexiou’s third feature stands out for its stark storytelling and earnest emotional intensity. There is more than […]",
+    "category": "movies"
+  },
+  {
+    "title": "Pogacar to have surgery on broken collarbone after horrific Vuelta crash",
+    "source": "Al Jazeera",
+    "sourceUrl": "https://www.aljazeera.com/sports/2026/8/30/pogacar-to-have-surgery-on-broken-collarbone-after-horrific-vuelta-crash?traffic_source=rss",
+    "date": "2026-08-30T08:19:31.000Z",
+    "snippet": "Pogacar suffered concussion and broke two bones after losing control of his bike when it hit a stone on the road.",
+    "category": "politics"
+  },
+  {
+    "title": "One person killed, five wounded in shooting at rave in Switzerland",
+    "source": "Al Jazeera",
+    "sourceUrl": "https://www.aljazeera.com/news/2026/8/30/one-person-killed-five-wounded-in-shooting-at-rave-in-switzerland?traffic_source=rss",
+    "date": "2026-08-30T08:02:35.000Z",
+    "snippet": "Police said a manhunt is under way following the incident at the annual techno party.",
+    "category": "politics"
+  },
+  {
+    "title": "Iceland rejects EU accession talks in referendum",
+    "source": "Al Jazeera",
+    "sourceUrl": "https://www.aljazeera.com/news/2026/8/30/iceland-rejects-eu-membership-plan-in-referendum?traffic_source=rss",
+    "date": "2026-08-30T07:57:18.000Z",
+    "snippet": "The 'No' camp garnered 52.8 percent of the vote while the 'Yes' camp secured 47.2 percent, RUV reports.",
+    "category": "politics"
+  },
+  {
+    "title": "Toxic waste of war on Gaza reached Israel",
+    "source": "Al Jazeera",
+    "sourceUrl": "https://www.aljazeera.com/opinions/2026/8/30/the-toxic-waste-of-the-gaza-war-has-reached-israel?traffic_source=rss",
+    "date": "2026-08-30T07:41:08.000Z",
+    "snippet": "The Israeli government cannot insulate its citizens from the impact of the ecocide it wrought on the strip.",
+    "category": "politics"
+  },
+  {
+    "title": "Barcola - the 'grasshopper' who has overcome setbacks",
+    "source": "BBC Sport",
+    "sourceUrl": "https://www.bbc.co.uk/sport/football/articles/ceqewejnpr3o?at_campaign=rss&at_medium=RSS",
+    "date": "2026-08-30T07:38:07.000Z",
+    "snippet": "As Liverpool agree a £123m deal for Bradley Barcola, BBC Sport looks at how he has ridden triumphs and setbacks to reach the top with the help of his family.",
+    "category": "sports"
+  },
+  {
+    "title": "Nepal rescuers drill into tunnels in bid to reach trapped workers",
+    "source": "Al Jazeera",
+    "sourceUrl": "https://www.aljazeera.com/news/2026/8/30/nepal-rescuers-drill-into-tunnels-in-bid-to-reach-trapped-workers?traffic_source=rss",
+    "date": "2026-08-30T07:37:44.000Z",
+    "snippet": "Nepali army joins flood rescue efforts at hydroelectric facilities where workers are believed to be trapped in tunnels.",
+    "category": "politics"
+  },
+  {
+    "title": "Kо̄ki Inо̄ Replaces Ayumu Murase as Kanon Himeno in The Idolm@ster Side M Franchise",
+    "source": "Anime News Network",
+    "sourceUrl": "https://www.animenewsnetwork.com/news/2026-08-30/k-ki-in-replaces-ayumu-murase-as-kanon-himeno-in-the-idolm@ster-side-m-franchise/.241117",
+    "date": "2026-08-30T07:31:51.000Z",
+    "snippet": "Voice actor chosen through audition",
+    "category": "anime"
+  },
+  {
+    "title": "Ethiopia’s Gobena, Kenya’s Olympic champion Jepchirchir win Sydney Marathon",
+    "source": "Al Jazeera",
+    "sourceUrl": "https://www.aljazeera.com/sports/2026/8/30/ethiopias-gobena-kenyas-olympic-champion-jepchirchir-win-sydney-marathon?traffic_source=rss",
+    "date": "2026-08-30T07:15:11.000Z",
+    "snippet": "Gobena claims first victory after finishing second last year, as Jepchirchir adds to Boston, New York and London wins.",
+    "category": "politics"
+  },
+  {
+    "title": "Antonio helps young Ghanaians chase Premier League dreams",
+    "source": "BBC Sport",
+    "sourceUrl": "https://www.bbc.co.uk/sport/football/articles/cvg0n8l87g7o?at_campaign=rss&at_medium=RSS",
+    "date": "2026-08-30T07:01:58.000Z",
+    "snippet": "Former West Ham forward Michail Antonio is helping players from a Ghana academy, who have travelled to England in the hope of turning pro.",
+    "category": "sports"
+  },
+  {
+    "title": "Flex your football brain with our daily quizzes",
+    "source": "BBC Sport",
+    "sourceUrl": "https://www.bbc.co.uk/sport/football/articles/cpd0q82zpxyo?at_campaign=rss&at_medium=RSS",
+    "date": "2026-08-30T06:22:41.000Z",
+    "snippet": "Test your ball knowledge against today's Who Am I?, Five in Five and Brainteaser.",
+    "category": "sports"
+  },
+  {
+    "title": "Heavyweight Itauma handed harsh world-title lesson",
+    "source": "BBC Sport",
+    "sourceUrl": "https://www.bbc.co.uk/sport/boxing/articles/cg7krndl84do?at_campaign=rss&at_medium=RSS",
+    "date": "2026-08-30T06:08:52.000Z",
+    "snippet": "British heavyweight Moses Itauma was taught a harsh lesson at world level - what can he learn from defeat and where does the 21-year-old go next?",
+    "category": "sports"
+  },
+  {
+    "title": "Hovland leads Tour Championship as Scheffler and McIlroy impress",
+    "source": "BBC Sport",
+    "sourceUrl": "https://www.bbc.co.uk/sport/golf/articles/ckgx9y2dr1no?at_campaign=rss&at_medium=RSS",
+    "date": "2026-08-30T05:36:01.000Z",
+    "snippet": "Norway's Viktor Hovland will head into the final round of the Tour Championship in Atlanta on Sunday with a one-stroke lead.",
+    "category": "sports"
+  },
+  {
+    "title": "GB's Fery beaten in his first ATP Tour final",
+    "source": "BBC Sport",
+    "sourceUrl": "https://www.bbc.co.uk/sport/tennis/articles/cnvl3m06j6po?at_campaign=rss&at_medium=RSS",
+    "date": "2026-08-30T05:32:40.000Z",
+    "snippet": "Arthur Fery misses out on his first ATP Tour title with a straight-set defeat by Ignacio Buse in the final of the Winston-Salem Open.",
+    "category": "sports"
+  },
+  {
+    "title": "'Unbelievable' - Stephenson & Bellew react to Hrgovic's stoppage of Itauma",
+    "source": "BBC Sport",
+    "sourceUrl": "https://www.bbc.co.uk/sport/boxing/articles/c3reqjegv8ro?at_campaign=rss&at_medium=RSS",
+    "date": "2026-08-30T05:19:59.000Z",
+    "snippet": "Shakur Stevenson and Tony Bellew believe Moses Itauma still has what it takes to become a world champion after losing to Filip Hrgovic for the IBF heavyweight title.",
+    "category": "sports"
+  },
+  {
+    "title": "How Sabalenka could lose No 1 ranking at US Open",
+    "source": "BBC Sport",
+    "sourceUrl": "https://www.bbc.co.uk/sport/tennis/articles/c4glzvq3pzno?at_campaign=rss&at_medium=RSS",
+    "date": "2026-08-30T05:06:28.000Z",
+    "snippet": "Will Aryna Sabalenka rediscover her mojo? How will Carlos Alcaraz's comeback go? And can Novak Djokovic win? It's time for the 2026 US Open singles.",
+    "category": "sports"
+  },
+  {
+    "title": "Haruhi Suzumiya x Hatsune Miku Crossover Project Is Coming",
+    "source": "Anime News Network",
+    "sourceUrl": "https://www.animenewsnetwork.com/interest/2026-08-29/haruhi-suzumiya-x-hatsune-miku-crossover-project-is-coming/.241046",
+    "date": "2026-08-30T03:00:00.000Z",
+    "snippet": "Is Haruhi inducting the legendary Vocaloid idol into the S.O.S. Brigade?",
+    "category": "anime"
+  },
+  {
+    "title": "Star Detective Precure! Anime Feature Film Unveils New Trailers, Character Visuals",
+    "source": "Crunchyroll News",
+    "sourceUrl": "https://crunchyroll.com/news/latest/2026/8/30/star-detective-precure-anime-feature-film-new-trailers-character-visuals",
+    "date": "2026-08-30T02:59:00.000Z",
+    "snippet": "The 35th Precure film hits Japanese theaters September 18",
+    "category": "anime"
+  },
+  {
+    "title": "‘Borges and Me’ Review: Gentle, Nostalgic Literary Road Movie Is More Perky Than Poetic",
+    "source": "Variety",
+    "sourceUrl": "https://variety.com/2026/film/news/borges-and-me-review-1236843724",
+    "date": "2026-08-29T21:36:42.000Z",
+    "snippet": "American author Jay Parini’s 2020 memoir “Borges and Me: An Encounter” read as a charming extension of an anecdote any writer would dine out on for the rest of their life: the tale of how Parini, as a college student in the 1970s, was somehow partnered on a winding road trip through the Scottish Highlands […]",
+    "category": "movies"
+  },
+  {
+    "title": "Chris Hansen Says Robert Pattinson’s ‘Primetime’ Performance Is ‘Overly Dramatic,’ But His Wife and Kids Think It’s a ‘Pretty Good Imitation’",
+    "source": "Variety",
+    "sourceUrl": "https://variety.com/2026/film/news/chris-hansen-robert-pattinson-primetime-overly-dramatic-1236846693",
+    "date": "2026-08-29T20:45:05.000Z",
+    "snippet": "Chris Hansen recently gave his reaction to Robert Pattinson’s impression of him in the upcoming A24 drama-thriller “Primetime,” which chronicles Hansen’s stint as host of Dateline NBC’s “To Catch a Predator.” “I mean, obviously he has practiced imitating me, and while I think it’s overly dramatic, I think there is a pretty good imitation there […]",
+    "category": "movies"
+  },
+  {
+    "title": "Man City open talks with Liverpool over Gakpo",
+    "source": "BBC Sport",
+    "sourceUrl": "https://www.bbc.co.uk/sport/football/articles/c39m0z4m2mpo?at_campaign=rss&at_medium=RSS",
+    "date": "2026-08-29T20:17:18.000Z",
+    "snippet": "The Netherlands forward has also attracted interest from Tottenham, but sources indicate Manchester City is his preferred destination if he leaves Anfield.",
+    "category": "sports"
+  },
+  {
+    "title": "Venice Film Festival Jury Press Conference ‘Probably Not’ Happening Due to Scheduling, Will Replace Event With Welcome Cocktails for Journalists",
+    "source": "Variety",
+    "sourceUrl": "https://variety.com/2026/film/news/venice-film-festival-jury-press-conference-canceled-1236846620",
+    "date": "2026-08-29T19:48:58.000Z",
+    "snippet": "The Venice Film Festival is weighing scrapping its traditional opening jury press conference on the Lido. The festival, which kicks off Sept. 2 with the world premiere of Danny Boyle’s “Ink,” told Variety that the presser will “probably not” take place, citing a scheduling conflict, and said a welcome cocktail hour with the press will […]",
+    "category": "movies"
+  },
+  {
+    "title": "Jaissle claims first Premier League win at lacklustre Spurs",
+    "source": "BBC Sport",
+    "sourceUrl": "https://www.bbc.co.uk/sport/football/videos/c1kxe87ye7ro?at_campaign=rss&at_medium=RSS",
+    "date": "2026-08-29T19:27:16.000Z",
+    "snippet": "Second-half goals from Anthony Elanga and Yoanne Wissa give manager Matthias Jaissle his first Premier League victory, as Newcastle United win 2-0 at Tottenham Hotspur.",
+    "category": "sports"
+  },
+  {
+    "title": "Iraola awaits first win as Liverpool rescue late draw against Forest",
+    "source": "BBC Sport",
+    "sourceUrl": "https://www.bbc.co.uk/sport/football/videos/cx2zw96094xo?at_campaign=rss&at_medium=RSS",
+    "date": "2026-08-29T19:12:20.000Z",
+    "snippet": "Liverpool come from behind twice to rescue a 2-2 draw against Nottingham Forest at Anfield, leaving new manager Andoni Iraola in search of his first Premier League win with the club.",
+    "category": "sports"
+  },
+  {
+    "title": "Anne Hathaway Cast Opposite Tom Cruise in Days of Thunder Sequel",
+    "source": "IGN Movies",
+    "sourceUrl": "https://www.ign.com/articles/anne-hathaway-tom-cruise-days-of-thunder-sequel-plot-release-date",
+    "date": "2026-08-29T18:35:07.000Z",
+    "snippet": "Anne Hathaway will star opposite Tom Cruise in the sequel to Days of Thunder. The Oscar-winning star of The Odyssey and The End of Oak Street will play a team owner and engineer in the sequel, due out summer 2028.",
+    "category": "movies"
+  },
+  {
+    "title": "Lawrence helps England build big lead on rain-affected day at Lord's",
+    "source": "BBC Sport",
+    "sourceUrl": "https://www.bbc.co.uk/sport/cricket/videos/c8r6jel75llo?at_campaign=rss&at_medium=RSS",
+    "date": "2026-08-29T18:11:05.000Z",
+    "snippet": "Dan Lawrence hits an unbeaten half-century as England close on 177-7 in their second innings on day three of the second Test at Lord's, with the hosts leading by 357 and seemingly closing in on a series victory, with a match to spare.",
+    "category": "sports"
+  },
+  {
+    "title": "‘New Girl’ Reunion Is Not Happening: ‘There Are No Scripts,’ Says Creator Liz Meriwether",
+    "source": "Variety",
+    "sourceUrl": "https://variety.com/2026/tv/news/new-girl-reunion-not-happening-no-scripts-liz-meriwether-britney-spears-1236846563",
+    "date": "2026-08-29T17:45:10.000Z",
+    "snippet": "“New Girl” isn’t coming back anytime soon. Despite recent claims by Max Greenfield, who played Schmidt on the hit Fox sitcom, that he has read “amazing” scripts for a reunion, show creator Liz Meriwether insists, “There are no scripts.” I caught up with Meriwether at the Season 1 finale screening of her latest hit series […]",
+    "category": "movies"
+  },
+  {
+    "title": "Everything Coming to HBO Max in September",
+    "source": "IGN Movies",
+    "sourceUrl": "https://www.ign.com/articles/whats-new-on-hbo-max-september-2026",
+    "date": "2026-08-29T17:30:00.000Z",
+    "snippet": "While the Paramount and Warner Bros. deal continues to sit in legal limbo, HBO Max is chugging along with another strong lineup of new additions in September.",
+    "category": "movies"
+  },
+  {
+    "title": "Ridley Scott Says Alien: Romulus 'Was OK,' So He's Returning to the Franchise Because It 'Needs Some Help'",
+    "source": "IGN Movies",
+    "sourceUrl": "https://www.ign.com/articles/ridley-scott-says-alien-romulus-was-ok-so-hes-returning-to-the-franchise-because-it-needs-some-help",
+    "date": "2026-08-29T17:29:26.000Z",
+    "snippet": "Director Ridley Scott said Alien: Romulus \"was OK,\" so he's returning to the Alien franchise because it \"needs some help.\"",
+    "category": "movies"
+  },
+  {
+    "title": "Director, Scriptwriter Izuru Narushima Dies at 65",
+    "source": "Anime News Network",
+    "sourceUrl": "https://www.animenewsnetwork.com/news/2026-08-29/director-scriptwriter-izuru-narushima-dies-at-65/.241105",
+    "date": "2026-08-29T17:15:00.000Z",
+    "snippet": "Award-winning Rebirth director also wrote screenplay for 2000 anime film The Boy Who Saw the Wind",
+    "category": "anime"
+  },
+  {
+    "title": "Anne Hathaway Joins Tom Cruise in ‘Days of Thunder’ Follow-Up; Paramount Sets Release Date (EXCLUSIVE)",
+    "source": "Variety",
+    "sourceUrl": "https://variety.com/2026/film/news/anne-hathaway-tom-cruise-days-of-thunder-sequel-1236839347",
+    "date": "2026-08-29T16:58:07.000Z",
+    "snippet": "Anne Hathaway will star opposite Tom Cruise in the next chapter of “Days of Thunder,” Variety has learned exclusively. Paramount Pictures has dated the feature film sequel for June 2, 2028, when Cruise and Hathaway will hit the road almost 40 years after the original Tony Scott film was released. The project will be shot […]",
+    "category": "movies"
+  },
+  {
+    "title": "Box Office: ‘The Dog Stars’ Struggles With Just $3 Million on Friday; ‘Spider-Man: Brand New Day’ to Win Weekend Again",
+    "source": "Variety",
+    "sourceUrl": "https://variety.com/2026/film/news/box-office-the-dog-stars-spider-man-brand-new-day-1236846559",
+    "date": "2026-08-29T16:20:00.000Z",
+    "snippet": "20th Century’s “The Dog Stars” and Keylight Pictures’ “Coyote vs. Acme” both debuted in theaters on Friday, but Sony and Marvel’s “Spider-Man: Brand New Day” will once again win the weekend. “Coyote vs. Acme” fared best of the two major newcomers, landing in second place with an estimated $5.2 million domestically on Friday from 3,575 […]",
+    "category": "movies"
+  },
+  {
+    "title": "Xenoblade Chronicles 2 - Nintendo Switch 2 Edition Game Review",
+    "source": "Anime News Network",
+    "sourceUrl": "https://www.animenewsnetwork.com/review/game/nintendo-switch-2/xenoblade-chronicles-2-nintendo-switch-2-edition/.240596",
+    "date": "2026-08-29T16:00:00.000Z",
+    "snippet": "The old flaws are still there, but Xenoblade Chronicles 2 can still show us a thing or three.",
+    "category": "anime"
+  },
+  {
+    "title": "Youka Nitta to Publish More Embracing Love Manga in Spring 2027",
+    "source": "Anime News Network",
+    "sourceUrl": "https://www.animenewsnetwork.com/news/2026-08-29/youka-nitta-to-publish-more-embracing-love-manga-in-spring-2027/.241108",
+    "date": "2026-08-29T15:15:00.000Z",
+    "snippet": "Author recently published 2-chapter spinoff manga in Be-Boy Gold magazine",
+    "category": "anime"
+  },
+  {
+    "title": "Bear McCreary on the Lessons Learned from the Akira and Ghost in the Shell OSTs",
+    "source": "Crunchyroll News",
+    "sourceUrl": "https://crunchyroll.com/news/interviews/2026/8/29/bear-mccreary-interview",
+    "date": "2026-08-29T15:00:00.000Z",
+    "snippet": "Anime is always on at home",
+    "category": "anime"
+  },
+  {
+    "title": "Tomb Raider King ‒ Episode 8",
+    "source": "Anime News Network",
+    "sourceUrl": "https://www.animenewsnetwork.com/review/tomb-raider-king/episode-8/.241101",
+    "date": "2026-08-29T13:30:00.000Z",
+    "snippet": "Finally, Jooheon manages to face some kind of setback in his relic dagger breaking.",
+    "category": "anime"
+  },
+  {
+    "title": "Comic, Manga Letterer Dave Lanphear Dies at 58",
+    "source": "Anime News Network",
+    "sourceUrl": "https://www.animenewsnetwork.com/news/2026-08-29/comic-manga-letterer-dave-lanphear-dies-at-58/.241104",
+    "date": "2026-08-29T13:15:00.000Z",
+    "snippet": "Prolific letterer won 2 Eisner Awards, worked on manga such as Bleach, Beyblade",
+    "category": "anime"
+  },
+  {
+    "title": "Stock Market Week Ahead: Chips, Cybersecurity And Jobs",
+    "source": "Yahoo Finance",
+    "sourceUrl": "https://www.investors.com/research/investing-action-plan/stock-market-week-ahead-chips-cybersecurity-and-jobs?src=A00220&yptr=yahoo",
+    "date": "2026-08-29T13:07:58.000Z",
+    "snippet": "Stock Market Week Ahead: Chips, Cybersecurity And Jobs",
+    "category": "finance"
+  },
+  {
+    "title": "Project Tetromino Likely to Drive Operational Efficiency and Margin Expansion for Amazon Stock",
+    "source": "Yahoo Finance",
+    "sourceUrl": "https://finance.yahoo.com/markets/stocks/articles/project-tetromino-likely-drive-operational-130002737.html",
+    "date": "2026-08-29T13:00:02.000Z",
+    "snippet": "Project Tetromino Likely to Drive Operational Efficiency and Margin Expansion for Amazon Stock",
+    "category": "finance"
+  },
+  {
+    "title": "Is Walmart Stock Underperforming the Nasdaq?",
+    "source": "Yahoo Finance",
+    "sourceUrl": "https://finance.yahoo.com/markets/stocks/articles/walmart-stock-underperforming-nasdaq-125750941.html",
+    "date": "2026-08-29T12:57:50.000Z",
+    "snippet": "Is Walmart Stock Underperforming the Nasdaq?",
+    "category": "finance"
+  },
+  {
+    "title": "The Last Time Money Fled U.S. Stocks, Emerging Markets Won for a Decade... But This Time Around, 'EM' Means Taiwan Semi and Samsung.",
+    "source": "Yahoo Finance",
+    "sourceUrl": "https://finance.yahoo.com/markets/stocks/articles/last-time-money-fled-u-124502477.html",
+    "date": "2026-08-29T12:45:02.000Z",
+    "snippet": "The Last Time Money Fled U.S. Stocks, Emerging Markets Won for a Decade... But This Time Around, 'EM' Means Taiwan Semi and Samsung.",
+    "category": "finance"
   },
   {
     "title": "Clevatess Season 2 ‒ Episode 8",
@@ -56,36 +632,132 @@
     "category": "anime"
   },
   {
-    "title": "Zimbabwe minibus carrying church members crashes, killing at least 27",
-    "source": "Al Jazeera",
-    "sourceUrl": "https://www.aljazeera.com/news/2026/8/29/zimbabwe-minibus-carrying-church-members-crashes-killing-at-least-27?traffic_source=rss",
-    "date": "2026-08-29T12:02:57.000Z",
-    "snippet": "The crash occurred when a truck overtook another vehicle and struck the minibus, police say.",
-    "category": "politics"
+    "title": "‘You could lose 25% to 35%.’ AARP warns Americans about making this 401(k) move. Here are 4 alternatives to consider",
+    "source": "Yahoo Finance",
+    "sourceUrl": "https://finance.yahoo.com/markets/articles/could-lose-25-35-aarp-121500853.html",
+    "date": "2026-08-29T12:15:00.000Z",
+    "snippet": "‘You could lose 25% to 35%.’ AARP warns Americans about making this 401(k) move. Here are 4 alternatives to consider",
+    "category": "finance"
   },
   {
-    "title": "Can “super coral” and cooling the sea, save reefs from climate change?",
-    "source": "Al Jazeera",
-    "sourceUrl": "https://www.aljazeera.com/video/101-east/2026/8/29/can-super-coral-and-cooling-the-sea-save-reefs-from-climate-change?traffic_source=rss",
+    "title": "These 7 Stocks Are Analyst Favorites For Magnificent Earnings Growth; Amazon Holds Key Level",
+    "source": "Yahoo Finance",
+    "sourceUrl": "https://www.investors.com/research/best-stocks-seven-magnificent-stocks-earnings-growth?src=A00220&yptr=yahoo",
+    "date": "2026-08-29T12:00:21.000Z",
+    "snippet": "These 7 Stocks Are Analyst Favorites For Magnificent Earnings Growth; Amazon Holds Key Level",
+    "category": "finance"
+  },
+  {
+    "title": "Dow Jones Futures: Microsoft, Titans Mask Market Weakness. Here's What To Do.",
+    "source": "Yahoo Finance",
+    "sourceUrl": "https://www.investors.com/market-trend/stock-market-today/dow-jones-futures-microsoft-titans-mask-market-weakness?src=A00220&yptr=yahoo",
+    "date": "2026-08-29T11:56:31.000Z",
+    "snippet": "Dow Jones Futures: Microsoft, Titans Mask Market Weakness. Here's What To Do.",
+    "category": "finance"
+  },
+  {
+    "title": "Microsoft, Palantir Among Stocks To Watch As Software Bounces Back",
+    "source": "Yahoo Finance",
+    "sourceUrl": "https://www.investors.com/news/microsoft-palantir-stocks-near-buy-points-software?src=A00220&yptr=yahoo",
+    "date": "2026-08-29T11:55:57.000Z",
+    "snippet": "Microsoft, Palantir Among Stocks To Watch As Software Bounces Back",
+    "category": "finance"
+  },
+  {
+    "title": "Wall Street is turning Nvidia's AI chips into a new futures market: Chart of the Day",
+    "source": "Yahoo Finance",
+    "sourceUrl": "https://finance.yahoo.com/markets/article/wall-street-is-turning-nvidias-ai-chips-into-a-new-futures-market-chart-of-the-day-115118331.html",
+    "date": "2026-08-29T11:51:18.000Z",
+    "snippet": "Wall Street is turning Nvidia's AI chips into a new futures market: Chart of the Day",
+    "category": "finance"
+  },
+  {
+    "title": "These 3 retirement rules were changed by the US government with no public fanfare — what you need to know",
+    "source": "Yahoo Finance",
+    "sourceUrl": "https://finance.yahoo.com/economy/policy/articles/3-retirement-rules-were-changed-114500503.html",
+    "date": "2026-08-29T11:45:00.000Z",
+    "snippet": "These 3 retirement rules were changed by the US government with no public fanfare — what you need to know",
+    "category": "finance"
+  },
+  {
+    "title": "Mortgage and refinance interest rates today, Saturday, August 29, 2026: Fixed rates move slightly higher into the weekend",
+    "source": "Yahoo Finance",
+    "sourceUrl": "https://finance.yahoo.com/personal-finance/mortgages/article/mortgage-and-refinance-interest-rates-today-saturday-august-29-2026-fixed-rates-move-slightly-higher-into-the-weekend-114438775.html",
+    "date": "2026-08-29T11:44:38.000Z",
+    "snippet": "Mortgage and refinance interest rates today, Saturday, August 29, 2026: Fixed rates move slightly higher into the weekend",
+    "category": "finance"
+  },
+  {
+    "title": "Would You Use a Debit Card That Offers 2% Cashback in Bitcoin? This Popular Cryptocurrency Exchange Thinks You Will.",
+    "source": "Yahoo Finance",
+    "sourceUrl": "https://finance.yahoo.com/markets/crypto/articles/debit-card-offers-2-cashback-113700569.html",
+    "date": "2026-08-29T11:37:00.000Z",
+    "snippet": "Would You Use a Debit Card That Offers 2% Cashback in Bitcoin? This Popular Cryptocurrency Exchange Thinks You Will.",
+    "category": "finance"
+  },
+  {
+    "title": "Robert Kiyosaki says he’s $1.2B in debt — and isn’t worried. He uses debt to buy this 1 asset and ‘pay no tax legally’",
+    "source": "Yahoo Finance",
+    "sourceUrl": "https://finance.yahoo.com/real-estate/articles/robert-kiyosaki-says-1-2b-113500795.html",
+    "date": "2026-08-29T11:35:00.000Z",
+    "snippet": "Robert Kiyosaki says he’s $1.2B in debt — and isn’t worried. He uses debt to buy this 1 asset and ‘pay no tax legally’",
+    "category": "finance"
+  },
+  {
+    "title": "What Are The Top Defense Stocks This Year? These 5 Leaders Will Surprise You.",
+    "source": "Yahoo Finance",
+    "sourceUrl": "https://www.investors.com/news/defense-aerospace-stock-leaders-2026-sifco-ducommun-ati-spire-astronics-space-contractors-lmt-ba-rtx?src=A00220&yptr=yahoo",
+    "date": "2026-08-29T11:30:31.000Z",
+    "snippet": "What Are The Top Defense Stocks This Year? These 5 Leaders Will Surprise You.",
+    "category": "finance"
+  },
+  {
+    "title": "A 2% advisor fee on a $300,000 portfolio could cost $220,000 over a decade — here's how to tell if you're overpaying",
+    "source": "Yahoo Finance",
+    "sourceUrl": "https://finance.yahoo.com/markets/articles/2-advisor-fee-300-000-113000644.html",
     "date": "2026-08-29T11:30:00.000Z",
-    "snippet": "101 East investigates whether Palau may hold the key to saving the world’s coral reefs from climate-driven destruction.",
-    "category": "politics"
+    "snippet": "A 2% advisor fee on a $300,000 portfolio could cost $220,000 over a decade — here's how to tell if you're overpaying",
+    "category": "finance"
   },
   {
-    "title": "Cannabis smell at US Open is distracting - Boulter",
-    "source": "BBC Sport",
-    "sourceUrl": "https://www.bbc.co.uk/sport/tennis/articles/c74exxnd7r3o?at_campaign=rss&at_medium=RSS",
-    "date": "2026-08-29T11:07:31.000Z",
-    "snippet": "British number one Katie Boulter complains that the smell of cannabis is putting her off her game at the US Open.",
-    "category": "sports"
+    "title": "Corporate earnings have been growing at a blistering pace. Here’s why that’s not likely to last.",
+    "source": "Yahoo Finance",
+    "sourceUrl": "https://finance.yahoo.com/markets/stocks/articles/corporate-earnings-growing-blistering-pace-113000528.html",
+    "date": "2026-08-29T11:30:00.000Z",
+    "snippet": "Corporate earnings have been growing at a blistering pace. Here’s why that’s not likely to last.",
+    "category": "finance"
   },
   {
-    "title": "Liverpool strike deal to sign PSG’s Barcola for up to $166m: Reports",
-    "source": "Al Jazeera",
-    "sourceUrl": "https://www.aljazeera.com/sports/2026/8/29/liverpool-strike-deal-to-sign-psgs-barcola-for-up-to-166m-reports?traffic_source=rss",
-    "date": "2026-08-29T10:49:31.000Z",
-    "snippet": "The 23-year-old French forward would bolster new boss Andoni Iraola's squad after the departure of Mohamed Salah.",
-    "category": "politics"
+    "title": "Down 35% From Its High, Is Sandisk Stock a Screaming Bargain in September?",
+    "source": "Yahoo Finance",
+    "sourceUrl": "https://finance.yahoo.com/markets/stocks/articles/down-35-high-sandisk-stock-112500118.html",
+    "date": "2026-08-29T11:25:00.000Z",
+    "snippet": "Down 35% From Its High, Is Sandisk Stock a Screaming Bargain in September?",
+    "category": "finance"
+  },
+  {
+    "title": "Block Director Anthony Eisen Sells 18,000 Shares for $1.5 Million",
+    "source": "Yahoo Finance",
+    "sourceUrl": "https://finance.yahoo.com/markets/stocks/articles/block-director-anthony-eisen-sells-112003398.html",
+    "date": "2026-08-29T11:20:03.000Z",
+    "snippet": "Block Director Anthony Eisen Sells 18,000 Shares for $1.5 Million",
+    "category": "finance"
+  },
+  {
+    "title": "Vanguard vs. Schwab: These International ETFs Are AI Bets in Disguise",
+    "source": "Yahoo Finance",
+    "sourceUrl": "https://finance.yahoo.com/markets/stocks/articles/vanguard-vs-schwab-international-etfs-112001773.html",
+    "date": "2026-08-29T11:20:01.000Z",
+    "snippet": "Vanguard vs. Schwab: These International ETFs Are AI Bets in Disguise",
+    "category": "finance"
+  },
+  {
+    "title": "Peter Schiff says Trump’s ‘numbing the pain’ of America’s $40T debt problem — protect your retirement before crisis hits",
+    "source": "Yahoo Finance",
+    "sourceUrl": "https://finance.yahoo.com/economy/policy/articles/peter-schiff-says-trump-numbing-111500280.html",
+    "date": "2026-08-29T11:15:00.000Z",
+    "snippet": "Peter Schiff says Trump’s ‘numbing the pain’ of America’s $40T debt problem — protect your retirement before crisis hits",
+    "category": "finance"
   },
   {
     "title": "Pokémon TCG Pocket Introduces Dual-Typing in October 2026 Set",
@@ -96,44 +768,36 @@
     "category": "anime"
   },
   {
-    "title": "Russian attack on warehouse near Ukraine’s Kyiv kills at least 37",
-    "source": "Al Jazeera",
-    "sourceUrl": "https://www.aljazeera.com/news/2026/8/29/russian-attack-on-warehouse-near-ukraines-kyiv-kills-at-least-27?traffic_source=rss",
-    "date": "2026-08-29T10:36:11.000Z",
-    "snippet": "Ukraine's President Zelenskyy says warehouse was struck, 'followed by a detonation', causing a major fire.",
-    "category": "politics"
+    "title": "A stolen wallet gives thieves access to your identity and finances — here's what to do before the damage spreads",
+    "source": "Yahoo Finance",
+    "sourceUrl": "https://finance.yahoo.com/markets/articles/stolen-wallet-gives-thieves-access-104500862.html",
+    "date": "2026-08-29T10:45:00.000Z",
+    "snippet": "A stolen wallet gives thieves access to your identity and finances — here's what to do before the damage spreads",
+    "category": "finance"
   },
   {
-    "title": "Far-right commentator Milo Yiannopoulos detained by ICE",
-    "source": "Al Jazeera",
-    "sourceUrl": "https://www.aljazeera.com/video/newsfeed/2026/8/29/far-right-commentator-milo-yiannopoulos-detained-by-ice?traffic_source=rss",
-    "date": "2026-08-29T10:10:23.000Z",
-    "snippet": "Far-right commentator Milo Yiannopoulos detained by ICE",
-    "category": "politics"
+    "title": "Bill Gates, Jeff Bezos, Mark Zuckerberg are piling into critical $4.3T US asset — and pricing out Americans. Get in now?",
+    "source": "Yahoo Finance",
+    "sourceUrl": "https://finance.yahoo.com/real-estate/articles/bill-gates-jeff-bezos-mark-101500828.html",
+    "date": "2026-08-29T10:15:00.000Z",
+    "snippet": "Bill Gates, Jeff Bezos, Mark Zuckerberg are piling into critical $4.3T US asset — and pricing out Americans. Get in now?",
+    "category": "finance"
   },
   {
-    "title": "Iran’s leaders acknowledge economic toll of war, pledge diplomacy, defence",
-    "source": "Al Jazeera",
-    "sourceUrl": "https://www.aljazeera.com/news/2026/8/29/irans-leaders-acknowledge-economic-toll-of-war-pledge-diplomacy-defence?traffic_source=rss",
-    "date": "2026-08-29T10:09:26.000Z",
-    "snippet": "Iran's president said sanctions and the US naval blockade had caused exports and imports to slump by nearly 35 percent.",
-    "category": "politics"
+    "title": "Best CD rates today, Saturday, August 29, 2026: Lock in up to 4.30% APY with a 16- or 18-month CD",
+    "source": "Yahoo Finance",
+    "sourceUrl": "https://finance.yahoo.com/personal-finance/banking/article/best-cd-rates-today-saturday-august-29-2026-lock-in-up-to-430-apy-with-a-16--or-18-month-cd-100000220.html",
+    "date": "2026-08-29T10:00:00.000Z",
+    "snippet": "Best CD rates today, Saturday, August 29, 2026: Lock in up to 4.30% APY with a 16- or 18-month CD",
+    "category": "finance"
   },
   {
-    "title": "Slow start makes me want to stay - Norris extends McLaren deal to 2030",
-    "source": "BBC Sport",
-    "sourceUrl": "https://www.bbc.co.uk/sport/formula1/articles/cj06j11ej4lo?at_campaign=rss&at_medium=RSS",
-    "date": "2026-08-29T09:52:52.000Z",
-    "snippet": "In an exclusive BBC Sport interview, Lando Norris explains why he has signed a new contract that will keep him at McLaren until at least the end of 2030.",
-    "category": "sports"
-  },
-  {
-    "title": "Norway mourns King Harald as new era begins under Haakon VIII",
-    "source": "Al Jazeera",
-    "sourceUrl": "https://www.aljazeera.com/news/2026/8/29/norway-mourns-king-harald-as-new-era-begins-under-haakon-viii?traffic_source=rss",
-    "date": "2026-08-29T09:45:37.000Z",
-    "snippet": "King Harald, Europe's oldest monarch, was viewed as a reformer who embraced inclusivity.",
-    "category": "politics"
+    "title": "Retailers feel the sting as cautious consumers weigh their options",
+    "source": "Yahoo Finance",
+    "sourceUrl": "https://finance.yahoo.com/markets/article/retailers-feel-the-sting-as-cautious-consumers-weigh-their-options-100000047.html",
+    "date": "2026-08-29T10:00:00.000Z",
+    "snippet": "Retailers feel the sting as cautious consumers weigh their options",
+    "category": "finance"
   },
   {
     "title": "JUJUTSU KAISEN Season 4 Anime Reveals Super Teaser Visual",
@@ -144,44 +808,12 @@
     "category": "anime"
   },
   {
-    "title": "US revokes visa of former Iraqi minister after watchlist listing",
-    "source": "Al Jazeera",
-    "sourceUrl": "https://www.aljazeera.com/video/newsfeed/2026/8/29/us-revokes-visa-of-former-iraqi-minister-after-watchlist-listing?traffic_source=rss",
-    "date": "2026-08-29T09:05:30.000Z",
-    "snippet": "The US has revoked an award-winning former Iraqi minister’s visa after the FBI placed her on a ‘terrorism watchlist'.",
-    "category": "politics"
-  },
-  {
-    "title": "Beaugrand wins again in Weihai as Potter second",
-    "source": "BBC Sport",
-    "sourceUrl": "https://www.bbc.co.uk/sport/triathlon/articles/cyvz3y2vgq0o?at_campaign=rss&at_medium=RSS",
-    "date": "2026-08-29T08:51:38.000Z",
-    "snippet": "France's Cassandre Beaugrand earns her fourth straight win in the World Triathlon Championship Series as Britain's Beth Potter comes second in Weihai.",
-    "category": "sports"
-  },
-  {
-    "title": "Chelsea vs Brighton: Premier League – preview, team news, prediction",
-    "source": "Al Jazeera",
-    "sourceUrl": "https://www.aljazeera.com/sports/2026/8/29/chelsea-vs-brighton-premier-league-preview-team-news?traffic_source=rss",
-    "date": "2026-08-29T08:51:07.000Z",
-    "snippet": "Brighton will fancy their chances against Chelsea though, having won their last three league games against the Blues.",
-    "category": "politics"
-  },
-  {
-    "title": "LIVE: Liverpool vs Nottingham Forest – Premier League",
-    "source": "Al Jazeera",
-    "sourceUrl": "https://www.aljazeera.com/sports/liveblog/2026/8/29/live-liverpool-vs-nottingham-forest-premier-league?traffic_source=rss",
-    "date": "2026-08-29T08:33:04.000Z",
-    "snippet": "Live text updates from our commentary stream coverage as Florian Wirtz and Dominik Szoboszlai try to inspire the Reds.",
-    "category": "politics"
-  },
-  {
-    "title": "Liverpool agree £123m deal for PSG's Barcola",
-    "source": "BBC Sport",
-    "sourceUrl": "https://www.bbc.co.uk/sport/football/articles/c5ywgjnnn74o?at_campaign=rss&at_medium=RSS",
-    "date": "2026-08-29T08:03:53.000Z",
-    "snippet": "Liverpool are closing in on a deal to sign forward Bradley Barcola, which will increase doubts over Cody Gakpo's future.",
-    "category": "sports"
+    "title": "A bankruptcy attorney explains exactly when creditors can — and can't — garnish your 401(k) to collect debts",
+    "source": "Yahoo Finance",
+    "sourceUrl": "https://finance.yahoo.com/markets/options/articles/bankruptcy-attorney-explains-exactly-creditors-093000489.html",
+    "date": "2026-08-29T09:30:00.000Z",
+    "snippet": "A bankruptcy attorney explains exactly when creditors can — and can't — garnish your 401(k) to collect debts",
+    "category": "finance"
   },
   {
     "title": "Arcanadea TV Anime Reveals More Cast, January 2027 Debut in Video",
@@ -200,36 +832,12 @@
     "category": "anime"
   },
   {
-    "title": "Aston Villa sign Chelsea striker Nicolas Jackson for reported club record",
-    "source": "Al Jazeera",
-    "sourceUrl": "https://www.aljazeera.com/sports/2026/8/29/aston-villa-sign-chelsea-striker-nicolas-jackson-for-reported-club-record?traffic_source=rss",
-    "date": "2026-08-29T07:33:34.000Z",
-    "snippet": "Jackson arrives as a replacement for Ollie Watkins, whose move to Saudi Arabian side Al Hilal is being finalised.",
-    "category": "politics"
-  },
-  {
-    "title": "India and Pakistan are united in spending citizen lives like pocket change",
-    "source": "Al Jazeera",
-    "sourceUrl": "https://www.aljazeera.com/opinions/2026/8/29/india-and-pakistan-are-united-in-spending-citizen-lives-like-pocket-change?traffic_source=rss",
-    "date": "2026-08-29T07:08:23.000Z",
-    "snippet": "Recent hospital fires expose how little decades of national achievement mean when basic public safety still fails.",
-    "category": "politics"
-  },
-  {
     "title": "‘The Song of Scorpions,’ ‘Qissa’ Director Anup Singh Sets Mumbai Film ‘Lasya: The Gentle Dance’ (EXCLUSIVE)",
     "source": "Variety",
     "sourceUrl": "https://variety.com/2026/film/news/anup-singh-lasya-the-gentle-dance-mumbai-film-1236846494",
     "date": "2026-08-29T07:06:14.000Z",
     "snippet": "Anup Singh, director of “Qissa” and “The Song of Scorpions,” is directing a new short film, “Lasya: The Gentle Dance,” shot on Mumbai’s streets, produced by Mumbai-based Pretty Pictures. “The Gentle Dance” follows a father and son, beggars on Mumbai’s roadside, over the course of a day in their lives. Monsoon rains repeatedly destroy their […]",
     "category": "movies"
-  },
-  {
-    "title": "The tiny town aiming to defy odds in Bundesliga debut",
-    "source": "BBC Sport",
-    "sourceUrl": "https://www.bbc.co.uk/sport/football/articles/c70d4n1d0r9o?at_campaign=rss&at_medium=RSS",
-    "date": "2026-08-29T06:55:10.000Z",
-    "snippet": "Elversberg has no train station and a population of just 13,000, but its football team have enjoyed a meteoric rise from the regional German leagues to the Bundesliga.",
-    "category": "sports"
   },
   {
     "title": "Bleach Mirrors High Mobile Game Streams 2 New Short Videos",
@@ -240,92 +848,12 @@
     "category": "anime"
   },
   {
-    "title": "Itauma v Hrgovic - heavyweight world title fight predictions",
-    "source": "BBC Sport",
-    "sourceUrl": "https://www.bbc.co.uk/sport/boxing/articles/c5ye30735xpo?at_campaign=rss&at_medium=RSS",
-    "date": "2026-08-29T06:21:04.000Z",
-    "snippet": "Figures from the boxing world give their predictions for Saturday's heavyweight world title fight between Moses Itauma and Filip Hrgovic.",
-    "category": "sports"
-  },
-  {
-    "title": "Six months into the Iran war, a new Gulf security architecture is emerging",
-    "source": "Al Jazeera",
-    "sourceUrl": "https://www.aljazeera.com/opinions/2026/8/29/six-months-into-the-iran-war-a-new-gulf-security-architecture-is-emerging?traffic_source=rss",
-    "date": "2026-08-29T06:11:58.000Z",
-    "snippet": "Gulf states are building overlapping partnerships that complement, rather than replace, the US security role.",
-    "category": "politics"
-  },
-  {
-    "title": "Trippier praises Miley's 'big presence' as Newcastle face Tonali reunion",
-    "source": "BBC Sport",
-    "sourceUrl": "https://www.bbc.co.uk/sport/football/articles/c07ler0rxlro?at_campaign=rss&at_medium=RSS",
-    "date": "2026-08-29T06:11:10.000Z",
-    "snippet": "Newcastle midfielder Lewis Miley is backed to \"go as far as he wants\" as the 20-year-old prepares to face former team-mate Sandro Tonali at Tottenham Hotspur Stadium.",
-    "category": "sports"
-  },
-  {
-    "title": "GB's Fery into first ATP Tour final as opponent retires",
-    "source": "BBC Sport",
-    "sourceUrl": "https://www.bbc.co.uk/sport/tennis/articles/cgmr97470epo?at_campaign=rss&at_medium=RSS",
-    "date": "2026-08-29T06:03:20.000Z",
-    "snippet": "Arthur Fery is into his first ATP Tour final as opponent James Duckworth retires because of injury at the Winston-Salem Open.",
-    "category": "sports"
-  },
-  {
     "title": "PuniRunes Anime's 4th Season Reveals New Characters in Promo Video",
     "source": "Anime News Network",
     "sourceUrl": "https://www.animenewsnetwork.com/news/2026-08-29/punirunes-anime-4th-season-reveals-new-characters-in-promo-video/.241103",
     "date": "2026-08-29T05:56:08.000Z",
     "snippet": "New season debuts on October 4",
     "category": "anime"
-  },
-  {
-    "title": "The 50-year-old amateur footballer who became a viral inspiration",
-    "source": "BBC Sport",
-    "sourceUrl": "https://www.bbc.co.uk/sport/football/articles/c8d3jpyd1rno?at_campaign=rss&at_medium=RSS",
-    "date": "2026-08-29T05:30:20.000Z",
-    "snippet": "Craig Kirby thought about quitting football following the death of his son - at 50, he didn't expect to go viral documenting his final season.",
-    "category": "sports"
-  },
-  {
-    "title": "Bernie Sanders, AOC join marchers in Washington to ‘defend the vote’",
-    "source": "Al Jazeera",
-    "sourceUrl": "https://www.aljazeera.com/video/newsfeed/2026/8/29/bernie-sanders-aoc-join-marchers-in-washington-to-defend-the?traffic_source=rss",
-    "date": "2026-08-29T05:27:25.000Z",
-    "snippet": "Thousands of people marched on Washington DC, invoking Martin Luther King Jr.’s legacy on the 63rd anniversary.",
-    "category": "politics"
-  },
-  {
-    "title": "Flex your football brain with our daily quizzes",
-    "source": "BBC Sport",
-    "sourceUrl": "https://www.bbc.co.uk/sport/football/articles/c89jw4554e5o?at_campaign=rss&at_medium=RSS",
-    "date": "2026-08-29T05:18:55.000Z",
-    "snippet": "Test your ball knowledge against today's Who Am I?, Five in Five and Brainteaser.",
-    "category": "sports"
-  },
-  {
-    "title": "Iceland heads to the polls in knife-edge vote on restarting EU talks",
-    "source": "Al Jazeera",
-    "sourceUrl": "https://www.aljazeera.com/news/2026/8/29/why-is-iceland-considering-joining-the-eu?traffic_source=rss",
-    "date": "2026-08-29T05:18:46.000Z",
-    "snippet": "Amid economic and security challenges, Iceland is holding a referendum more than a decade after pausing accession talks.",
-    "category": "politics"
-  },
-  {
-    "title": "Let's be brave about being in Premier League - Coventry's Lampard",
-    "source": "BBC Sport",
-    "sourceUrl": "https://www.bbc.co.uk/sport/football/videos/c3r02929wllo?at_campaign=rss&at_medium=RSS",
-    "date": "2026-08-29T05:13:17.000Z",
-    "snippet": "Frank Lampard and Tom Grennan discuss why Coventry will be playing brave football in the Premier League this season.",
-    "category": "sports"
-  },
-  {
-    "title": "Lampard 'somewhere in the middle' of Mourinho and Ancelotti",
-    "source": "BBC Sport",
-    "sourceUrl": "https://www.bbc.co.uk/sport/football/articles/c87v04d59n3o?at_campaign=rss&at_medium=RSS",
-    "date": "2026-08-29T05:12:27.000Z",
-    "snippet": "Eight years into his own managerial career, Coventry City boss Frank Lampard cites Jose Mourinho and Carli Ancelotti as the main influences on his style.",
-    "category": "sports"
   },
   {
     "title": "Roji's Ao to Midori Boys-Love Manga Gets Live-Action Series",
@@ -352,68 +880,12 @@
     "category": "movies"
   },
   {
-    "title": "What’s in the US-Venezuela ‘biggest oil deal in world history?’",
-    "source": "Al Jazeera",
-    "sourceUrl": "https://www.aljazeera.com/video/newsfeed/2026/8/29/whats-in-the-us-venezuela-biggest-oil-deal-in-world-history?traffic_source=rss",
-    "date": "2026-08-29T04:16:01.000Z",
-    "snippet": "US President Donald Trump has claimed the US and Venezuela have reached the ‘biggest oil deal in world history’.",
-    "category": "politics"
-  },
-  {
-    "title": "‘The whole country’s grandfather:’ Norway’s King Harald V dies aged 89",
-    "source": "Al Jazeera",
-    "sourceUrl": "https://www.aljazeera.com/video/newsfeed/2026/8/29/the-whole-countrys-grandfather-norways-king-harald-v-dies-aged-89?traffic_source=rss",
-    "date": "2026-08-29T04:14:51.000Z",
-    "snippet": "Norwegians are saying goodbye to King Harald V, Europe’s oldest reigning monarch.",
-    "category": "politics"
-  },
-  {
-    "title": "Ecuador sentences ex-president Moreno to five years in jail in bribery case",
-    "source": "Al Jazeera",
-    "sourceUrl": "https://www.aljazeera.com/news/2026/8/29/ecuador-sentences-ex-president-moreno-to-five-years-in-jail-in-bribery-case?traffic_source=rss",
-    "date": "2026-08-29T03:48:25.000Z",
-    "snippet": "Lenin Moreno, 73, has also been permanently barred from holding any public office in the future.",
-    "category": "politics"
-  },
-  {
-    "title": "Nepal and China resume flood rescue as death toll surpasses 600",
-    "source": "Al Jazeera",
-    "sourceUrl": "https://www.aljazeera.com/news/2026/8/29/nepal-and-china-resume-flood-rescue-as-death-toll-nears-600?traffic_source=rss",
-    "date": "2026-08-29T03:35:58.000Z",
-    "snippet": "Rescue operations have resumed after a brief pause, but experts caution of danger from a newly formed lake.",
-    "category": "politics"
-  },
-  {
-    "title": "Guinea-Bissau votes on a stronger presidency: What’s at stake?",
-    "source": "Al Jazeera",
-    "sourceUrl": "https://www.aljazeera.com/news/2026/8/29/guinea-bissau-votes-on-a-stronger-presidency-whats-at-stake?traffic_source=rss",
-    "date": "2026-08-29T02:38:27.000Z",
-    "snippet": "The proposed constitution would give the president more power and reshape parliament and elections.",
-    "category": "politics"
-  },
-  {
-    "title": "Trump announces ‘biggest oil deal in world history’ with Venezuela",
-    "source": "Al Jazeera",
-    "sourceUrl": "https://www.aljazeera.com/news/2026/8/29/trump-announces-biggest-oil-deal-in-world-history-with-venezuela?traffic_source=rss",
-    "date": "2026-08-29T02:32:51.000Z",
-    "snippet": "US president says deal secures majority control of more than 65 billion barrels of proven oil reserves in Venezuela.",
-    "category": "politics"
-  },
-  {
     "title": "U.S. appeals court rules against prediction markets, sets up likely fight at Supreme Court",
     "source": "CNBC Markets",
     "sourceUrl": "https://www.cnbc.com/2026/08/28/appeals-court-rules-against-prediction-markets-tees-up-scotus-fight.html",
     "date": "2026-08-29T02:23:52.000Z",
     "snippet": "The 9th U.S. Circuit Court of Appeals ruled that sports-related event contracts are not swaps, contradicting a 3rd Circuit ruling from April.",
     "category": "share-market"
-  },
-  {
-    "title": "Tuareg rebels free more Malian soldiers in prisoner swap, sources say",
-    "source": "Al Jazeera",
-    "sourceUrl": "https://www.aljazeera.com/news/2026/8/29/tuareg-rebels-free-more-malian-soldiers-in-prisoner-swap-sources-say?traffic_source=rss",
-    "date": "2026-08-29T01:50:03.000Z",
-    "snippet": "Tuareg rebels have freed about 60 Malian soldiers in exchange for one of their own leaders, security sources said.",
-    "category": "politics"
   },
   {
     "title": "FictionJunction Releases Puella Magi Madoka Magica -Walpurgisnacht Rising- Anime Film Theme Song Music Video",
@@ -432,14 +904,6 @@
     "category": "anime"
   },
   {
-    "title": "California Lawmakers Settle on Partial Film Carveout From Tax Credit Cap",
-    "source": "Variety",
-    "sourceUrl": "https://variety.com/2026/film/news/california-partial-film-carveout-tax-credit-cap-1236845354",
-    "date": "2026-08-29T00:32:51.000Z",
-    "snippet": "California lawmakers have agreed on a partial carveout for the film and TV industry from a state cap on tax credits. The bill, AB 186, was unveiled on Friday evening. It addresses concerns raised in June by the Motion Picture Association and a coalition of entertainment unions, who argued that the cap threatened to undermine […]",
-    "category": "movies"
-  },
-  {
     "title": "Zach Cregger's Resident Evil on Track to Have Biggest Opening Weekend of Any RE Movie in History",
     "source": "IGN Movies",
     "sourceUrl": "https://www.ign.com/articles/zach-creggers-resident-evil-on-track-to-have-biggest-opening-weekend-of-any-re-movie-in-history",
@@ -448,28 +912,12 @@
     "category": "movies"
   },
   {
-    "title": "What’s Coming to Disney+ in September 2026",
-    "source": "Variety",
-    "sourceUrl": "https://variety.com/feature/whats-on-disney-plus-new-shows-movies-1203517920",
-    "date": "2026-08-28T23:20:00.000Z",
-    "snippet": "It’s officially fall at Disney+, which is entering the month of September with a lineup of beloved spooky classics and all things football. “Coraline,” “ParaNorman” and “Jennifer’s Body” are among the titles kicking off the fall season on the streaming platform and Hulu, which will also see the season premieres of familiar favorites like “Chad […]",
+    "title": "The Founders of Hooters Are Making a Buddy-Comedy Movie About the Restaurant Chain's Origin Story",
+    "source": "IGN Movies",
+    "sourceUrl": "https://www.ign.com/articles/the-founders-of-hooters-are-making-a-buddy-comedy-movie-about-the-restaurant-chains-origin-story",
+    "date": "2026-08-28T23:00:13.000Z",
+    "snippet": "Yep, you read that right. Hooters: The Movie is in the early stages of pre-production, and some of the chain’s original founders are directly involved.",
     "category": "movies"
-  },
-  {
-    "title": "Hovland in tie for lead at Tour Championship",
-    "source": "BBC Sport",
-    "sourceUrl": "https://www.bbc.co.uk/sport/golf/articles/c20lnlpx714o?at_campaign=rss&at_medium=RSS",
-    "date": "2026-08-28T23:09:36.000Z",
-    "snippet": "Norway's Viktor Hovland and American Ryan Gerard in tie for the lead at 10 under, heading into the weekend at the Tour Championship in Atlanta.",
-    "category": "sports"
-  },
-  {
-    "title": "A magician and a maverick - this could be Cherki's moment for Man City",
-    "source": "BBC Sport",
-    "sourceUrl": "https://www.bbc.co.uk/sport/football/articles/c24j5jnnr9eo?at_campaign=rss&at_medium=RSS",
-    "date": "2026-08-28T22:56:42.000Z",
-    "snippet": "After two goals and a swaggering display against Crystal Palace, Phil McNulty asks if this is Rayan Cherki's time to shine for Manchester City.",
-    "category": "sports"
   },
   {
     "title": "Gandahar Review",
@@ -480,52 +928,12 @@
     "category": "movies"
   },
   {
-    "title": "Leeds go back top with thumping win at St Helens",
-    "source": "BBC Sport",
-    "sourceUrl": "https://www.bbc.co.uk/sport/rugby-league/articles/c8r6dyk5g2eo?at_campaign=rss&at_medium=RSS",
-    "date": "2026-08-28T21:59:42.000Z",
-    "snippet": "Leeds Rhinos go back to the top of the Super League standings on points difference with a rare and comprehensive away win at St Helens.",
-    "category": "sports"
-  },
-  {
-    "title": "Haaland and Cherki fire impressive Man City to victory at Palace",
-    "source": "BBC Sport",
-    "sourceUrl": "https://www.bbc.co.uk/sport/football/videos/c8e3k3ww56no?at_campaign=rss&at_medium=RSS",
-    "date": "2026-08-28T21:30:06.000Z",
-    "snippet": "Erling Haaland and Rayan Cherki both score twice as Manchester City cruise to a 4-1 win at Crystal Palace in the Premier League.",
-    "category": "sports"
-  },
-  {
-    "title": "Hooters Restaurant Movie in the Works — Film News in Brief",
-    "source": "Variety",
-    "sourceUrl": "https://variety.com/2026/film/news/film-news-in-brief-aug-24-2026-1236841619",
-    "date": "2026-08-28T21:20:30.000Z",
-    "snippet": "First the Blackberry and Hot Cheetos got the feature film treatment, and now: “Hooters: The Movie.” Based on real-life events that took place at the restaurant, the founders of Hooters are turning their business into a movie, which is already in the works, first reported by Deadline. The official description for the film reads: “Ted […]",
-    "category": "movies"
-  },
-  {
     "title": "North American Anime, Manga Releases, August 23-29",
     "source": "Anime News Network",
     "sourceUrl": "https://www.animenewsnetwork.com/news/2026-08-28/north-american-anime-manga-releases-august-23-29/.240937",
     "date": "2026-08-28T21:00:00.000Z",
     "snippet": "Is It Wrong to Try to Pick Up Girls in a Dungeon? V, Your Name. anime; Elden Ring: Distant Tales Between, Colori Colore Creare manga ship",
     "category": "anime"
-  },
-  {
-    "title": "Arsenal & Barca monitor Rashford - Saturday's gossip",
-    "source": "BBC Sport",
-    "sourceUrl": "https://www.bbc.co.uk/sport/football/articles/cp8416ll9yvo?at_campaign=rss&at_medium=RSS",
-    "date": "2026-08-28T20:48:59.000Z",
-    "snippet": "Arsenal monitor Marcus Rashford, Chelsea eye Monaco's Lamine Camara and Valencia push for Liverpool midfielder Harvey Elliott, plus more.",
-    "category": "sports"
-  },
-  {
-    "title": "Greaves loses thriller to Cross on European debut",
-    "source": "BBC Sport",
-    "sourceUrl": "https://www.bbc.co.uk/sport/darts/articles/czjz78lwjzzo?at_campaign=rss&at_medium=RSS",
-    "date": "2026-08-28T20:35:22.000Z",
-    "snippet": "Beau Greaves narrowly loses 6-5 to Rob Cross on her European Tour debut in the Hungarian Darts Trophy.",
-    "category": "sports"
   },
   {
     "title": "Corn and wheat prices jump to highest prices in more than three years",
@@ -544,36 +952,12 @@
     "category": "anime"
   },
   {
-    "title": "'I learned from Murray' - Boulter won't make wedding ring mistake",
-    "source": "BBC Sport",
-    "sourceUrl": "https://www.bbc.co.uk/sport/tennis/articles/c20v7y3vy2do?at_campaign=rss&at_medium=RSS",
-    "date": "2026-08-28T19:55:25.000Z",
-    "snippet": "Andy Murray has long been a guiding figure for British tennis, but newly-married Katie Boulter will not be following his lead when it comes to keeping her wedding ring safe as she prepares for the US Open.",
-    "category": "sports"
-  },
-  {
-    "title": "Sarfaraz denies knowing about Pakistan threat to end tour",
-    "source": "BBC Sport",
-    "sourceUrl": "https://www.bbc.co.uk/sport/cricket/articles/c17j0y17epdo?at_campaign=rss&at_medium=RSS",
-    "date": "2026-08-28T19:38:35.000Z",
-    "snippet": "Head coach Sarfaraz Ahmed says he and his players did not know about a Pakistan Cricket Board threat to the England and Wales Cricket Board over a Sky interview with the sons of Imran Khan.",
-    "category": "sports"
-  },
-  {
     "title": "12 Game, Movie, and TV Show Trailers You Might Have Missed This Week",
     "source": "IGN Movies",
     "sourceUrl": "https://www.ign.com/articles/this-week-in-game-movie-tv-show-trailers-aug-22-aug-28",
     "date": "2026-08-28T19:14:03.000Z",
     "snippet": "This week's trailer bounty included the extended look at Grand Theft Auto 6, tons of footage from gamescom, a first look at the new Pokémon stop-motion series coming to Disney+, a new Ali G movie, and lots more.",
     "category": "movies"
-  },
-  {
-    "title": "How England are building an attack to trouble Australia",
-    "source": "BBC Sport",
-    "sourceUrl": "https://www.bbc.co.uk/sport/cricket/articles/cvgy0zdex14o?at_campaign=rss&at_medium=RSS",
-    "date": "2026-08-28T19:11:13.000Z",
-    "snippet": "Former England captain Michael Vaughan predicts England's new pace quartet will trouble Australia - so what is making them effective against Pakistan?",
-    "category": "sports"
   },
   {
     "title": "OceanVeil Reveals September 11 Simulcast Debut of Now That I Can Control Reality With A Mouse Cursor Anime; English Dub of Marika's Love Meter Malfunction",
@@ -592,22 +976,6 @@
     "category": "anime"
   },
   {
-    "title": "What’s New on Netflix in September 2026",
-    "source": "Variety",
-    "sourceUrl": "https://variety.com/feature/whats-on-netflix-movies-shows-1203517873",
-    "date": "2026-08-28T18:35:00.000Z",
-    "snippet": "Whether you’re looking to settle into September with cozy classics or start a new series, Netflix has a long list of titles joining or returning to the streamer this fall. The long-awaited “Earle Meets World” is available Sept. 4. Following Gen-Z’s ultimate It Girl, Alix Earle, the reality series shows a new side of her, […]",
-    "category": "movies"
-  },
-  {
-    "title": "England enjoy dominant day at Lord's to close in on series win",
-    "source": "BBC Sport",
-    "sourceUrl": "https://www.bbc.co.uk/sport/cricket/videos/cwyz10x20p3o?at_campaign=rss&at_medium=RSS",
-    "date": "2026-08-28T18:29:17.000Z",
-    "snippet": "England enjoy day of dominance with both bat and ball to put themselves in complete control of the second Test against Pakistan, closing day two on 81-3, giving the hosts a lead of 261 at Lord's.",
-    "category": "sports"
-  },
-  {
     "title": "Aardman Animation’s Pokémon Tales: The Misadventures of Sirfetch’d & Pichu Teaser Trailer Debuts",
     "source": "Crunchyroll News",
     "sourceUrl": "https://crunchyroll.com/news/latest/2026/8/28/aardman-animation-pokemon-tales-the-misadventures-of-sirfetchd-and-pichu-teaser-trailer",
@@ -624,38 +992,6 @@
     "category": "movies"
   },
   {
-    "title": "SCAD Savannah Film Festival Returns for 29th Year",
-    "source": "Variety",
-    "sourceUrl": "https://variety.com/2026/film/news/scad-savannah-film-festival-returns-1236846079",
-    "date": "2026-08-28T17:15:00.000Z",
-    "snippet": "SCAD Savannah Film Festival returns for its 29th year on Oct. 24 through Oct. 31. The eight-day university-led festival in Georgia will host exclusive screenings, competition films, feature films, documentaries, shorts, animated films, panel discussions and workshops. Visiting industry professionals and students of SCAD School of Film and Acting and School of Animation and Motion […]",
-    "category": "movies"
-  },
-  {
-    "title": "Dunkin' comes back to major market after 12-year absence",
-    "source": "Yahoo Finance",
-    "sourceUrl": "https://finance.yahoo.com/small-business/articles/dunkin-comes-back-major-market-161700314.html",
-    "date": "2026-08-28T16:17:00.000Z",
-    "snippet": "Dunkin' comes back to major market after 12-year absence",
-    "category": "finance"
-  },
-  {
-    "title": "Okta’s AI boom just created a new security problem",
-    "source": "Yahoo Finance",
-    "sourceUrl": "https://finance.yahoo.com/technology/ai/articles/okta-ai-boom-just-created-161700485.html",
-    "date": "2026-08-28T16:17:00.000Z",
-    "snippet": "Okta’s AI boom just created a new security problem",
-    "category": "finance"
-  },
-  {
-    "title": "Payal Kapadia, Neeraj Churi, Subhadra Mahajan Among Talent Behind SASO, IFFSA-Backed South Asian Toronto Market Projects (EXCLUSIVE)",
-    "source": "Variety",
-    "sourceUrl": "https://variety.com/2026/film/news/payal-kapadia-neeraj-churi-subhadra-mahajan-toronto-market-1236846057",
-    "date": "2026-08-28T16:15:36.000Z",
-    "snippet": "The South Asian Screen Office of Canada and IFFSA Toronto, in collaboration with Storiculture, have selected eight South Asian feature film projects for a new pathway to financiers and industry partners at the Toronto Film Festival’s inugural market, under an initiative called South Asian Screen Futures. The slate includes talent tied to recent Sundance, Cannes […]",
-    "category": "movies"
-  },
-  {
     "title": "RetroCrush Adds Several Anime Series, Films from Viz Including Naruto the Movie: Ninja Clash in the Land of Snow",
     "source": "Anime News Network",
     "sourceUrl": "https://www.animenewsnetwork.com/news/2026-08-28/retrocrush-adds-several-anime-series-films-from-viz-including-naruto-the-movie-ninja-clash-in-the-/.241080",
@@ -664,28 +1000,12 @@
     "category": "anime"
   },
   {
-    "title": "'Pakistan cleaned up!' - England take five wickets for 19 runs",
-    "source": "BBC Sport",
-    "sourceUrl": "https://www.bbc.co.uk/sport/cricket/videos/czrz7ezxzggo?at_campaign=rss&at_medium=RSS",
-    "date": "2026-08-28T16:13:41.000Z",
-    "snippet": "Ollie Robinson and Jofra Archer make light work of Pakistan's lower order as they combine to take five wickets for just 19 runs in seven overs as England bowl Pakistan out for 110 in their first innings, giving England a 180-run lead on day two of the second Test at Lord's.",
-    "category": "sports"
-  },
-  {
     "title": "Naruto to Boruto: Shinobi Striker Adds Naruto Uzumaki (Sage Mode) to Playable Roster",
     "source": "Crunchyroll News",
     "sourceUrl": "https://crunchyroll.com/news/latest/2026/8/28/naruto-to-boruto-shinobi-striker-naruto-uzumaki-sage-mode-trailer",
     "date": "2026-08-28T16:03:00.000Z",
     "snippet": "Latest character is now available through a free update",
     "category": "anime"
-  },
-  {
-    "title": "183-year-old giant tool company closes factory, lays off dozens",
-    "source": "Yahoo Finance",
-    "sourceUrl": "https://finance.yahoo.com/markets/stocks/articles/183-old-giant-tool-company-160300042.html",
-    "date": "2026-08-28T16:03:00.000Z",
-    "snippet": "183-year-old giant tool company closes factory, lays off dozens",
-    "category": "finance"
   },
   {
     "title": "Puella Magi Madoka Magica the Movie -Walpurgisnacht: Rising- Anime Film Review",
@@ -710,14 +1030,6 @@
     "date": "2026-08-28T15:50:08.000Z",
     "snippet": "Creator sooncha withdrew copyright for manga from Square Enix",
     "category": "anime"
-  },
-  {
-    "title": "Sting-Narrated Documentary About ‘The Godfather,’ ‘La Dolce Vita’ Composer Nino Rota Boarded by Global Constellation (EXCLUSIVE)",
-    "source": "Variety",
-    "sourceUrl": "https://variety.com/2026/film/news/nino-rota-global-constellation-venice-1236846027",
-    "date": "2026-08-28T15:32:56.000Z",
-    "snippet": "Vuelta’s sales and finance outfit Global Constellation has boarded international sales on “Nino: A Film About Nino Rota,” a documentary exploring the life and legacy of the Oscar-winning Italian composer, ahead of its world premiere at the Venice Film Festival, where it will screen in the Official Selection Out of Competition. Directed by Walter Fasano, […]",
-    "category": "movies"
   },
   {
     "title": "September Fed decision is now a coin flip as rate hike odds increase post Warsh",
@@ -760,43 +1072,11 @@
     "category": "anime"
   },
   {
-    "title": "Kotaro Lives Alone Author Mami Tsumura Launches New Manga",
-    "source": "Anime News Network",
-    "sourceUrl": "https://www.animenewsnetwork.com/news/2026-08-28/kotaro-lives-alone-author-mami-tsumura-launches-new-manga/.240982",
-    "date": "2026-08-28T14:15:00.000Z",
-    "snippet": "Tanosuke no Kawazanyō debuts September 11",
-    "category": "anime"
-  },
-  {
-    "title": "This Week in Games - Gamescom-ing... But Who's Buying?",
-    "source": "Anime News Network",
-    "sourceUrl": "https://www.animenewsnetwork.com/this-week-in-games/2026-08-28/gamescom-ing-but-who-buying/.240950",
-    "date": "2026-08-28T14:00:00.000Z",
-    "snippet": "Gamescom's Opening Night Live did not impress Jean-Karlo. It's a good thing we have Terranigma to look forward to!",
-    "category": "anime"
-  },
-  {
-    "title": "Smoking Behind the Supermarket with You ‒ Episode 8",
-    "source": "Anime News Network",
-    "sourceUrl": "https://www.animenewsnetwork.com/review/smoking-behind-the-supermarket-with-you/episode-8/.241084",
-    "date": "2026-08-28T13:30:00.000Z",
-    "snippet": "With every other part of this production working so well and so cohesively, I’m more than willing to forgive Supermarket Smoking ’s longstanding limited visual direction.",
-    "category": "anime"
-  },
-  {
     "title": "Fairy Princess Minky Momo Anime New OVA Casts Momo's Royal and Human Parents",
     "source": "Crunchyroll News",
     "sourceUrl": "https://crunchyroll.com/news/latest/2026/8/28/fairy-princess-minky-momo-anime-new-ova-casts-momos-royal-and-human-parents",
     "date": "2026-08-28T13:29:00.000Z",
     "snippet": "The magical girl series returns on November 13 in Japan",
-    "category": "anime"
-  },
-  {
-    "title": "Blaze of Flesh and Blood Manga Ends in September",
-    "source": "Anime News Network",
-    "sourceUrl": "https://www.animenewsnetwork.com/news/2026-08-28/blaze-of-flesh-and-blood-manga-ends-in-september/.240202",
-    "date": "2026-08-28T13:15:00.000Z",
-    "snippet": "Manga adaptation debuted in November 2024",
     "category": "anime"
   },
   {
@@ -816,28 +1096,12 @@
     "category": "anime"
   },
   {
-    "title": "There's No Age Limit to Asobi - An Interview with TAKARATOMY CEO & President Akio Tomiyama",
-    "source": "Anime News Network",
-    "sourceUrl": "https://www.animenewsnetwork.com/interview/2026-08-28/there-no-age-limit-to-asobi-an-with-takaratomy-ceo-and-president-akio-tomiyama/.240615",
-    "date": "2026-08-28T13:00:00.000Z",
-    "snippet": "Coop sits down with the CEO of TAKARATOMY to discuss the joy of play.",
-    "category": "anime"
-  },
-  {
     "title": "Colony Review",
     "source": "IGN Movies",
     "sourceUrl": "https://www.ign.com/articles/colony-movie-review",
     "date": "2026-08-28T13:00:00.000Z",
     "snippet": "Colony review: This is no Train to Busan.",
     "category": "movies"
-  },
-  {
-    "title": "I Want to Love You Till Your Dying Day ‒ Episode 8",
-    "source": "Anime News Network",
-    "sourceUrl": "https://www.animenewsnetwork.com/review/i-want-to-love-you-till-your-dying-day/episode-8/.241063",
-    "date": "2026-08-28T12:30:00.000Z",
-    "snippet": "It feels like the author is desperately trying to make sure you really feel the loss of a character instead of organically getting you attached to them.",
-    "category": "anime"
   },
   {
     "title": "Jeremy Renner Teases Hawkeye Return as Avengers: Doomsday Reshoots Reportedly Underway",
@@ -848,28 +1112,12 @@
     "category": "movies"
   },
   {
-    "title": "Magical Explorer TV Anime Reveals More Cast, October Debut, Theme Song Artist in Video",
-    "source": "Anime News Network",
-    "sourceUrl": "https://www.animenewsnetwork.com/news/2026-08-28/magical-explorer-tv-anime-reveals-more-cast-october-debut-theme-song-artist-in-video/.241073",
-    "date": "2026-08-28T12:07:43.000Z",
-    "snippet": "ASCA performs both opening, ending themes",
-    "category": "anime"
-  },
-  {
     "title": "Boorman and the Devil Review",
     "source": "IGN Movies",
     "sourceUrl": "https://www.ign.com/articles/boorman-and-the-devil-review",
     "date": "2026-08-28T12:00:00.000Z",
     "snippet": "Review: John Boorman and the Devil is a fun and engrossing look at the creation of what is considered to be one of the worst sequels ever made.",
     "category": "movies"
-  },
-  {
-    "title": "Gold prices today, Friday, August 28, 2026: Gold steady as markets prepare for Warsh speech",
-    "source": "Yahoo Finance",
-    "sourceUrl": "https://finance.yahoo.com/personal-finance/investing/article/gold-prices-today-friday-august-28-2026-gold-steady-as-markets-prepare-for-warsh-speech-115654858.html",
-    "date": "2026-08-28T11:56:54.000Z",
-    "snippet": "Gold prices today, Friday, August 28, 2026: Gold steady as markets prepare for Warsh speech",
-    "category": "finance"
   },
   {
     "title": "Jyu-Oh Mujin Dandivine Anime Reveals 8 Additional Cast Members",
@@ -880,196 +1128,12 @@
     "category": "anime"
   },
   {
-    "title": "Atelier Resleriana: Forgotten Alchemy and the Polar Night Liberator Smartphone Game Ends Service in Japan on November 25",
-    "source": "Anime News Network",
-    "sourceUrl": "https://www.animenewsnetwork.com/news/2026-08-28/atelier-resleriana-forgotten-alchemy-and-the-polar-night-liberator-smartphone-game-ends-service-in-/.241082",
-    "date": "2026-08-28T11:47:52.000Z",
-    "snippet": "Game ended service in English in March 2025",
-    "category": "anime"
-  },
-  {
-    "title": "Tim Cook's biggest hits and misses as Apple CEO",
-    "source": "Yahoo Finance",
-    "sourceUrl": "https://finance.yahoo.com/technology/article/tim-cooks-biggest-hits-and-misses-as-apple-ceo-130000601.html",
-    "date": "2026-08-28T11:47:48.000Z",
-    "snippet": "Tim Cook's biggest hits and misses as Apple CEO",
-    "category": "finance"
-  },
-  {
-    "title": "Explainer-Can Volkswagen sidestep board opposition to push through its overhaul?",
-    "source": "Yahoo Finance",
-    "sourceUrl": "https://finance.yahoo.com/markets/stocks/articles/explainer-volkswagen-sidestep-board-opposition-114559282.html",
-    "date": "2026-08-28T11:45:59.000Z",
-    "snippet": "Explainer-Can Volkswagen sidestep board opposition to push through its overhaul?",
-    "category": "finance"
-  },
-  {
     "title": "Fed Chairman Kevin Warsh delivers his key Jackson Hole speech Friday. Here's what to expect",
     "source": "CNBC Markets",
     "sourceUrl": "https://www.cnbc.com/2026/08/27/fed-chairman-kevin-warsh-delivers-his-key-jackson-hole-speech-friday.html",
     "date": "2026-08-28T11:39:47.000Z",
     "snippet": "Prior Fed chairs have used the speech as an opportunity to lay out broad policy frameworks and intentions.",
     "category": "share-market"
-  },
-  {
-    "title": "Jim Cramer Doesn’t Think Anything Was Wrong With Marvell Technology Inc. (NASDAQ: MRVL)’s Earnings",
-    "source": "Yahoo Finance",
-    "sourceUrl": "https://finance.yahoo.com/markets/stocks/articles/jim-cramer-doesn-t-think-113906575.html",
-    "date": "2026-08-28T11:39:06.000Z",
-    "snippet": "Jim Cramer Doesn’t Think Anything Was Wrong With Marvell Technology Inc. (NASDAQ: MRVL)’s Earnings",
-    "category": "finance"
-  },
-  {
-    "title": "Social Security hired a ‘special’ new employee to make big changes — and he’ll work for free. Here’s what could change",
-    "source": "Yahoo Finance",
-    "sourceUrl": "https://finance.yahoo.com/economy/policy/articles/social-security-hired-special-employee-113500660.html",
-    "date": "2026-08-28T11:35:00.000Z",
-    "snippet": "Social Security hired a ‘special’ new employee to make big changes — and he’ll work for free. Here’s what could change",
-    "category": "finance"
-  },
-  {
-    "title": "Tesla and Uber Won Robotaxi Permits—Why Citizens Kept Both Ratings Unchanged",
-    "source": "Yahoo Finance",
-    "sourceUrl": "https://finance.yahoo.com/markets/stocks/articles/tesla-uber-won-robotaxi-permits-113220799.html",
-    "date": "2026-08-28T11:32:20.000Z",
-    "snippet": "Tesla and Uber Won Robotaxi Permits—Why Citizens Kept Both Ratings Unchanged",
-    "category": "finance"
-  },
-  {
-    "title": "Seagate Stock Is Off 27%. Why It’s Time to Buy the Dip in STX for 36% Upside.",
-    "source": "Yahoo Finance",
-    "sourceUrl": "https://finance.yahoo.com/markets/stocks/articles/seagate-stock-off-27-why-113003714.html",
-    "date": "2026-08-28T11:30:03.000Z",
-    "snippet": "Seagate Stock Is Off 27%. Why It’s Time to Buy the Dip in STX for 36% Upside.",
-    "category": "finance"
-  },
-  {
-    "title": "Revolution Medicines Won FDA Approval One Month After Filing. Analysts See $11.5 Billion in Peak Sales. Is the Stock Still a Buy After Skyrocketing More Than 5X?",
-    "source": "Yahoo Finance",
-    "sourceUrl": "https://finance.yahoo.com/healthcare/articles/revolution-medicines-won-fda-approval-112701076.html",
-    "date": "2026-08-28T11:27:01.000Z",
-    "snippet": "Revolution Medicines Won FDA Approval One Month After Filing. Analysts See $11.5 Billion in Peak Sales. Is the Stock Still a Buy After Skyrocketing More Than 5X?",
-    "category": "finance"
-  },
-  {
-    "title": "Fed Chair Kevin Warsh Jackson Hole speech 2026: What to expect",
-    "source": "Yahoo Finance",
-    "sourceUrl": "https://finance.yahoo.com/economy/policy/articles/fed-chair-kevin-warsh-jackson-112633771.html",
-    "date": "2026-08-28T11:26:33.000Z",
-    "snippet": "Fed Chair Kevin Warsh Jackson Hole speech 2026: What to expect",
-    "category": "finance"
-  },
-  {
-    "title": "Nvidia Will Be The Most Profitable Company In The U.S. Next Year",
-    "source": "Yahoo Finance",
-    "sourceUrl": "https://www.investors.com/etfs-and-funds/sectors/nvidia-will-be-the-most-profitable-company-in-the-u-s-next-year?src=A00220&yptr=yahoo",
-    "date": "2026-08-28T11:18:38.000Z",
-    "snippet": "Nvidia Will Be The Most Profitable Company In The U.S. Next Year",
-    "category": "finance"
-  },
-  {
-    "title": "Bitcoin and ethereum prices today, Friday, August 28, 2026: Bitcoin moves above $81,000 before falling back",
-    "source": "Yahoo Finance",
-    "sourceUrl": "https://finance.yahoo.com/personal-finance/investing/article/bitcoin-and-ethereum-prices-today-friday-august-28-2026-bitcoin-moves-above-81000-before-falling-back-111816647.html",
-    "date": "2026-08-28T11:18:16.000Z",
-    "snippet": "Bitcoin and ethereum prices today, Friday, August 28, 2026: Bitcoin moves above $81,000 before falling back",
-    "category": "finance"
-  },
-  {
-    "title": "Palo Alto Networks Gets a $400 Target — But Earnings Need to Prove the AI Story",
-    "source": "Yahoo Finance",
-    "sourceUrl": "https://finance.yahoo.com/technology/ai/articles/palo-alto-networks-gets-400-111553249.html",
-    "date": "2026-08-28T11:15:53.000Z",
-    "snippet": "Palo Alto Networks Gets a $400 Target — But Earnings Need to Prove the AI Story",
-    "category": "finance"
-  },
-  {
-    "title": "Betting retirement on the big game? Gen Z investors are gambling on sports as a financial plan",
-    "source": "Yahoo Finance",
-    "sourceUrl": "https://finance.yahoo.com/markets/stocks/articles/betting-retirement-big-game-gen-111500387.html",
-    "date": "2026-08-28T11:15:00.000Z",
-    "snippet": "Betting retirement on the big game? Gen Z investors are gambling on sports as a financial plan",
-    "category": "finance"
-  },
-  {
-    "title": "Broadcom Stock: Is AVGO Underperforming the Technology Sector?",
-    "source": "Yahoo Finance",
-    "sourceUrl": "https://finance.yahoo.com/markets/stocks/articles/broadcom-stock-avgo-underperforming-technology-111006670.html",
-    "date": "2026-08-28T11:10:06.000Z",
-    "snippet": "Broadcom Stock: Is AVGO Underperforming the Technology Sector?",
-    "category": "finance"
-  },
-  {
-    "title": "India's July industrial output growth slows to 6.7% y/y as mining contracts",
-    "source": "Yahoo Finance",
-    "sourceUrl": "https://finance.yahoo.com/news/indias-july-industrial-output-grows-103813174.html",
-    "date": "2026-08-28T11:08:19.000Z",
-    "snippet": "India's July industrial output growth slows to 6.7% y/y as mining contracts",
-    "category": "finance"
-  },
-  {
-    "title": "Jyuо̄ Mujin Dandivine Original TV Anime Reveals 8 More Cast Members, October 7 Debut",
-    "source": "Anime News Network",
-    "sourceUrl": "https://www.animenewsnetwork.com/news/2026-08-28/jyu-mujin-dandivine-original-tv-anime-reveals-8-more-cast-members-october-7-debut/.241078",
-    "date": "2026-08-28T11:02:59.000Z",
-    "snippet": "Nao Tōyama, Ryōtarō Okiayu, Katsuyuki Konishi, more join cast",
-    "category": "anime"
-  },
-  {
-    "title": "Salesforce is surging again — but the best software setups may be elsewhere: One Big Investment Idea",
-    "source": "Yahoo Finance",
-    "sourceUrl": "https://finance.yahoo.com/markets/article/salesforce-is-surging-again--but-the-best-software-setups-may-be-elsewhere-one-big-investment-idea-110000145.html",
-    "date": "2026-08-28T11:00:00.000Z",
-    "snippet": "Salesforce is surging again — but the best software setups may be elsewhere: One Big Investment Idea",
-    "category": "finance"
-  },
-  {
-    "title": "Japan spent record $96.5 billion to support yen over past month, ministry data shows",
-    "source": "Yahoo Finance",
-    "sourceUrl": "https://finance.yahoo.com/markets/currencies/articles/japan-spent-record-96-5-104742635.html",
-    "date": "2026-08-28T10:47:42.000Z",
-    "snippet": "Japan spent record $96.5 billion to support yen over past month, ministry data shows",
-    "category": "finance"
-  },
-  {
-    "title": "Walmart, Goldman Sachs, JD Power issue red alert over US consumers — and your nest egg takes the biggest hit",
-    "source": "Yahoo Finance",
-    "sourceUrl": "https://finance.yahoo.com/economy/articles/walmart-goldman-sachs-jd-power-104500597.html",
-    "date": "2026-08-28T10:45:00.000Z",
-    "snippet": "Walmart, Goldman Sachs, JD Power issue red alert over US consumers — and your nest egg takes the biggest hit",
-    "category": "finance"
-  },
-  {
-    "title": "Is Eli Lilly Stock Outperforming the Dow?",
-    "source": "Yahoo Finance",
-    "sourceUrl": "https://finance.yahoo.com/markets/stocks/articles/eli-lilly-stock-outperforming-dow-103527018.html",
-    "date": "2026-08-28T10:35:27.000Z",
-    "snippet": "Is Eli Lilly Stock Outperforming the Dow?",
-    "category": "finance"
-  },
-  {
-    "title": "Morning Bid: Six months and counting",
-    "source": "Yahoo Finance",
-    "sourceUrl": "https://finance.yahoo.com/news/morning-bid-six-months-counting-103402976.html",
-    "date": "2026-08-28T10:34:02.000Z",
-    "snippet": "Morning Bid: Six months and counting",
-    "category": "finance"
-  },
-  {
-    "title": "S&P Futures Tread Water Ahead of Warsh’s Jackson Hole Speech; Marvell Sinks After Earnings",
-    "source": "Yahoo Finance",
-    "sourceUrl": "https://finance.yahoo.com/markets/stocks/articles/p-futures-tread-water-ahead-103253116.html",
-    "date": "2026-08-28T10:32:53.000Z",
-    "snippet": "S&P Futures Tread Water Ahead of Warsh’s Jackson Hole Speech; Marvell Sinks After Earnings",
-    "category": "finance"
-  },
-  {
-    "title": "Kane on Ballon d'Or hopes",
-    "source": "BBC Sport",
-    "sourceUrl": "https://www.bbc.co.uk/sport/football/videos/czjz9g977p0o?at_campaign=rss&at_medium=RSS",
-    "date": "2026-08-28T05:05:59.000Z",
-    "snippet": "Harry Kane discusses potential Ballon d'Or hopes after becoming the first Englishman to win Germany's footballer of the year award for the 2025-26 season.",
-    "category": "sports"
   },
   {
     "title": "Yu-Gi-Oh! Manga Original Artwork Exhibition Unveils Key Visual, Schedule",
@@ -1160,14 +1224,6 @@
     "category": "movies"
   },
   {
-    "title": "My Crush's Crush Anime Adaptation Announced",
-    "source": "Crunchyroll News",
-    "sourceUrl": "https://crunchyroll.com/news/latest/2026/8/27/my-crushs-crush-anime-adaptation-announced",
-    "date": "2026-08-27T15:42:00.000Z",
-    "snippet": "The rom-com series is penned by the creator of GAMERS!",
-    "category": "anime"
-  },
-  {
     "title": "Peter Cullen, Optimus Prime in Transformers, Dies at 85",
     "source": "IGN Movies",
     "sourceUrl": "https://www.ign.com/articles/peter-cullen-optimus-prime-in-transformers-dies-at-85",
@@ -1176,36 +1232,12 @@
     "category": "movies"
   },
   {
-    "title": "Beginner Camping Tips for Fans of Solo Camping for Two",
-    "source": "Crunchyroll News",
-    "sourceUrl": "https://crunchyroll.com/news/guides/2026/8/27/solo-camping-for-two-beginner-camping-tips",
-    "date": "2026-08-27T15:00:00.000Z",
-    "snippet": "Time to set up your tent!",
-    "category": "anime"
-  },
-  {
     "title": "Kansas City Fed's Schmid says inflation 'stubborn' and 'sticky,' policy rate not restrictive",
     "source": "CNBC Markets",
     "sourceUrl": "https://www.cnbc.com/2026/08/27/kansas-city-feds-schmid-says-inflation-stubborn-and-sticky-policy-rate-not-restrictive.html",
     "date": "2026-08-27T14:11:29.000Z",
     "snippet": "The policymaker stopped just short of calling for an interest rate hike.",
     "category": "share-market"
-  },
-  {
-    "title": "The Ramparts of Ice Season 2 Anime Shares New Trailer and Key Visual",
-    "source": "Crunchyroll News",
-    "sourceUrl": "https://crunchyroll.com/news/latest/2026/8/27/the-ramparts-of-ice-season-2-anime-trailer-key-visual",
-    "date": "2026-08-27T13:26:00.000Z",
-    "snippet": "The series returns October 1",
-    "category": "anime"
-  },
-  {
-    "title": "We Are Aliens Anime Film Shares Heisei Era Trailer",
-    "source": "Crunchyroll News",
-    "sourceUrl": "https://crunchyroll.com/news/latest/2026/8/27/we-are-aliens-anime-film-heisei-era-trailer",
-    "date": "2026-08-27T12:59:00.000Z",
-    "snippet": "Japanese / French co-production begins theatrical run on September 25",
-    "category": "anime"
   },
   {
     "title": "Avengers: Endgame Encore Disney+ Release Looks Likely, Fans Say",
@@ -1264,52 +1296,12 @@
     "category": "movies"
   },
   {
-    "title": "Fans Mourn Tim Curry After Legendary Actor Dies at 80 Years Old",
-    "source": "IGN Movies",
-    "sourceUrl": "https://www.ign.com/articles/fans-mourn-tim-curry-after-legendary-actor-dies-at-80-years-old",
-    "date": "2026-08-26T17:40:14.000Z",
-    "snippet": "Prolific British actor Tim Curry has died aged 80, leaving behind a storied legacy that includes iconic roles in productions like The Rocky Horror Picture Show, Muppet Treasure Island, Home Alone 2, and many more.",
-    "category": "movies"
-  },
-  {
-    "title": "Rupert Grint Returning as Ron Weasley for Harry Potter and The Cursed Child on Broadway",
-    "source": "IGN Movies",
-    "sourceUrl": "https://www.ign.com/articles/rupert-grint-returning-as-ron-weasley-for-harry-potter-and-the-cursed-child-on-broadway",
-    "date": "2026-08-26T14:49:15.000Z",
-    "snippet": "Harry Potter movie star Rupert Grint will reprise his character of Ron Weasley next year, as he joins the Broadway cast of Harry Potter and the Cursed Child.",
-    "category": "movies"
-  },
-  {
     "title": "China's short-drama producers flood the market with cheap bets — and let audiences pick the winners",
     "source": "CNBC Markets",
     "sourceUrl": "https://www.cnbc.com/2026/08/26/short-drama-china-production-ai-entertainment-economics.html",
     "date": "2026-08-26T13:20:34.000Z",
     "snippet": "The short-drama model offers an alternative to traditional entertainment, but rising distribution costs and audience-retention challenges remain.",
     "category": "share-market"
-  },
-  {
-    "title": "Marvel Fans Say Avengers: Endgame Encore's Extra 4 Minutes Risk Being 'Really Oversold' After Directors Insist Movie Is 'Required Viewing for Following the Story in Doomsday'",
-    "source": "IGN Movies",
-    "sourceUrl": "https://www.ign.com/articles/marvel-fans-say-avengers-endgame-encores-extra-4-minutes-are-being-really-oversold-after-directors-insist-movie-is-required-viewing-for-following-the-story-in-doomsday",
-    "date": "2026-08-26T11:18:47.000Z",
-    "snippet": "We all love Avengers: Endgame, but some Marvel fans are now suggesting that the four minutes of footage added to its upcoming Encore re-release risk being oversold by its directors.",
-    "category": "movies"
-  },
-  {
-    "title": "Toxic: A Fairy Tale for Grown-Ups Review",
-    "source": "IGN Movies",
-    "sourceUrl": "https://www.ign.com/articles/toxic-a-fairy-tale-for-grown-ups-review",
-    "date": "2026-08-26T02:00:00.000Z",
-    "snippet": "Toxic: A Fairy Tale for Grown-Ups review: A sloppy gangster epic finds Indian megastar Yash in the mood for blood.",
-    "category": "movies"
-  },
-  {
-    "title": "The Dog Stars Review",
-    "source": "IGN Movies",
-    "sourceUrl": "https://www.ign.com/articles/the-dog-stars-review",
-    "date": "2026-08-26T00:00:00.000Z",
-    "snippet": "Ridley Scott's post-apocalyptic survivor drama keeps its feelings about grieving in a triple layer of emotional bubble wrap.",
-    "category": "movies"
   },
   {
     "title": "China needs U.S. dollars but is building a hedge against Washington’s sanctions",
