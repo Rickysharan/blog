@@ -25,12 +25,12 @@ security definer
 set search_path = ''
 as $$
   select e.submission_id, e.submission_version,
-    round((1 - (e.embedding <=> p_embedding))::numeric, 6) as similarity,
+    round((1 - (e.embedding operator(extensions.<=>) p_embedding))::numeric, 6) as similarity,
     e.created_at
   from app_private.submission_embeddings e
   where e.category = p_category
     and e.created_at >= p_now - interval '48 hours'
-  order by e.embedding <=> p_embedding
+  order by e.embedding operator(extensions.<=>) p_embedding
   limit least(greatest(p_limit, 1), 10);
 $$;
 
