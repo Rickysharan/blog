@@ -1,0 +1,42 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`renderPublicationMdx > renders every allowed editor node and mark into canonical parsed MDX 1`] = `
+"---
+title: 'A title: with # YAML delimiters'
+slug: carefully-sourced-contributor-update
+date: '2026-08-27'
+category: finance
+tags:
+  - markets
+  - 'policy: global'
+author: 'Ada: Contributor #1'
+excerpt: 'A concise: explanation # with YAML delimiters.'
+coverImage: >-
+  https://project-id.supabase.co/storage/v1/object/public/published-images/10000000-0000-4000-8000-000000000001.webp
+readTime: 6
+sourceName: 'Example: [Research] #1'
+sourceUrl: 'https://example.com/report?edition=global'
+region: europe
+language: en-GB
+contributorId: 10000000-0000-4000-8000-000000000003
+contributorName: 'Ada: Contributor #1'
+submissionId: 10000000-0000-4000-8000-000000000002
+publicationId: 10000000-0000-4000-8000-000000000001
+---
+By Ada: Contributor #1
+
+## A heading
+
+**Bold** and _italic_[ linked](https://example.com/guide)\\u0020\\u0020\\nEscaped \\*markdown\\* \\[label\\]
+
+1. First
+   - Nested
+2. Second
+
+> ### Quoted
+>
+> A quote.
+
+Source: [Example: \\[Research\\] #1](https://example.com/report?edition=global)
+"
+`;

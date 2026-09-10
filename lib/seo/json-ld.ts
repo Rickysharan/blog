@@ -22,6 +22,7 @@ export function buildNewsArticleJsonLd(
     url: canonical,
     image: [new URL(article.coverImage, `${site.url}/`).toString()],
     articleSection: article.category,
+    inLanguage: article.language ?? "en",
     keywords: article.tags,
     isBasedOn: article.sourceUrl,
     author: {

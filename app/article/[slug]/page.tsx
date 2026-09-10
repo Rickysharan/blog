@@ -7,6 +7,7 @@ import { cache } from "react";
 import { ArticleBody } from "@/components/articles/article-body";
 import { ArticleMeta } from "@/components/articles/article-meta";
 import { CategoryLabel } from "@/components/articles/category-label";
+import { ContributorAttribution } from "@/components/articles/contributor-attribution";
 import { RelatedArticles } from "@/components/articles/related-articles";
 import { ShareActions } from "@/components/articles/share-actions";
 import { SourceAttribution } from "@/components/articles/source-attribution";
@@ -42,6 +43,7 @@ export async function generateMetadata({
     title: article.title,
     description: article.excerpt,
     alternates: { canonical },
+    other: { "content-language": article.language ?? "en" },
     authors: [{ name: article.author }],
     openGraph: {
       type: "article",
@@ -82,7 +84,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
         dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
         type="application/ld+json"
       />
-      <article>
+      <article data-publication-id={article.publicationId}>
         <header className="grid gap-7 border-b-2 border-ink pb-9 lg:grid-cols-[minmax(0,1.4fr)_minmax(18rem,0.6fr)] lg:items-end">
           <div>
             <p className="mb-5 text-xs font-black uppercase tracking-[0.2em] text-muted">
@@ -104,6 +106,14 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                 readTime={article.readTime}
               />
             </div>
+            {article.contributorName && article.region ? (
+              <ContributorAttribution
+                category={article.category}
+                contributorName={article.contributorName}
+                language={article.language ?? "en"}
+                region={article.region}
+              />
+            ) : null}
             <ShareActions
               title={article.title}
               url={`${SITE_CONFIG.url}/article/${article.slug}`}

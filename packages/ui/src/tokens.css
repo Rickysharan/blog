@@ -1,0 +1,15 @@
+:root {
+  --omnilede-ink: #172033;
+  --omnilede-paper: #fffdf8;
+  --omnilede-divider: #d8dde8;
+  --omnilede-electric-blue: #185adb;
+  --omnilede-signal-red: #c62828;
+  --omnilede-focus-ring: 0 0 0 3px rgb(24 90 219 / 45%);
+  --omnilede-space-1: 0.25rem;
+  --omnilede-space-2: 0.5rem;
+  --omnilede-space-3: 0.75rem;
+  --omnilede-space-4: 1rem;
+  --omnilede-space-6: 1.5rem;
+  --omnilede-font-sans: Inter, ui-sans-serif, system-ui, sans-serif;
+  --omnilede-font-serif: Georgia, Cambria, "Times New Roman", serif;
+}

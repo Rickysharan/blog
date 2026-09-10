@@ -1,0 +1,9 @@
+"use client";
+
+import { FormEvent, useState } from "react";
+
+export function ContactForm() {
+  const [category, setCategory] = useState("general"); const [email, setEmail] = useState(""); const [message, setMessage] = useState(""); const [status, setStatus] = useState(""); const [error, setError] = useState(""); const [pending, setPending] = useState(false);
+  async function submit(event: FormEvent<HTMLFormElement>) { event.preventDefault(); setPending(true); setStatus(""); setError(""); try { const response = await fetch("/api/contact", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ category, email, message, website: "" }) }); const body = (await response.json()) as { error?: string; message?: string }; if (!response.ok) setError(body.error ?? "Unable to send"); else setStatus(body.message ?? "Queued"); } catch { setError("Network unavailable"); } finally { setPending(false); } }
+  return <form className="settings-card" onSubmit={submit}><label>Enquiry type<select value={category} onChange={(event) => setCategory(event.target.value)}><option value="general">General</option><option value="support">Support</option><option value="advertising">Advertising</option><option value="partnership">Partnership</option></select></label><label>Email<input type="email" required value={email} onChange={(event) => setEmail(event.target.value)} /></label><label>Message<textarea required minLength={10} maxLength={10_000} rows={7} value={message} onChange={(event) => setMessage(event.target.value)} /></label><label className="honeypot">Website<input tabIndex={-1} autoComplete="off" value="" readOnly /></label>{error ? <p className="form-error" role="alert">{error}</p> : null}{status ? <p className="form-success" role="status">{status}</p> : null}<button className="button button-primary" type="submit" disabled={pending}>{pending ? "Sending…" : "Send enquiry"}</button></form>;
+}

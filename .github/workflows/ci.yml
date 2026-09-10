@@ -1,0 +1,86 @@
+name: OmniLede CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: omnilede-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ordered-validation:
+    name: Contracts, builds, integration, then browser checks
+    runs-on: ubuntu-latest
+    env:
+      # Synthetic, unreachable values exercise validation and rendering only.
+      # PR CI never receives production GitHub, Supabase, email, AI, or deployment secrets.
+      NEXT_PUBLIC_SUPABASE_URL: https://127.0.0.1:9
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci
+      NEXT_PUBLIC_BLOG_URL: https://blog.example
+      NEXT_PUBLIC_CONTRIBUTOR_URL: http://127.0.0.1:3200
+      SUPABASE_SECRET_KEY: sb_secret_ci_only
+      REDEMPTIONS_ENABLED: "false"
+      ALLOW_FUNDED_REDEMPTIONS: "false"
+      AUTH_ALLOWED_ORIGINS: http://127.0.0.1:3200
+      ADMIN_PASSWORD: ci-admin-password-123
+      ADMIN_SESSION_SECRET: ci-session-secret-that-is-at-least-32-characters-long
+      CONTACT_RATE_LIMIT_SECRET: ci-contact-rate-limit-secret-that-is-at-least-32-characters
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint all workspaces
+        run: npm run lint
+
+      - name: Typecheck all workspaces
+        run: npm run typecheck:all
+
+      - name: Run contracts, unit, and component tests
+        run: npm test -- --run --exclude 'tests/integration/**'
+
+      - name: Set up isolated Supabase CLI
+        uses: supabase/setup-cli@v2
+        with:
+          version: 2.84.2
+          github-token: ${{ github.token }}
+
+      - name: Start isolated Supabase database
+        run: supabase db start
+
+      - name: Run database contract and idempotency tests
+        run: supabase test db
+
+      - name: Validate content and build the public blog
+        run: npm run build:blog
+
+      - name: Build contributor production bundle
+        run: npm run build:contributor
+
+      - name: Build operations production bundle
+        run: npm run build:ops
+
+      - name: Run isolated contributor publication integration
+        run: npm test -- --run tests/integration/contributor-publication.test.ts
+
+      - name: Install Chromium for browser checks
+        run: npx playwright install --with-deps chromium
+
+      - name: Run public blog browser suite
+        run: npm run test:e2e
+
+      - name: Run contributor production browser suite
+        run: npm run test:e2e --workspace @omnilede/contributor

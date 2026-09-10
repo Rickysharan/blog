@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { ContactForm, type ContactFormType } from "@/components/contact/contact-form";
 import { InfoPage } from "@/components/layout/info-page";
 
 export const metadata: Metadata = {
@@ -19,7 +20,14 @@ type ContactPageProps = {
 export default async function ContactPage({ searchParams }: ContactPageProps) {
   const query = await searchParams;
   const subject = Array.isArray(query.subject) ? query.subject[0] : query.subject;
-  const commercial = subject === "advertising" || subject === "partnerships";
+  const initialType: ContactFormType = subject === "advertising"
+    ? "advertising"
+    : subject === "partnerships"
+      ? "partnership"
+      : subject === "support"
+        ? "support"
+        : "general";
+  const commercial = initialType === "advertising" || initialType === "partnership";
   const email = configuredEmail();
   return (
     <InfoPage
@@ -28,7 +36,7 @@ export default async function ContactPage({ searchParams }: ContactPageProps) {
         ? "Talk to OmniLede about responsible advertising, sponsorships and editorially independent partnerships."
         : "Use the monitored editorial address for correction requests, source questions, rights concerns and privacy enquiries."}
       title="Contact"
-      templateNotice={!email}
+      templateNotice
     >
       {commercial ? (
         <>
@@ -36,17 +44,13 @@ export default async function ContactPage({ searchParams }: ContactPageProps) {
           <p>
             Share your campaign goals, target desks and flight dates. Advertising must be clearly labelled, privacy-respecting and separate from editorial decisions.
           </p>
-          {email ? (
-            <p>
-              Email <a href={`mailto:${email}?subject=${encodeURIComponent("OmniLede advertising enquiry")}`}>{email}</a> with your organisation name and preferred placement.
-            </p>
-          ) : (
-            <p>
-              A commercial inbox is not configured yet. Set <code>NEXT_PUBLIC_CONTACT_EMAIL</code> to a monitored address before inviting enquiries.
-            </p>
-          )}
         </>
       ) : null}
+      <h2>Send an enquiry</h2>
+      <p>
+        The form separates editorial/support requests from advertising/partnership messages. It stores a validated enquiry before attempting an email notification, so a notification problem does not silently lose the message.
+      </p>
+      <ContactForm initialType={initialType} />
       <h2>Editorial and corrections</h2>
       {email ? (
         <p>
@@ -60,6 +64,10 @@ export default async function ContactPage({ searchParams }: ContactPageProps) {
       <h2>Response expectations</h2>
       <p>
         Messages should be acknowledged according to an operator-defined service level. Urgent safety or legal requests require human assessment; automated submission does not guarantee removal, correction or a particular outcome.
+      </p>
+      <h2>Operator details</h2>
+      <p>
+        Operator: [FILL IN: LEGAL OPERATOR NAME] · Address: [FILL IN: REGISTERED ADDRESS] · Privacy: [FILL IN: PRIVACY EMAIL]. This contact process is an operational template and not a substitute for legal advice.
       </p>
       <h2>Security reports</h2>
       <p>

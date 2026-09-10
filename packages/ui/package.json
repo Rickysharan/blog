@@ -1,0 +1,23 @@
+{
+  "name": "@omnilede/ui",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "sh -c 'cd ../.. && vitest run --config vitest.config.ts packages/ui/src/status-badge.test.tsx'",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@omnilede/contracts": "0.1.0",
+    "react": "19.2.0"
+  },
+  "devDependencies": {
+    "@testing-library/react": "16.3.2",
+    "@types/react": "19.2.18",
+    "typescript": "5.9.3",
+    "vitest": "4.1.11"
+  }
+}

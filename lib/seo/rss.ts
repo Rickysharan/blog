@@ -38,13 +38,14 @@ export function buildRssXml(
       <pubDate>${new Date(`${article.date}T00:00:00.000Z`).toUTCString()}</pubDate>
       <description>${escapeXml(article.excerpt)}</description>
       <category>${escapeXml(article.category)}</category>
+      <dc:language>${escapeXml(article.language ?? "en")}</dc:language>
       <source url="${escapeXml(article.sourceUrl)}">${escapeXml(article.sourceName)}</source>
     </item>`;
     })
     .join("\n");
 
   return `<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:dc="http://purl.org/dc/elements/1.1/">
   <channel>
     <title>${escapeXml(site.name)}</title>
     <link>${escapeXml(site.url)}</link>

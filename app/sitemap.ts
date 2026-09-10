@@ -4,7 +4,16 @@ import { CATEGORIES } from "@/lib/config/categories";
 import { SITE_CONFIG } from "@/lib/config/site";
 import { getAllArticles } from "@/lib/content/articles";
 
-const STATIC_PATHS = ["", "/about", "/contact", "/privacy", "/terms", "/disclaimer"];
+const STATIC_PATHS = [
+  "",
+  "/about",
+  "/advertise",
+  "/contact",
+  "/disclaimer",
+  "/guidelines",
+  "/privacy",
+  "/terms",
+];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const articles = await getAllArticles();

@@ -9,67 +9,17 @@ import {
   type PublishResult,
 } from "@/lib/drafts/types";
 import { validateDraftMdx, validateDraftRef } from "@/lib/drafts/validation";
-import type { FetchLike } from "@/lib/pipeline/types";
+import {
+  GitDataClient,
+  GitDataClientError,
+  type GitCommitResult,
+  type GitDataClientOptions,
+  type GitHubTreeEntry,
+  type GitSnapshot,
+  type GitTreeMutation,
+} from "@/lib/github/git-data-client";
 
-const GITHUB_API_VERSION = "2026-03-10";
-const MAX_API_RESPONSE_CHARACTERS = 8 * 1024 * 1024;
-
-interface GitHubDraftRepositoryOptions {
-  repository: string;
-  branch: string;
-  token: string;
-  fetchImpl?: FetchLike;
-  apiBase?: string;
-}
-
-interface GitHubRefResponse {
-  object?: { sha?: string };
-}
-
-interface GitHubCommitResponse {
-  sha?: string;
-  html_url?: string;
-  tree?: { sha?: string };
-}
-
-interface GitHubTreeEntry {
-  path?: string;
-  mode?: string;
-  type?: string;
-  sha?: string | null;
-}
-
-interface GitHubTreeResponse {
-  sha?: string;
-  truncated?: boolean;
-  tree?: GitHubTreeEntry[];
-}
-
-interface GitHubBlobResponse {
-  sha?: string;
-  encoding?: string;
-  content?: string;
-}
-
-interface Snapshot {
-  headSha: string;
-  treeSha: string;
-  entries: GitHubTreeEntry[];
-}
-
-type TreeMutation = {
-  path: string;
-  mode: "100644";
-  type: "blob";
-  sha: string | null;
-};
-
-const REPOSITORY_PATTERN = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
-const BRANCH_PATTERN = /^(?!\/)(?!.*(?:^|\/)\.\.?(?:\/|$))[A-Za-z0-9._/-]+$/;
-
-function encodePath(value: string): string {
-  return value.split("/").map(encodeURIComponent).join("/");
-}
+type GitHubDraftRepositoryOptions = GitDataClientOptions;
 
 function draftGitPath(ref: DraftRef): string {
   return `content/drafts/${ref.category}/${ref.filename}`;
@@ -77,16 +27,6 @@ function draftGitPath(ref: DraftRef): string {
 
 function articleGitPath(ref: DraftRef): string {
   return `content/articles/${ref.category}/${ref.filename}`;
-}
-
-function decodeBlob(blob: GitHubBlobResponse): string {
-  if (blob.encoding !== "base64" || typeof blob.content !== "string") {
-    throw new DraftRepositoryError(
-      "storage_unavailable",
-      "GitHub returned an unsupported draft encoding",
-    );
-  }
-  return Buffer.from(blob.content.replace(/\s+/g, ""), "base64").toString("utf8");
 }
 
 function toSummary(document: DraftDocument): DraftSummary {
@@ -101,135 +41,33 @@ function toSummary(document: DraftDocument): DraftSummary {
 }
 
 export class GitHubDraftRepository implements DraftRepository {
-  private readonly repository: string;
-  private readonly branch: string;
-  private readonly token: string;
-  private readonly fetchImpl: FetchLike;
-  private readonly apiBase: string;
+  private readonly client: GitDataClient;
 
   constructor(options: GitHubDraftRepositoryOptions) {
-    if (!REPOSITORY_PATTERN.test(options.repository)) {
-      throw new DraftRepositoryError(
-        "invalid_input",
-        "GITHUB_REPOSITORY must use owner/repository format",
-      );
-    }
-    if (!BRANCH_PATTERN.test(options.branch) || !options.branch) {
-      throw new DraftRepositoryError("invalid_input", "GITHUB_BRANCH is invalid");
-    }
-    if (!options.token) {
-      throw new DraftRepositoryError("invalid_input", "GITHUB_TOKEN is required");
-    }
-    const apiUrl = new URL(options.apiBase ?? "https://api.github.com");
-    if (apiUrl.protocol !== "https:") {
-      throw new DraftRepositoryError("invalid_input", "GitHub API base must use HTTPS");
-    }
-
-    this.repository = options.repository;
-    this.branch = options.branch;
-    this.token = options.token;
-    this.fetchImpl = options.fetchImpl ?? fetch;
-    this.apiBase = apiUrl.toString().replace(/\/$/, "");
-  }
-
-  private endpoint(pathname: string): string {
-    return `${this.apiBase}/repos/${this.repository}/${pathname}`;
-  }
-
-  private async api<T>(
-    pathname: string,
-    init: { method?: string; body?: unknown } = {},
-  ): Promise<T> {
-    let response: Response;
     try {
-      response = await this.fetchImpl(this.endpoint(pathname), {
-        method: init.method ?? "GET",
-        headers: {
-          accept: "application/vnd.github+json",
-          authorization: `Bearer ${this.token}`,
-          "content-type": "application/json",
-          "x-github-api-version": GITHUB_API_VERSION,
-        },
-        body: init.body === undefined ? undefined : JSON.stringify(init.body),
-        signal: AbortSignal.timeout(15_000),
-      });
+      this.client = new GitDataClient(options);
     } catch (error) {
-      throw new DraftRepositoryError(
-        "storage_unavailable",
-        "GitHub could not be reached",
-        { cause: error },
-      );
+      throw this.asDraftError(error);
     }
+  }
 
-    if (!response.ok) {
-      if (response.status === 409 || response.status === 422) {
-        throw new DraftRepositoryError(
-          "conflict",
-          "GitHub rejected the change because the branch moved or validation failed",
-        );
-      }
-      if (response.status === 404) {
-        throw new DraftRepositoryError(
-          "not_found",
-          "The requested GitHub draft or repository object was not found",
-        );
-      }
-      throw new DraftRepositoryError(
-        "storage_unavailable",
-        `GitHub request failed with HTTP ${response.status}`,
-      );
+  private asDraftError(error: unknown): DraftRepositoryError {
+    if (error instanceof DraftRepositoryError) return error;
+    if (error instanceof GitDataClientError) {
+      return new DraftRepositoryError(error.code, error.message);
     }
+    return new DraftRepositoryError("storage_unavailable", "GitHub draft operation failed");
+  }
 
-    const text = await response.text();
-    if (text.length > MAX_API_RESPONSE_CHARACTERS) {
-      throw new DraftRepositoryError(
-        "storage_unavailable",
-        "GitHub response exceeded the safety limit",
-      );
-    }
-    if (!text) {
-      return {} as T;
-    }
+  private async snapshot(): Promise<GitSnapshot> {
     try {
-      return JSON.parse(text) as T;
+      return await this.client.snapshot();
     } catch (error) {
-      throw new DraftRepositoryError(
-        "storage_unavailable",
-        "GitHub returned malformed JSON",
-        { cause: error },
-      );
+      throw this.asDraftError(error);
     }
   }
 
-  private async snapshot(): Promise<Snapshot> {
-    const branchPath = encodePath(this.branch);
-    const reference = await this.api<GitHubRefResponse>(`git/ref/heads/${branchPath}`);
-    const headSha = reference.object?.sha;
-    if (!headSha) {
-      throw new DraftRepositoryError(
-        "storage_unavailable",
-        "GitHub branch response did not include a commit SHA",
-      );
-    }
-    const commit = await this.api<GitHubCommitResponse>(`git/commits/${headSha}`);
-    const treeSha = commit.tree?.sha;
-    if (!treeSha) {
-      throw new DraftRepositoryError(
-        "storage_unavailable",
-        "GitHub commit response did not include a tree SHA",
-      );
-    }
-    const tree = await this.api<GitHubTreeResponse>(`git/trees/${treeSha}?recursive=1`);
-    if (tree.truncated) {
-      throw new DraftRepositoryError(
-        "storage_unavailable",
-        "GitHub repository tree was truncated; draft operations are paused",
-      );
-    }
-    return { headSha, treeSha, entries: tree.tree ?? [] };
-  }
-
-  private assertExpectedVersion(snapshot: Snapshot, expectedVersion?: string): void {
+  private assertExpectedVersion(snapshot: GitSnapshot, expectedVersion?: string): void {
     if (expectedVersion && expectedVersion !== snapshot.headSha) {
       throw new DraftRepositoryError(
         "conflict",
@@ -238,7 +76,7 @@ export class GitHubDraftRepository implements DraftRepository {
     }
   }
 
-  private findDraft(snapshot: Snapshot, ref: DraftRef): GitHubTreeEntry {
+  private findDraft(snapshot: GitSnapshot, ref: DraftRef): GitHubTreeEntry {
     const entry = snapshot.entries.find(
       (candidate) =>
         candidate.path === draftGitPath(ref) &&
@@ -252,7 +90,11 @@ export class GitHubDraftRepository implements DraftRepository {
   }
 
   private async readBlob(sha: string): Promise<string> {
-    return decodeBlob(await this.api<GitHubBlobResponse>(`git/blobs/${sha}`));
+    try {
+      return await this.client.readBlob(sha);
+    } catch (error) {
+      throw this.asDraftError(error);
+    }
   }
 
   private document(ref: DraftRef, mdx: string, version: string): DraftDocument {
@@ -330,49 +172,23 @@ export class GitHubDraftRepository implements DraftRepository {
   }
 
   private async createBlob(mdx: string): Promise<string> {
-    const blob = await this.api<GitHubBlobResponse>("git/blobs", {
-      method: "POST",
-      body: { content: mdx, encoding: "utf-8" },
-    });
-    if (!blob.sha) {
-      throw new DraftRepositoryError(
-        "storage_unavailable",
-        "GitHub did not return a blob SHA",
-      );
+    try {
+      return await this.client.createBlob(mdx);
+    } catch (error) {
+      throw this.asDraftError(error);
     }
-    return blob.sha;
   }
 
   private async commitMutation(
-    snapshot: Snapshot,
-    entries: TreeMutation[],
+    snapshot: GitSnapshot,
+    entries: GitTreeMutation[],
     message: string,
-  ): Promise<GitHubCommitResponse> {
-    const tree = await this.api<GitHubTreeResponse>("git/trees", {
-      method: "POST",
-      body: { base_tree: snapshot.treeSha, tree: entries },
-    });
-    if (!tree.sha) {
-      throw new DraftRepositoryError(
-        "storage_unavailable",
-        "GitHub did not return a new tree SHA",
-      );
+  ): Promise<GitCommitResult> {
+    try {
+      return await this.client.commitMutation(snapshot, entries, message);
+    } catch (error) {
+      throw this.asDraftError(error);
     }
-    const commit = await this.api<GitHubCommitResponse>("git/commits", {
-      method: "POST",
-      body: { message, tree: tree.sha, parents: [snapshot.headSha] },
-    });
-    if (!commit.sha) {
-      throw new DraftRepositoryError(
-        "storage_unavailable",
-        "GitHub did not return a new commit SHA",
-      );
-    }
-    await this.api(`git/refs/heads/${encodePath(this.branch)}`, {
-      method: "PATCH",
-      body: { sha: commit.sha, force: false },
-    });
-    return commit;
   }
 
   async save(
@@ -423,8 +239,7 @@ export class GitHubDraftRepository implements DraftRepository {
     return {
       articlePath,
       commitUrl:
-        commit.html_url ??
-        `https://github.com/${this.repository}/commit/${commit.sha as string}`,
+        commit.htmlUrl ?? this.client.commitUrl(commit.sha),
     };
   }
 
