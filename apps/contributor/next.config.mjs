@@ -1,5 +1,8 @@
 import { existsSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import withSerwistInit from "@serwist/next";
+
+const monorepoRoot = fileURLToPath(new URL("../..", import.meta.url));
 
 const withSerwist = withSerwistInit({
   swSrc: "app/sw.ts",
@@ -13,7 +16,7 @@ const withSerwist = withSerwistInit({
 const nextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
-  outputFileTracingRoot: process.cwd(),
+  outputFileTracingRoot: monorepoRoot,
 };
 
 export default withSerwist(nextConfig);
