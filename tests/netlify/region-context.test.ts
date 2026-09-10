@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import regionContext, { mapCountryToRegion } from "./region-context";
+import regionContext, { mapCountryToRegion } from "../../netlify/edge-functions/region-context";
 
 describe("region context Edge Function", () => {
   it.each([
