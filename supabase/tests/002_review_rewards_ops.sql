@@ -56,11 +56,26 @@ select ok(
   'credential metadata stores no secret values'
 );
 
-select has_policy('public', 'wallet_accounts', 'wallet_accounts_select_own', 'wallet account privacy policy exists');
-select has_policy('public', 'wallet_transactions', 'wallet_transactions_select_own', 'wallet history privacy policy exists');
-select has_policy('public', 'redemption_requests', 'redemption_requests_select_own', 'redemption privacy policy exists');
-select has_policy('public', 'trending_topics', 'trending_topics_select', 'topics are readable');
-select has_policy('public', 'contact_inquiries', 'contact_inquiries_no_client_access', 'contact has explicit deny policy');
+select ok(
+  exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'wallet_accounts' and policyname = 'wallet_accounts_select_own'),
+  'wallet account privacy policy exists'
+);
+select ok(
+  exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'wallet_transactions' and policyname = 'wallet_transactions_select_own'),
+  'wallet history privacy policy exists'
+);
+select ok(
+  exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'redemption_requests' and policyname = 'redemption_requests_select_own'),
+  'redemption privacy policy exists'
+);
+select ok(
+  exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'trending_topics' and policyname = 'trending_topics_select'),
+  'topics are readable'
+);
+select ok(
+  exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'contact_inquiries' and policyname = 'contact_inquiries_no_client_access'),
+  'contact has explicit deny policy'
+);
 select ok(
   exists (select 1 from pg_trigger where tgname = 'reputation_rules_audit'),
   'reputation rule changes are audited'

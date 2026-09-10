@@ -1,10 +1,14 @@
 begin;
 
-select plan(23);
+select plan(22);
 
 select has_table('app_private', 'publication_nonces', 'publication nonces use a private table');
-select col_is_pk('app_private', 'publication_nonces', 'nonce_digest', 'nonce digest participates in the primary key');
-select col_is_pk('app_private', 'publication_nonces', 'audience', 'audience participates in the primary key');
+select col_is_pk(
+  'app_private',
+  'publication_nonces',
+  array['nonce_digest', 'audience']::name[],
+  'nonce digest and audience form the composite primary key'
+);
 select col_type_is('app_private', 'publication_nonces', 'nonce_digest', 'text', 'nonce digest is stored as text');
 select col_type_is('app_private', 'publication_nonces', 'publication_id', 'uuid', 'publication ID is stored');
 select col_type_is('app_private', 'publication_nonces', 'body_digest', 'text', 'body digest is stored');

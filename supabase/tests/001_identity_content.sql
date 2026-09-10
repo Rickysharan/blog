@@ -30,16 +30,46 @@ select ok(
   'submission updates are server-mediated'
 );
 
-select has_policy('public', 'profiles', 'profiles_select', 'profiles select policy exists');
-select has_policy('public', 'profiles', 'profiles_update_own', 'profiles owner update policy exists');
-select has_policy('public', 'submissions', 'submissions_select', 'submissions select policy exists');
-select has_policy('public', 'submissions', 'submissions_insert_own', 'submissions owner insert policy exists');
-select has_policy('public', 'submissions', 'submissions_update_own', 'submissions owner update policy exists');
-select has_policy('public', 'submission_revisions', 'revisions_select', 'revision select policy exists');
-select has_policy('public', 'review_decisions', 'decisions_select', 'decision select policy exists');
-select has_policy('public', 'publications', 'publications_select', 'publication select policy exists');
-select has_policy('public', 'notifications', 'notifications_select', 'notification select policy exists');
-select has_policy('public', 'notifications', 'notifications_update_read', 'notification read policy exists');
+select ok(
+  exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'profiles' and policyname = 'profiles_select'),
+  'profiles select policy exists'
+);
+select ok(
+  exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'profiles' and policyname = 'profiles_update_own'),
+  'profiles owner update policy exists'
+);
+select ok(
+  exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'submissions' and policyname = 'submissions_select'),
+  'submissions select policy exists'
+);
+select ok(
+  exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'submissions' and policyname = 'submissions_insert_own'),
+  'submissions owner insert policy exists'
+);
+select ok(
+  exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'submissions' and policyname = 'submissions_update_own'),
+  'submissions owner update policy exists'
+);
+select ok(
+  exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'submission_revisions' and policyname = 'revisions_select'),
+  'revision select policy exists'
+);
+select ok(
+  exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'review_decisions' and policyname = 'decisions_select'),
+  'decision select policy exists'
+);
+select ok(
+  exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'publications' and policyname = 'publications_select'),
+  'publication select policy exists'
+);
+select ok(
+  exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'notifications' and policyname = 'notifications_select'),
+  'notification select policy exists'
+);
+select ok(
+  exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'notifications' and policyname = 'notifications_update_read'),
+  'notification read policy exists'
+);
 select ok(
   not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'roles'),
   'roles has no client policies'
@@ -112,15 +142,15 @@ select throws_ok(
 
 do $$ begin perform set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-000000000003', true); end $$;
 select is(
-  (select count(*)::integer from public.submissions),
+  (select count(*)::integer from public.submissions where id = '00000000-0000-4000-8000-000000000010'),
   1,
-  'reviewer can select every submission'
+  'reviewer can select another contributor submission'
 );
 do $$ begin perform set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-000000000004', true); end $$;
 select is(
-  (select count(*)::integer from public.submissions),
+  (select count(*)::integer from public.submissions where id = '00000000-0000-4000-8000-000000000010'),
   1,
-  'admin can select every submission'
+  'admin can select another contributor submission'
 );
 
 do $$ begin perform set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-000000000001', true); end $$;
@@ -194,7 +224,7 @@ select is(
   'account status changes require the private RPC'
 );
 select is(
-  (select reason from public.audit_log where target_type = 'profiles' and target_id = '00000000-0000-4000-8000-000000000001' order by created_at desc limit 1),
+  (select reason from public.audit_log where target_type = 'profiles' and target_id = '00000000-0000-4000-8000-000000000001' and action = 'update'),
   'Administrative suspension review.',
   'account status audit records preserve the reason'
 );

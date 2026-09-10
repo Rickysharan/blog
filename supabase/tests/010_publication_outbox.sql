@@ -85,9 +85,9 @@ select app_private.apply_review_decision(
 reset role;
 select is((select count(*)::integer from app_private.publication_outbox where submission_id = '30000000-0000-4000-8000-000000000010'), 1, 'approval replay does not duplicate the outbox');
 
-create temporary table claimed_publication(payload jsonb);
 set local role service_role;
 select set_config('request.jwt.claim.role', 'service_role', true);
+create temporary table claimed_publication(payload jsonb);
 insert into claimed_publication
 select public.claim_publication_outbox('30000000-0000-4000-8000-000000000020', 60);
 reset role;
@@ -200,9 +200,9 @@ update app_private.publication_outbox
 set max_attempts = 1
 where submission_id = '30000000-0000-4000-8000-000000000030';
 
-create temporary table failed_publication(payload jsonb);
 set local role service_role;
 select set_config('request.jwt.claim.role', 'service_role', true);
+create temporary table failed_publication(payload jsonb);
 insert into failed_publication
 select public.claim_publication_outbox('30000000-0000-4000-8000-000000000040', 60);
 reset role;

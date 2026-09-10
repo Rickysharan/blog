@@ -124,9 +124,9 @@ set title = 'Mutated live title',
     primary_source_url = 'https://example.test/mutated'
 where id = '31000000-0000-4000-8000-000000000011';
 
-create temporary table hardening_claims(sequence integer generated always as identity, payload jsonb);
 set local role service_role;
 select set_config('request.jwt.claim.role', 'service_role', true);
+create temporary table hardening_claims(sequence integer generated always as identity, payload jsonb);
 insert into hardening_claims(payload)
 select public.claim_publication_outbox('31000000-0000-4000-8000-000000000030', 60);
 reset role;

@@ -424,7 +424,7 @@ begin
   select * into publication
   from public.publications
   where publication_id = item.publication_id;
-  expected_path := 'content/articles/' || claim->>'category' || '/' || claim->>'slug' || '.mdx';
+  expected_path := 'content/articles/' || (claim->>'category') || '/' || (claim->>'slug') || '.mdx';
   if p_article_path <> expected_path or p_article_url !~ ('/article/' || (claim->>'slug') || '$') then
     raise exception 'invalid_publication_receipt';
   end if;

@@ -75,7 +75,7 @@ select is(
   'idempotent retries store one row'
 );
 select lives_ok(
-  $$do $rate_limit$
+  $assertion$do $rate_limit$
   declare
     v_key uuid;
   begin
@@ -92,7 +92,8 @@ select lives_ok(
       );
     end loop;
   end
-  $rate_limit$$$,
+  $rate_limit$;
+  $assertion$,
   'five distinct enquiries fit inside the database rate limit'
 );
 select throws_ok(

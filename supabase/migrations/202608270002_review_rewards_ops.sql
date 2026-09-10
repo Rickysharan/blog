@@ -211,7 +211,7 @@ returns trigger
 language plpgsql security definer set search_path = ''
 as $$
 begin
-  new.updated_at := now();
+  new.updated_at := clock_timestamp();
   return new;
 end;
 $$;
@@ -352,18 +352,18 @@ begin
   perform 1 from public.trending_topics where id = topic_uuid and active for update;
   if not found then raise exception 'topic_not_available'; end if;
   update public.topic_claims
-  set status = 'expired', updated_at = now()
-  where topic_id = topic_uuid and status = 'active' and expires_at <= now();
+  set status = 'expired', updated_at = clock_timestamp()
+  where topic_id = topic_uuid and status = 'active' and expires_at <= clock_timestamp();
   update public.topic_claims
-  set status = 'expired', updated_at = now()
-  where user_id = claimant and status = 'active' and expires_at <= now();
+  set status = 'expired', updated_at = clock_timestamp()
+  where user_id = claimant and status = 'active' and expires_at <= clock_timestamp();
   select coalesce((value #>> '{}')::integer, 3) into max_claims
   from app_private.settings where key = 'MAX_ACTIVE_TOPIC_CLAIMS';
   select count(*)::integer into active_claims
   from public.topic_claims where user_id = claimant and status = 'active';
   if active_claims >= coalesce(max_claims, 3) then raise exception 'active_claim_limit'; end if;
   insert into public.topic_claims (topic_id, user_id, expires_at)
-  values (topic_uuid, claimant, now() + ttl)
+  values (topic_uuid, claimant, clock_timestamp() + ttl)
   returning id into claim_id;
   return claim_id;
 end;
@@ -495,18 +495,18 @@ create policy daily_metrics_select_ops on public.daily_metrics for select to aut
 create policy credential_metadata_select_ops on public.credential_metadata for select to authenticated using (public.is_active_account() and public.has_role('admin'));
 create policy contact_inquiries_no_client_access on public.contact_inquiries for select to authenticated using (public.is_active_account() and false);
 
+revoke all on public.review_runs, public.duplicate_matches, public.pipeline_events,
+  public.reputation_rules, public.reputation_snapshots, public.reward_rules,
+  public.wallet_accounts, public.wallet_transactions, public.redemption_requests,
+  public.display_rates, public.trending_topics, public.topic_claims,
+  public.health_checks, public.daily_metrics, public.credential_metadata,
+  public.contact_inquiries from anon, authenticated;
 grant select on public.review_runs, public.duplicate_matches, public.pipeline_events,
   public.reputation_rules, public.reputation_snapshots, public.reward_rules,
   public.wallet_accounts, public.wallet_transactions, public.redemption_requests,
   public.trending_topics, public.topic_claims, public.health_checks,
   public.daily_metrics, public.credential_metadata to authenticated;
 grant select on public.display_rates, public.trending_topics to anon;
-revoke insert, update, delete on public.review_runs, public.duplicate_matches, public.pipeline_events,
-  public.reputation_rules, public.reputation_snapshots, public.reward_rules,
-  public.wallet_accounts, public.wallet_transactions, public.redemption_requests,
-  public.display_rates, public.trending_topics, public.topic_claims,
-  public.health_checks, public.daily_metrics, public.credential_metadata,
-  public.contact_inquiries from anon, authenticated;
 grant all on public.review_runs, public.duplicate_matches, public.pipeline_events,
   public.reputation_rules, public.reputation_snapshots, public.reward_rules,
   public.wallet_accounts, public.wallet_transactions, public.redemption_requests,

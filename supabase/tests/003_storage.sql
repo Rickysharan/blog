@@ -24,11 +24,26 @@ select ok(
   ),
   'submission images allow only JPEG, PNG, and WebP'
 );
-select has_policy('storage', 'objects', 'submission_images_insert_own', 'owners can upload to their folder');
-select has_policy('storage', 'objects', 'submission_images_select_owner_or_reviewer', 'private images have scoped reads');
-select has_policy('storage', 'objects', 'submission_images_update_own', 'owners can update only their folder');
-select has_policy('storage', 'objects', 'published_images_select_public', 'published derivatives are public-read');
-select has_policy('storage', 'objects', 'published_images_write_service', 'published derivatives are server-written');
+select ok(
+  exists (select 1 from pg_policies where schemaname = 'storage' and tablename = 'objects' and policyname = 'submission_images_insert_own'),
+  'owners can upload to their folder'
+);
+select ok(
+  exists (select 1 from pg_policies where schemaname = 'storage' and tablename = 'objects' and policyname = 'submission_images_select_owner_or_reviewer'),
+  'private images have scoped reads'
+);
+select ok(
+  exists (select 1 from pg_policies where schemaname = 'storage' and tablename = 'objects' and policyname = 'submission_images_update_own'),
+  'owners can update only their folder'
+);
+select ok(
+  exists (select 1 from pg_policies where schemaname = 'storage' and tablename = 'objects' and policyname = 'published_images_select_public'),
+  'published derivatives are public-read'
+);
+select ok(
+  exists (select 1 from pg_policies where schemaname = 'storage' and tablename = 'objects' and policyname = 'published_images_write_service'),
+  'published derivatives are server-written'
+);
 select ok(
   not exists (
     select 1 from pg_policies

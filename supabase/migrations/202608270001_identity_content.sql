@@ -495,10 +495,12 @@ create policy notifications_update_read on public.notifications for update to au
 using (public.is_active_account() and user_id = (select auth.uid())) with check (public.is_active_account() and user_id = (select auth.uid()));
 
 grant usage on schema public to anon, authenticated;
+revoke all on public.profiles, public.roles, public.submissions,
+  public.submission_revisions, public.review_decisions, public.publications,
+  public.notifications, public.audit_log from anon, authenticated;
 grant select on public.profiles, public.submissions, public.submission_revisions,
   public.review_decisions, public.publications, public.notifications to authenticated;
 grant update on public.profiles, public.notifications to authenticated;
-revoke all on public.roles, public.audit_log from anon, authenticated;
 
 grant all on public.profiles, public.roles, public.submissions, public.notifications to service_role;
 grant select, insert on public.submission_revisions to service_role;
