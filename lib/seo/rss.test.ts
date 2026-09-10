@@ -15,6 +15,7 @@ const article: ArticleSummary = {
   readTime: 5,
   sourceName: "Example & Co",
   sourceUrl: "https://example.com/story?a=1&b=2",
+  language: "en-IN",
 };
 
 describe("buildRssXml", () => {
@@ -29,7 +30,32 @@ describe("buildRssXml", () => {
     expect(xml).toContain("What rates &lt;and&gt; policy");
     expect(xml).toContain("https://news.example/article/markets-and-policy");
     expect(xml).toContain('url="https://example.com/story?a=1&amp;b=2"');
+    expect(xml).toContain("<dc:language>en-IN</dc:language>");
+    expect(xml).toContain('xmlns:dc="http://purl.org/dc/elements/1.1/"');
     expect(xml).not.toContain("<news>");
+  });
+
+  it("keeps legacy articles and contributor articles on one global canonical URL", () => {
+    const legacy = { ...article, slug: "legacy-story", language: undefined };
+    const contributor = {
+      ...article,
+      slug: "contributor-story",
+      contributorId: "00000000-0000-4000-8000-000000000101",
+      contributorName: "Fixture Contributor",
+      submissionId: "00000000-0000-4000-8000-000000000111",
+      publicationId: "00000000-0000-4000-8000-000000000161",
+      region: "asia" as const,
+    };
+    const xml = buildRssXml([legacy, contributor], {
+      name: "OmniLede",
+      description: "Global news",
+      url: "https://news.example",
+    });
+
+    expect(xml).toContain("https://news.example/article/legacy-story");
+    expect(xml).toContain("https://news.example/article/contributor-story");
+    expect(xml).toContain("<dc:language>en</dc:language>");
+    expect(xml).not.toContain("/region/");
   });
 
   it("sorts newest first and limits the feed to twenty public articles", () => {

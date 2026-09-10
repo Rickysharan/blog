@@ -10,14 +10,14 @@ export const metadata: Metadata = {
 export default function DisclaimerPage() {
   return (
     <InfoPage
-      eyebrow="Policy · updated 26 August 2026"
+      eyebrow="Policy · updated 3 September 2026"
       intro="OmniLede explains public reporting. It is not a substitute for professional advice or direct confirmation from the responsible publisher, authority, league, studio or issuer."
       templateNotice
       title="Editorial disclaimer"
     >
       <h2>Markets, finance and business</h2>
       <p>
-        Index figures may be delayed, incomplete or unavailable. Nothing on the site is investment, trading, tax, accounting or legal advice, a recommendation, or an offer to buy or sell a security. Verify prices and disclosures with regulated providers and consider qualified advice suited to your circumstances.
+        Index figures may be delayed, incomplete or unavailable. This content is not investment, trading, tax, accounting or legal advice, a recommendation, or an offer to buy or sell a security. Contributor views are not verified professional financial advice. Verify prices and disclosures with regulated providers and consider qualified advice suited to your circumstances.
       </p>
       <h2>Politics and public affairs</h2>
       <p>
@@ -30,6 +30,10 @@ export default function DisclaimerPage() {
       <h2>Third-party reporting</h2>
       <p>
         Source links identify the reporting used to prepare an article; they do not imply sponsorship or endorsement. OmniLede may summarize facts in original wording but cannot guarantee that a third-party page remains accessible or unchanged.
+      </p>
+      <h2>Operational template</h2>
+      <p>
+        This disclaimer is an operational starting point, not a substitute for legal advice. The operator must review it for every jurisdiction in which OmniLede is offered or monetised.
       </p>
     </InfoPage>
   );

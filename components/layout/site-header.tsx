@@ -15,7 +15,7 @@ export function SiteHeader() {
           <p>Independent global briefing</p>
           <nav aria-label="Publication links" className="hidden items-center gap-5 sm:flex">
             <Link className="hover:text-ink" href="/about">About</Link>
-            <Link className="hover:text-ink" href="/contact?subject=advertising">Advertise</Link>
+            <Link className="hover:text-ink" href="/advertise">Advertise</Link>
             <Link className="hover:text-ink" href="/feed.xml">RSS</Link>
           </nav>
         </div>

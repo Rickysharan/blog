@@ -1,8 +1,8 @@
 import { CategorySection } from "@/components/articles/category-section";
-import { LatestFeed } from "@/components/articles/latest-feed";
 import { LeadStory } from "@/components/articles/lead-story";
 import { MarketStrip } from "@/components/market/market-strip";
 import { AdSlot } from "@/components/ads/ad-slot";
+import { RegionalFeed } from "@/components/region/regional-feed";
 import { CATEGORIES } from "@/lib/config/categories";
 import { getAllArticles } from "@/lib/content/articles";
 import { selectHomepageStories } from "@/lib/content/homepage";
@@ -124,7 +124,7 @@ export default async function HomePage() {
 
         {latest.slice(4).length > 0 ? (
           <div className="mt-20">
-            <LatestFeed articles={latest.slice(4)} />
+            <RegionalFeed articles={latest.slice(4)} heading="Latest reporting" />
           </div>
         ) : null}
       </div>

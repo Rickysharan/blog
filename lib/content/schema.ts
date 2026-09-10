@@ -3,26 +3,15 @@ import path from "node:path";
 import matter from "gray-matter";
 import { z } from "zod";
 
-import { isCategorySlug } from "@/lib/config/categories";
-
-const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-
-const dateSchema = z.preprocess(
-  (value) => (value instanceof Date ? value.toISOString().slice(0, 10) : value),
-  z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "date must use YYYY-MM-DD")
-    .refine((value) => !Number.isNaN(Date.parse(`${value}T00:00:00Z`)), {
-      message: "date must be a real calendar date",
-    }),
-);
-
-const httpsUrlSchema = z
-  .string()
-  .url()
-  .refine((value) => new URL(value).protocol === "https:", {
-    message: "must use HTTPS",
-  });
+import {
+  articleSlugSchema,
+  articleTagsSchema,
+  bcp47LanguageSchema,
+  categorySchema,
+  httpsUrlSchema,
+  publicationDateSchema,
+  regionSchema,
+} from "@omnilede/contracts";
 
 const coverImageSchema = z.string().refine(
   (value) => {
@@ -39,24 +28,64 @@ const coverImageSchema = z.string().refine(
   { message: "coverImage must be a local path or HTTPS URL" },
 );
 
-export const articleFrontmatterSchema = z
+const articleFrontmatterInputSchema = z
   .object({
     title: z.string().trim().min(1).max(180),
-    slug: z.string().regex(SLUG_PATTERN).max(120),
-    date: dateSchema,
-    category: z.string().refine(isCategorySlug, "unsupported category"),
-    tags: z.array(z.string().trim().min(1).max(50)).min(1).max(12),
+    slug: articleSlugSchema,
+    date: publicationDateSchema,
+    category: categorySchema,
+    tags: articleTagsSchema,
     author: z.string().trim().min(1).max(100),
     excerpt: z.string().trim().min(1).max(320),
     coverImage: coverImageSchema,
     readTime: z.number().int().positive().max(120),
     sourceName: z.string().trim().min(1).max(120),
     sourceUrl: httpsUrlSchema,
+    region: regionSchema.optional(),
+    language: bcp47LanguageSchema.optional(),
+    contributorId: z.string().uuid().optional(),
+    contributorName: z.string().trim().min(1).max(100).optional(),
+    submissionId: z.string().uuid().optional(),
+    publicationId: z.string().uuid().optional(),
   })
-  .strict();
+  .strict()
+  .superRefine((article, context) => {
+    const contributorFields = [
+      "contributorId",
+      "contributorName",
+      "submissionId",
+      "publicationId",
+    ] as const;
+    const hasContributorAttribution = contributorFields.some(
+      (field) => article[field] !== undefined,
+    );
+
+    if (!hasContributorAttribution) {
+      return;
+    }
+
+    for (const field of [...contributorFields, "region", "language"] as const) {
+      if (article[field] === undefined) {
+        context.addIssue({
+          code: "custom",
+          path: [field],
+          message: "contributor attribution requires all contributor fields, region, and language",
+        });
+      }
+    }
+  });
+
+export const articleFrontmatterSchema = articleFrontmatterInputSchema.transform(
+  (article) => ({
+    ...article,
+    language: article.language ?? "en",
+  }),
+);
 
 export type ArticleFrontmatter = z.infer<typeof articleFrontmatterSchema>;
-export type ArticleSummary = ArticleFrontmatter;
+export type ArticleSummary = Omit<ArticleFrontmatter, "language"> & {
+  language?: ArticleFrontmatter["language"];
+};
 export type ArticleDocument = ArticleFrontmatter & { body: string };
 
 function formatSchemaError(error: z.ZodError): string {

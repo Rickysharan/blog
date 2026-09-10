@@ -13,9 +13,17 @@ test-results/
 # Serwist build output
 public/sw*
 public/swe-worker*
+**/public/sw*
+**/public/swe-worker*
 *.tsbuildinfo
 .DS_Store
 npm-debug.log*
 
 # Local Netlify folder
 .netlify
+
+# Local database dumps and encrypted backup test artifacts
+/supabase/backups/*.sql
+/supabase/backups/*.dump
+/supabase/backups/*.age
+/backup-artifacts/

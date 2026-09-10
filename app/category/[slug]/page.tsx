@@ -3,8 +3,8 @@ import { notFound } from "next/navigation";
 
 import { AdSlot } from "@/components/ads/ad-slot";
 import { ArticleCard } from "@/components/articles/article-card";
-import { ArticleListItem } from "@/components/articles/article-list-item";
 import { Pagination } from "@/components/articles/pagination";
+import { RegionalFeed } from "@/components/region/regional-feed";
 import {
   CATEGORIES,
   getCategory,
@@ -119,18 +119,11 @@ export default async function CategoryPage({
               <ArticleCard article={featured} priority />
             </div>
             <div>
-              <h2 className="border-b-2 border-ink pb-3 font-serif text-4xl font-semibold tracking-[-0.045em]">
-                Latest from the desk
-              </h2>
-              {remaining.length > 0 ? (
-                remaining.map((article) => (
-                  <ArticleListItem key={article.slug} article={article} />
-                ))
-              ) : (
-                <p className="border-b border-line py-10 text-sm leading-6 text-muted">
-                  More reviewed reporting is being prepared. New stories appear here after editorial approval.
-                </p>
-              )}
+              <RegionalFeed
+                articles={remaining}
+                heading="Latest from the desk"
+                intro="Regional and language matches move up without removing worldwide coverage."
+              />
             </div>
           </div>
         ) : (

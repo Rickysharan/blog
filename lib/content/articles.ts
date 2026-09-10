@@ -63,12 +63,22 @@ async function readAllDocuments(
   );
   const documents = groups.flat();
   const seen = new Set<string>();
+  const publicationIds = new Set<string>();
 
   for (const article of documents) {
     if (seen.has(article.slug)) {
       throw new Error(`Duplicate published slug detected: ${article.slug}`);
     }
     seen.add(article.slug);
+
+    if (article.publicationId) {
+      if (publicationIds.has(article.publicationId)) {
+        throw new Error(
+          `Duplicate publication ID detected: ${article.publicationId}`,
+        );
+      }
+      publicationIds.add(article.publicationId);
+    }
   }
 
   return documents.sort(
@@ -78,19 +88,9 @@ async function readAllDocuments(
 }
 
 function toSummary(article: ArticleDocument): ArticleSummary {
-  return {
-    title: article.title,
-    slug: article.slug,
-    date: article.date,
-    category: article.category,
-    tags: article.tags,
-    author: article.author,
-    excerpt: article.excerpt,
-    coverImage: article.coverImage,
-    readTime: article.readTime,
-    sourceName: article.sourceName,
-    sourceUrl: article.sourceUrl,
-  };
+  const { body, ...summary } = article;
+  void body;
+  return summary;
 }
 
 export async function getAllArticles(

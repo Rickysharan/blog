@@ -28,12 +28,13 @@ const site = {
 
 describe("buildNewsArticleJsonLd", () => {
   it("emits a canonical NewsArticle object with publisher and source URL", () => {
-    expect(buildNewsArticleJsonLd(article, site)).toMatchObject({
+    expect(buildNewsArticleJsonLd({ ...article, language: "en-IN" }, site)).toMatchObject({
       "@context": "https://schema.org",
       "@type": "NewsArticle",
       headline: article.title,
       mainEntityOfPage: "https://news.example/article/a-global-story",
       isBasedOn: "https://example.com/source",
+      inLanguage: "en-IN",
       publisher: { "@type": "Organization", name: "OmniLede Editorial" },
     });
   });

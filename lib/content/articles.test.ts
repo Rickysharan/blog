@@ -1,3 +1,5 @@
+import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 
 import { describe, expect, it } from "vitest";
@@ -54,6 +56,59 @@ describe("public article discovery", () => {
       /duplicate published slug.*same-story/i,
     );
   });
+
+  it("rejects duplicate contributor publication IDs in a fixture library", async () => {
+    const rootDir = await mkdtemp(path.join(os.tmpdir(), "omnilede-publication-id-"));
+    const publicationId = "10000000-0000-4000-8000-000000000003";
+
+    try {
+      await Promise.all(
+        ["anime", "movies"].map((category) =>
+          mkdir(path.join(rootDir, "articles", category), { recursive: true }),
+        ),
+      );
+      await Promise.all(
+        ["anime", "movies"].map((category, index) => {
+          const slug = `${category}-contributor-story`;
+          const source = [
+            "---",
+            `title: ${category} contributor story`,
+            `slug: ${slug}`,
+            `date: 2026-08-2${index}`,
+            `category: ${category}`,
+            "tags:",
+            "  - contributor",
+            "author: Ada Contributor",
+            "excerpt: A fixture article with contributor attribution.",
+            `coverImage: /images/articles/${category}.svg`,
+            "readTime: 3",
+            "sourceName: Example Newsroom",
+            `sourceUrl: https://example.com/${slug}`,
+            "region: europe",
+            "language: en-GB",
+            "contributorId: 10000000-0000-4000-8000-000000000001",
+            "contributorName: Ada Contributor",
+            "submissionId: 10000000-0000-4000-8000-000000000002",
+            `publicationId: ${publicationId}`,
+            "---",
+            "",
+            "Fixture body.",
+          ].join("\n");
+
+          return writeFile(
+            path.join(rootDir, "articles", category, `${slug}.mdx`),
+            source,
+          );
+        }),
+      );
+
+      await expect(getAllArticles({ rootDir })).rejects.toThrow(
+        /duplicate publication id.*10000000-0000-4000-8000-000000000003/i,
+      );
+    } finally {
+      await rm(rootDir, { recursive: true, force: true });
+    }
+  });
 });
 
 describe("article collection helpers", () => {
@@ -69,6 +124,16 @@ describe("article collection helpers", () => {
     for (const category of ["anime", "movies", "politics", "sports", "finance", "share-market"]) {
       expect(counts.get(category)).toBeGreaterThanOrEqual(2);
     }
+  });
+
+  it("preserves current published articles and carries their default language", async () => {
+    const articles = await getAllArticles();
+
+    expect(articles).toHaveLength(18);
+    expect(articles.map(({ slug }) => slug)).toContain(
+      "how-to-read-global-economic-forecasts-without-treating-them-as-certainty",
+    );
+    expect(articles.every(({ language }) => language === "en")).toBe(true);
   });
 
   it("ranks related stories by shared tags and then recency", () => {
@@ -90,6 +155,12 @@ describe("article collection helpers", () => {
         slug: "one-shared-tag-newer",
         date: "2026-08-19",
         tags: ["trade"],
+        region: "europe",
+        language: "en-GB",
+        contributorId: "10000000-0000-4000-8000-000000000001",
+        contributorName: "Ada Contributor",
+        submissionId: "10000000-0000-4000-8000-000000000002",
+        publicationId: "10000000-0000-4000-8000-000000000003",
       },
     ];
 

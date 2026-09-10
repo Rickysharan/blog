@@ -6,13 +6,14 @@ export default defineConfig([
   ...nextVitals,
   ...nextTypeScript,
   globalIgnores([
-    ".next/**",
+    "**/.next/**",
     "coverage/**",
     "out/**",
     "playwright-report/**",
-    "public/sw*",
-    "public/swe-worker*",
+    "**/public/sw*",
+    "**/public/swe-worker*",
     "test-results/**",
-    "next-env.d.ts",
+    "**/next-env.d.ts",
+    "**/*.tsbuildinfo",
   ]),
 ]);

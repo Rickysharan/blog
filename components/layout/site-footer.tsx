@@ -8,7 +8,8 @@ import { ConsentSettingsButton } from "@/components/privacy/consent-manager";
 const policyLinks = [
   ["About", "/about"],
   ["Contact", "/contact"],
-  ["Advertise", "/contact?subject=advertising"],
+  ["Advertise", "/advertise"],
+  ["Guidelines", "/guidelines"],
   ["Privacy", "/privacy"],
   ["Terms", "/terms"],
   ["Disclaimer", "/disclaimer"],
