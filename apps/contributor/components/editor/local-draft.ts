@@ -3,7 +3,9 @@ import type { SubmissionSave } from "@omnilede/contracts";
 export type LocalDraft = {
   savedAt: string;
   expectedVersion: number;
-  payload: Omit<SubmissionSave, "expectedVersion" | "submit">;
+  payload: Omit<SubmissionSave, "expectedVersion" | "submit" | "guidelinesAccepted"> & {
+    guidelinesAccepted: boolean;
+  };
 };
 
 function storageKey(userId: string, submissionId: string): string {
