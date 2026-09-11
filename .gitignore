@@ -23,6 +23,8 @@ npm-debug.log*
 .netlify
 
 # Local database dumps and encrypted backup test artifacts
+/supabase/.branches/
+/supabase/.temp/
 /supabase/backups/*.sql
 /supabase/backups/*.dump
 /supabase/backups/*.age
