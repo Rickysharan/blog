@@ -1,10 +1,15 @@
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, test } from "vitest";
+import { afterEach, describe, expect, test, vi } from "vitest";
 
 import { ArticleEditor } from "./article-editor";
 
 describe("ArticleEditor", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    window.localStorage.clear();
+  });
+
   test("exposes labelled story fields and an accessible formatting toolbar", () => {
     render(<ArticleEditor userId="00000000-0000-4000-8000-000000000001" submissionId="00000000-0000-4000-8000-000000000002" />);
     expect(screen.getByLabelText("Headline")).toBeVisible();
@@ -68,5 +73,44 @@ describe("ArticleEditor", () => {
       expect(raw).not.toBeNull();
       expect(JSON.parse(raw ?? "{}").payload.guidelinesAccepted).toBe(false);
     });
+  });
+
+  test("omits the create-only id when submitting an existing draft", async () => {
+    const existingSubmission = {
+      id: "00000000-0000-4000-8000-000000000002",
+      authorId: "00000000-0000-4000-8000-000000000001",
+      title: "Existing draft",
+      contentDocument: {
+        type: "doc" as const,
+        content: [{ type: "paragraph" as const, content: [{ type: "text" as const, text: "Original reporting" }] }]
+      },
+      category: "finance" as const,
+      region: "global" as const,
+      language: "en",
+      primarySourceName: "Primary source",
+      primarySourceUrl: "https://example.com/report",
+      privateImagePath: "00000000-0000-4000-8000-000000000001/00000000-0000-4000-8000-000000000002/00000000-0000-4000-8000-000000000003.webp",
+      guidelinesVersion: "2026-08-27",
+      guidelinesAccepted: true as const,
+      status: "draft" as const,
+      version: 1,
+      createdAt: "2026-09-11T00:00:00.000Z",
+      updatedAt: "2026-09-11T00:00:00.000Z",
+      submittedAt: null
+    };
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      submission: { ...existingSubmission, status: "under_review", version: 2 }
+    }), { status: 200, headers: { "Content-Type": "application/json" } }));
+    vi.stubGlobal("fetch", fetchMock);
+    const user = userEvent.setup();
+    render(<ArticleEditor userId={existingSubmission.authorId} submissionId={existingSubmission.id} initialSubmission={existingSubmission} />);
+
+    await user.click(screen.getByRole("button", { name: /submit for review/i }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledOnce());
+    const request = fetchMock.mock.calls[0]?.[1] as RequestInit;
+    const body = JSON.parse(String(request.body)) as Record<string, unknown>;
+    expect(body).not.toHaveProperty("id");
+    expect(body.submit).toBe(true);
   });
 });

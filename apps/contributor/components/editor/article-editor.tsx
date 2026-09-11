@@ -125,11 +125,11 @@ export function ArticleEditor({ userId, submissionId, initialSubmission }: { use
     if (!parsed.success) { setError("Use the supported text tools and remove unsupported pasted content."); return; }
     if (!accepted) { setError("Accept the contributor guidelines before submitting."); return; }
     setPending(true); setError(""); setStatus("");
-    const payload = { id: submissionId, title, contentDocument: parsed.data, category, region, language, primarySourceName: sourceName, primarySourceUrl: sourceUrl, privateImagePath: imagePath, guidelinesVersion: GUIDELINES_VERSION, guidelinesAccepted: true };
+    const payload = { title, contentDocument: parsed.data, category, region, language, primarySourceName: sourceName, primarySourceUrl: sourceUrl, privateImagePath: imagePath, guidelinesVersion: GUIDELINES_VERSION, guidelinesAccepted: true };
     try {
       const response = await fetch(exists ? `/api/submissions/${submissionId}` : "/api/submissions", {
         method: exists ? "PATCH" : "POST", credentials: "include", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(exists ? { ...payload, expectedVersion: version, submit } : payload)
+        body: JSON.stringify(exists ? { ...payload, expectedVersion: version, submit } : { id: submissionId, ...payload })
       });
       const body = (await response.json()) as { error?: string; submission?: SubmissionRecord };
       if (!response.ok || !body.submission) { setError(body.error ?? "Unable to save submission"); return; }
