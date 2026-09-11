@@ -2,6 +2,7 @@ project_id = "omnilede"
 
 [api]
 enabled = true
+schemas = ["public", "graphql_public", "app_private"]
 
 [db]
 major_version = 17
