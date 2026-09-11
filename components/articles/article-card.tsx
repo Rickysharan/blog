@@ -14,7 +14,7 @@ export function ArticleCard({
 }) {
   return (
     <article className="group flex h-full flex-col border-t-2 border-ink pt-4">
-      <div className="relative aspect-[16/9] overflow-hidden bg-panel">
+      <div className="relative aspect-[16/9] overflow-hidden border-2 border-ink bg-panel shadow-[3px_3px_0_rgb(var(--desk-accent,var(--signal)))]">
         <Image
           src={article.coverImage}
           alt={article.title}

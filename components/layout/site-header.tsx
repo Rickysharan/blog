@@ -12,7 +12,7 @@ export function SiteHeader() {
     <header className="relative z-30 bg-canvas text-ink">
       <div className="border-b border-line/70">
         <div className="mx-auto flex min-h-9 max-w-7xl items-center justify-between gap-4 px-5 text-[0.65rem] font-bold uppercase tracking-[0.16em] text-muted sm:px-8">
-          <p>Independent global briefing</p>
+          <p>Global edition · Vol. 01</p>
           <nav aria-label="Publication links" className="hidden items-center gap-5 sm:flex">
             <Link className="hover:text-ink" href="/about">About</Link>
             <Link className="hover:text-ink" href="/advertise">Advertise</Link>
@@ -21,12 +21,12 @@ export function SiteHeader() {
         </div>
       </div>
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
-        <div className="flex min-h-28 items-center justify-between gap-5 py-6">
+        <div className="flex min-h-28 items-center justify-between gap-5 py-6 sm:py-7">
           <Link href="/" className="group inline-flex flex-col">
-            <span className="font-serif text-4xl font-semibold leading-none tracking-[-0.055em] group-hover:text-signal sm:text-6xl">
+            <span className="masthead-wordmark font-serif text-4xl font-semibold leading-none tracking-[-0.055em] group-hover:text-cobalt sm:text-6xl">
               {SITE_CONFIG.name}
             </span>
-            <span className="mt-2 text-[0.62rem] font-black uppercase tracking-[0.24em] text-signal">
+            <span className="mt-3 w-fit bg-signal px-2 py-1 text-[0.62rem] font-black uppercase tracking-[0.2em] text-signalInk">
               The world, clearly edited
             </span>
           </Link>
@@ -44,7 +44,7 @@ export function SiteHeader() {
           </div>
         </div>
       </div>
-      <div className="bg-signal text-signalInk">
+      <div className="border-y-2 border-ink bg-signal text-signalInk">
         <div className="mx-auto max-w-7xl px-5 sm:px-8">
           <CategoryNav className="hidden py-4 md:block" />
         </div>

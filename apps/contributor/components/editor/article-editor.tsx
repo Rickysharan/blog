@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import LinkExtension from "@tiptap/extension-link";
@@ -27,7 +27,7 @@ function wordCount(document: EditorDocument): number {
 
 export function ArticleEditor({ userId, submissionId, initialSubmission }: { userId: string; submissionId: string; initialSubmission?: SubmissionRecord }) {
   const initialDocument = initialSubmission?.contentDocument;
-  const initial = initialDocument ?? { type: "doc", content: [{ type: "paragraph" }] };
+  const initial: EditorDocument = initialDocument ?? { type: "doc", content: [{ type: "paragraph", content: [] }] };
   const [title, setTitle] = useState(initialSubmission?.title ?? "");
   const [category, setCategory] = useState<Category>(initialSubmission?.category ?? "anime");
   const [region, setRegion] = useState<Region>(initialSubmission?.region ?? "global");
@@ -45,6 +45,7 @@ export function ArticleEditor({ userId, submissionId, initialSubmission }: { use
   const [status, setStatus] = useState("");
   const [dirty, setDirty] = useState(false);
   const [restoreNotice, setRestoreNotice] = useState("");
+  const [document, setDocument] = useState<EditorDocument>(initial);
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -53,7 +54,10 @@ export function ArticleEditor({ userId, submissionId, initialSubmission }: { use
       LinkExtension.configure({ openOnClick: false, autolink: false, linkOnPaste: false, HTMLAttributes: { rel: "nofollow noopener noreferrer" } })
     ],
     content: initial,
-    onUpdate: () => setDirty(true)
+    onUpdate: ({ editor: updatedEditor }) => {
+      setDocument(updatedEditor.getJSON() as EditorDocument);
+      setDirty(true);
+    }
   });
 
   useEffect(() => {
@@ -77,12 +81,12 @@ export function ArticleEditor({ userId, submissionId, initialSubmission }: { use
       setSourceUrl(draft.payload.primarySourceUrl);
       setImagePath(draft.payload.privateImagePath);
       setAccepted(draft.payload.guidelinesAccepted);
+      setDocument(draft.payload.contentDocument);
       editor.commands.setContent(draft.payload.contentDocument);
     }, 0);
     return () => window.clearTimeout(restore);
   }, [editor, initialSubmission, submissionId, userId, version]);
 
-  const document = useMemo(() => (editor?.getJSON() ?? initialDocument ?? { type: "doc", content: [] }) as EditorDocument, [editor, initialDocument]);
   const words = wordCount(document);
   const characters = editorText(document).length;
 
@@ -91,10 +95,10 @@ export function ArticleEditor({ userId, submissionId, initialSubmission }: { use
     const timeout = window.setTimeout(() => saveLocalDraft(userId, submissionId, {
       savedAt: new Date().toISOString(),
       expectedVersion: version,
-      payload: { title, contentDocument: document, category, region, language, primarySourceName: sourceName, primarySourceUrl: sourceUrl, privateImagePath: imagePath, guidelinesVersion: GUIDELINES_VERSION, guidelinesAccepted: true }
+      payload: { title, contentDocument: document, category, region, language, primarySourceName: sourceName, primarySourceUrl: sourceUrl, privateImagePath: imagePath, guidelinesVersion: GUIDELINES_VERSION, guidelinesAccepted: accepted }
     }), 600);
     return () => window.clearTimeout(timeout);
-  }, [category, document, dirty, imagePath, language, region, sourceName, sourceUrl, submissionId, title, userId, version]);
+  }, [accepted, category, document, dirty, imagePath, language, region, sourceName, sourceUrl, submissionId, title, userId, version]);
 
   useEffect(() => {
     const warn = (event: BeforeUnloadEvent) => { if (dirty) { event.preventDefault(); event.returnValue = ""; } };
@@ -172,7 +176,7 @@ export function ArticleEditor({ userId, submissionId, initialSubmission }: { use
         <input type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => { const file = event.target.files?.[0]; if (file) void uploadImage(file); }} disabled={uploading} />
         {imagePath ? <p className="form-success" role="status">Validated private image attached.</p> : null}
       </section>
-      <label className="guidelines-check"><input type="checkbox" checked={accepted} onChange={(event) => setAccepted(event.target.checked)} /> <span>I’ve read the <Link href="/guidelines" target="_blank">contributor guidelines</Link> and this article is my own work.</span></label>
+      <label className="guidelines-check"><input type="checkbox" checked={accepted} onChange={(event) => { setAccepted(event.target.checked); setDirty(true); }} /> <span>I’ve read the <Link href="/guidelines" target="_blank">contributor guidelines</Link> and this article is my own work.</span></label>
       {!online ? <p className="form-error" role="alert">You are offline. Saving and submitting require a connection.</p> : null}
       {error ? <p className="form-error" role="alert">{error}</p> : null}
       {status ? <p className="form-success" role="status">{status}</p> : null}

@@ -14,8 +14,8 @@ export function LeadStory({
 }) {
   return (
     <section className="grid border-y-2 border-ink lg:grid-cols-[minmax(0,2fr)_minmax(19rem,0.8fr)]" aria-label="Top stories">
-      <article className="py-6 lg:pr-8">
-        <div className="relative aspect-[16/9] overflow-hidden bg-panel">
+      <article className="py-8 lg:pr-8">
+        <div className="print-shadow relative aspect-[16/9] overflow-hidden bg-panel">
           <Image
             src={article.coverImage}
             alt={article.title}
@@ -53,8 +53,8 @@ export function LeadStory({
         </div>
       </article>
 
-      <aside className="border-t-2 border-ink py-6 lg:border-l lg:border-t-0 lg:pl-8" aria-labelledby="latest-signals-heading">
-        <p className="text-xs font-black uppercase tracking-[0.2em] text-muted">
+      <aside className="border-t-2 border-ink bg-canvas px-5 py-7 lg:border-l lg:border-t-0 lg:px-8" aria-labelledby="latest-signals-heading">
+        <p className="inline-flex bg-sun px-2 py-1 text-xs font-black uppercase tracking-[0.18em] text-[#15233b]">
           Across the desks
         </p>
         <h2 id="latest-signals-heading" className="mt-2 font-serif text-3xl font-semibold tracking-[-0.035em]">

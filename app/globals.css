@@ -3,30 +3,36 @@
 @tailwind utilities;
 
 :root {
-  --paper: 250 250 250;
-  --canvas: 255 255 255;
-  --panel: 237 237 237;
-  --ink: 0 0 0;
-  --muted: 76 76 76;
-  --line: 184 184 184;
-  --brand: 0 0 0;
-  --brand-ink: 255 255 255;
-  --signal: 0 255 154;
-  --signal-ink: 0 0 0;
+  --paper: 246 235 213;
+  --canvas: 255 249 235;
+  --panel: 234 218 181;
+  --ink: 21 35 59;
+  --muted: 88 83 75;
+  --line: 180 161 123;
+  --brand: 21 35 59;
+  --brand-ink: 255 247 227;
+  --signal: 216 75 55;
+  --signal-ink: 255 247 227;
+  --cobalt: 31 95 191;
+  --sun: 242 177 52;
+  --teal: 28 124 118;
   color-scheme: light;
 }
 
 .dark {
-  --paper: 13 13 13;
-  --canvas: 19 19 19;
-  --panel: 30 30 30;
-  --ink: 255 255 255;
-  --muted: 174 174 174;
-  --line: 74 74 74;
-  --brand: 0 0 0;
-  --brand-ink: 255 255 255;
-  --signal: 0 255 154;
-  --signal-ink: 0 0 0;
+  --paper: 17 26 45;
+  --canvas: 24 35 59;
+  --panel: 38 50 77;
+  --ink: 247 235 211;
+  --muted: 193 183 159;
+  --line: 91 97 112;
+  --brand: 9 15 31;
+  --brand-ink: 255 247 227;
+  --signal: 240 100 73;
+  --signal-ink: 9 15 31;
+  --cobalt: 91 142 219;
+  --sun: 243 191 77;
+  --teal: 73 167 157;
   color-scheme: dark;
 }
 
@@ -40,7 +46,11 @@ html {
 
 body {
   min-width: 320px;
-  background: rgb(var(--paper));
+  background-color: rgb(var(--paper));
+  background-image:
+    radial-gradient(circle, rgb(var(--ink) / 0.055) 0.7px, transparent 0.8px),
+    linear-gradient(90deg, rgb(var(--canvas) / 0.18), transparent 34%, rgb(var(--canvas) / 0.12));
+  background-size: 9px 9px, 100% 100%;
   color: rgb(var(--ink));
   font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
   text-rendering: optimizeLegibility;
@@ -48,6 +58,75 @@ body {
 
 a {
   text-decoration-thickness: from-font;
+}
+
+.print-shadow {
+  border: 2px solid rgb(var(--ink));
+  box-shadow: 6px 6px 0 rgb(var(--ink));
+}
+
+.masthead-wordmark {
+  text-shadow:
+    2px 2px 0 rgb(var(--sun)),
+    4px 4px 0 rgb(var(--signal) / 0.42);
+}
+
+.retro-hero {
+  position: relative;
+  border: 3px solid rgb(var(--ink));
+  background:
+    linear-gradient(112deg, rgb(var(--canvas)) 0 68%, rgb(var(--sun) / 0.55) 68% 100%);
+  box-shadow: 8px 8px 0 rgb(var(--cobalt));
+}
+
+.retro-hero::before {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 0.45rem;
+  background: linear-gradient(
+    90deg,
+    rgb(var(--signal)) 0 34%,
+    rgb(var(--cobalt)) 34% 68%,
+    rgb(var(--teal)) 68% 100%
+  );
+  content: "";
+}
+
+.retro-desk {
+  --desk-accent: var(--signal);
+  border: 2px solid rgb(var(--ink));
+  border-top: 0.55rem solid rgb(var(--desk-accent));
+  background: rgb(var(--canvas));
+  box-shadow: 5px 5px 0 rgb(var(--ink));
+  padding: 1.25rem;
+}
+
+.retro-desk:nth-child(3n + 2) {
+  --desk-accent: var(--cobalt);
+}
+
+.retro-desk:nth-child(3n + 3) {
+  --desk-accent: var(--teal);
+}
+
+.retro-rule-title {
+  position: relative;
+  padding-left: 1rem;
+}
+
+.retro-rule-title::before {
+  position: absolute;
+  inset: 0.08em auto 0.08em 0;
+  width: 0.42rem;
+  background: rgb(var(--signal));
+  content: "";
+}
+
+@media (max-width: 639px) {
+  .retro-hero {
+    background: rgb(var(--canvas));
+    box-shadow: 5px 5px 0 rgb(var(--cobalt));
+  }
 }
 
 .article-prose {

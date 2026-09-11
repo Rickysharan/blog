@@ -23,7 +23,10 @@ const config: Config = {
         brand: "rgb(var(--brand) / <alpha-value>)",
         brandInk: "rgb(var(--brand-ink) / <alpha-value>)",
         signal: "rgb(var(--signal) / <alpha-value>)",
-        signalInk: "rgb(var(--signal-ink) / <alpha-value>)"
+        signalInk: "rgb(var(--signal-ink) / <alpha-value>)",
+        cobalt: "rgb(var(--cobalt) / <alpha-value>)",
+        sun: "rgb(var(--sun) / <alpha-value>)",
+        teal: "rgb(var(--teal) / <alpha-value>)"
       }
     }
   },
