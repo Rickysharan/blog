@@ -13,11 +13,14 @@ export function SiteHeader() {
       <div className="border-b border-line/70">
         <div className="mx-auto flex min-h-9 max-w-7xl items-center justify-between gap-4 px-5 text-[0.65rem] font-bold uppercase tracking-[0.16em] text-muted sm:px-8">
           <p>Global edition · Vol. 01</p>
-          <nav aria-label="Publication links" className="hidden items-center gap-5 sm:flex">
-            <Link className="hover:text-ink" href="/about">About</Link>
-            <Link className="hover:text-ink" href="/advertise">Advertise</Link>
-            <Link className="hover:text-ink" href="/feed.xml">RSS</Link>
-          </nav>
+          <div className="flex items-center gap-6">
+            <p className="hidden font-black text-cobalt lg:block">World wide signal · 24/7</p>
+            <nav aria-label="Publication links" className="hidden items-center gap-5 sm:flex">
+              <Link className="hover:text-ink" href="/about">About</Link>
+              <Link className="hover:text-ink" href="/advertise">Advertise</Link>
+              <Link className="hover:text-ink" href="/feed.xml">RSS</Link>
+            </nav>
+          </div>
         </div>
       </div>
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
@@ -44,7 +47,7 @@ export function SiteHeader() {
           </div>
         </div>
       </div>
-      <div className="border-y-2 border-ink bg-signal text-signalInk">
+      <div className="retro-nav-shell border-y-2 border-ink bg-signal text-signalInk">
         <div className="mx-auto max-w-7xl px-5 sm:px-8">
           <CategoryNav className="hidden py-4 md:block" />
         </div>

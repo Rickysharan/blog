@@ -10,6 +10,7 @@ describe("SiteHeader", () => {
     const header = screen.getByRole("banner");
     expect(header).toHaveClass("bg-canvas", "text-ink");
     expect(screen.getByText("Global edition · Vol. 01")).toBeInTheDocument();
+    expect(screen.getByText("World wide signal · 24/7")).toBeInTheDocument();
     expect(screen.getByRole("navigation", { name: "News desks" }).closest(".bg-signal")).not.toBeNull();
     expect(screen.getByRole("button", { name: /theme:/i })).toHaveClass("border-ink/20", "text-ink");
   });
