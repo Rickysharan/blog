@@ -26,7 +26,9 @@ const config: Config = {
         signalInk: "rgb(var(--signal-ink) / <alpha-value>)",
         cobalt: "rgb(var(--cobalt) / <alpha-value>)",
         sun: "rgb(var(--sun) / <alpha-value>)",
-        teal: "rgb(var(--teal) / <alpha-value>)"
+        teal: "rgb(var(--teal) / <alpha-value>)",
+        magenta: "rgb(var(--magenta) / <alpha-value>)",
+        cyan: "rgb(var(--cyan) / <alpha-value>)"
       }
     }
   },

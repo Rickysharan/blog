@@ -16,6 +16,7 @@ export function LeadStory({
     <section className="grid border-y-2 border-ink lg:grid-cols-[minmax(0,2fr)_minmax(19rem,0.8fr)]" aria-label="Top stories">
       <article className="py-8 lg:pr-8">
         <div className="print-shadow relative aspect-[16/9] overflow-hidden bg-panel">
+          <span aria-hidden="true" className="retro-lead-stamp">Lead / 01</span>
           <Image
             src={article.coverImage}
             alt={article.title}
@@ -61,8 +62,11 @@ export function LeadStory({
           Latest signals
         </h2>
         <ol className="mt-5">
-          {supportingArticles.map((supportingArticle) => (
+          {supportingArticles.map((supportingArticle, index) => (
             <li className="border-t border-line py-5 first:border-t-2 first:border-ink" key={supportingArticle.slug}>
+              <span aria-hidden="true" className="retro-signal-index">
+                {String(index + 1).padStart(2, "0")}
+              </span>
               <CategoryLabel category={supportingArticle.category} />
               <h3 className="mt-3 font-serif text-xl font-semibold leading-tight tracking-[-0.02em]">
                 <Link className="underline-offset-4 hover:underline" href={`/article/${supportingArticle.slug}`}>

@@ -37,15 +37,20 @@ export default async function HomePage() {
       <div className="mx-auto max-w-7xl px-5 py-10 sm:px-8 sm:py-14">
         <section aria-labelledby="newsroom-heading" className="retro-hero grid gap-7 overflow-hidden px-5 pb-7 pt-10 sm:px-8 sm:pb-9 lg:grid-cols-[minmax(0,1.5fr)_minmax(18rem,0.5fr)] lg:items-end">
           <div>
-            <p className="inline-flex bg-cobalt px-3 py-1.5 text-xs font-black uppercase tracking-[0.2em] text-white">
+            <p className="retro-kicker bg-cobalt px-3 py-1.5 text-xs font-black uppercase tracking-[0.2em] text-white">
               Today&apos;s global briefing
             </p>
             <h1
               id="newsroom-heading"
-              className="mt-5 max-w-5xl font-serif text-4xl font-semibold leading-[0.94] tracking-[-0.055em] sm:text-6xl lg:text-7xl"
+              className="retro-display-title mt-5 max-w-5xl font-serif text-4xl font-semibold leading-[0.94] tracking-[-0.055em] sm:text-6xl lg:text-7xl"
             >
               Culture. Power. <span className="text-signal">Capital.</span>
             </h1>
+            <ul aria-label="Edition details" className="retro-chip-row mt-6">
+              <li className="retro-chip">Est. 2026</li>
+              <li className="retro-chip">Edition 01</li>
+              <li className="retro-chip">Signal strong</li>
+            </ul>
           </div>
           <div className="border-l-[6px] border-cobalt bg-canvas/80 p-5">
             <p className="text-sm font-medium leading-6 text-ink sm:text-base sm:leading-7">
@@ -68,7 +73,7 @@ export default async function HomePage() {
         </div>
 
         <section aria-labelledby="culture-heading" className="mt-16">
-          <div className="grid gap-4 border-b-[3px] border-ink pb-4 sm:grid-cols-[1fr_auto] sm:items-end">
+          <div className="retro-section-header grid gap-4 border-b-[3px] border-ink pb-4 sm:grid-cols-[1fr_auto] sm:items-end">
             <div>
               <p className="text-xs font-black uppercase tracking-[0.2em] text-muted">Culture and competition</p>
               <h2 id="culture-heading" className="retro-rule-title mt-2 font-serif text-4xl font-semibold tracking-[-0.045em] sm:text-5xl">
@@ -101,7 +106,7 @@ export default async function HomePage() {
         </div>
 
         <section aria-labelledby="power-heading" className="mt-16">
-          <div className="grid gap-4 border-b-[3px] border-ink pb-4 sm:grid-cols-[1fr_auto] sm:items-end">
+          <div className="retro-section-header grid gap-4 border-b-[3px] border-ink pb-4 sm:grid-cols-[1fr_auto] sm:items-end">
             <div>
               <p className="text-xs font-black uppercase tracking-[0.2em] text-muted">Institutions and markets</p>
               <h2 id="power-heading" className="retro-rule-title mt-2 font-serif text-4xl font-semibold tracking-[-0.045em] sm:text-5xl">

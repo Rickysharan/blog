@@ -85,13 +85,13 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
         type="application/ld+json"
       />
       <article data-publication-id={article.publicationId}>
-        <header className="grid gap-7 border-b-2 border-ink pb-9 lg:grid-cols-[minmax(0,1.4fr)_minmax(18rem,0.6fr)] lg:items-end">
+        <header className="retro-page-banner grid gap-7 lg:grid-cols-[minmax(0,1.4fr)_minmax(18rem,0.6fr)] lg:items-end">
           <div>
             <p className="mb-5 text-xs font-black uppercase tracking-[0.2em] text-muted">
               OmniLede analysis
             </p>
             <CategoryLabel category={article.category} />
-            <h1 className="mt-5 max-w-5xl font-serif text-4xl font-semibold leading-[0.98] tracking-[-0.05em] sm:text-6xl lg:text-7xl">
+            <h1 className="retro-display-title mt-5 max-w-5xl font-serif text-4xl font-semibold leading-[0.98] tracking-[-0.05em] sm:text-6xl lg:text-7xl">
               {article.title}
             </h1>
           </div>
@@ -121,7 +121,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
           </div>
         </header>
 
-        <div className="relative mt-8 aspect-[16/9] overflow-hidden bg-panel">
+        <div className="retro-article-image relative mt-10 aspect-[16/9] overflow-hidden bg-panel">
           <Image
             src={article.coverImage}
             alt={article.title}

@@ -5,14 +5,18 @@ import { CATEGORIES } from "@/lib/config/categories";
 export function CategoryNav({ className = "" }: { className?: string }) {
   return (
     <nav aria-label="News desks" className={className}>
-      <ul className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
-        {CATEGORIES.map((category) => (
-          <li key={category.slug}>
+      <ul className="grid grid-cols-6 items-stretch gap-0">
+        {CATEGORIES.map((category, index) => (
+          <li className="retro-nav-item" data-accent={category.accent} key={category.slug}>
             <Link
+              aria-label={category.label}
               href={`/category/${category.slug}`}
-              className="text-xs font-black uppercase tracking-[0.12em] underline-offset-4 hover:underline"
+              className="retro-nav-link text-xs font-black uppercase tracking-[0.12em]"
             >
-              {category.label}
+              <span aria-hidden="true" className="retro-nav-number">
+                {String(index + 1).padStart(2, "0")}
+              </span>
+              <span>{category.label}</span>
             </Link>
           </li>
         ))}

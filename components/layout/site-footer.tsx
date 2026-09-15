@@ -17,7 +17,7 @@ const policyLinks = [
 
 export function SiteFooter() {
   return (
-    <footer className="mt-20 border-t border-brandInk/15 bg-brand text-brandInk">
+    <footer className="retro-footer mt-20 border-t border-brandInk/15 bg-brand text-brandInk">
       <div className="mx-auto grid max-w-7xl gap-10 px-5 py-12 sm:px-8 md:grid-cols-[1fr_2fr]">
         <div>
           <Link href="/" className="font-serif text-3xl font-semibold tracking-[-0.035em]">

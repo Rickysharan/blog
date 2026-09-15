@@ -10,7 +10,7 @@ describe("CategoryNav", () => {
     expect(
       screen
         .getAllByRole("link")
-        .map((link) => ({ label: link.textContent, href: link.getAttribute("href") })),
+        .map((link) => ({ label: link.getAttribute("aria-label"), href: link.getAttribute("href") })),
     ).toEqual([
       { label: "Anime", href: "/category/anime" },
       { label: "Movies", href: "/category/movies" },
@@ -19,5 +19,7 @@ describe("CategoryNav", () => {
       { label: "Finance", href: "/category/finance" },
       { label: "Share Market", href: "/category/share-market" },
     ]);
+    expect(screen.getByRole("link", { name: "Anime" })).toHaveTextContent("01Anime");
+    expect(screen.getByRole("link", { name: "Share Market" })).toHaveTextContent("06Share Market");
   });
 });

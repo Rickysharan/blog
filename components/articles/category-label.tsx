@@ -7,8 +7,9 @@ export function CategoryLabel({ category }: { category: CategorySlug }) {
 
   return (
     <Link
+      data-accent={definition.accent}
       href={`/category/${category}`}
-      className="inline-flex border-l-[3px] border-signal pl-2 text-[0.65rem] font-black uppercase tracking-[0.18em] text-ink transition-opacity hover:opacity-65"
+      className="retro-category-label inline-flex text-[0.65rem] font-black uppercase tracking-[0.16em] text-ink transition-transform hover:-translate-y-0.5"
     >
       {definition.label}
     </Link>
