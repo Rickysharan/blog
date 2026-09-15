@@ -100,7 +100,6 @@ values
 set local role service_role;
 do $$ begin
   perform set_config('request.jwt.claim.role', 'service_role', true);
-  perform app_private.set_audit_context('system', null, 'Review rewards pgTAP fixture');
   perform app_private.post_wallet_transaction(
     '00000000-0000-4000-8000-000000000011', 25, 'earn', 'earn-once', 'test'
   );
@@ -139,7 +138,10 @@ select throws_ok(
   'redemption transactions cannot credit the wallet'
 );
 
+reset role;
 select app_private.set_audit_context('system', null, 'Topic claim pgTAP fixture');
+set local role service_role;
+do $$ begin perform set_config('request.jwt.claim.role', 'service_role', true); end $$;
 
 insert into public.trending_topics (id, topic_key, title, category)
 values ('00000000-0000-4000-8000-000000000021', 'test-topic', 'Test topic', 'anime');
