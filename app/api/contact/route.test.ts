@@ -12,9 +12,23 @@ import { POST } from "@/app/api/contact/route";
 
 describe("contact route", () => {
   beforeEach(() => {
+    vi.unstubAllEnvs();
     contactMocks.createContactDependencies.mockClear();
     contactMocks.hashContactIdentity.mockClear();
     contactMocks.processContactPayload.mockReset();
+  });
+
+  it("rejects commercial enquiries while the publication is in preparation mode", async () => {
+    vi.stubEnv("COMMERCIAL_FEATURES_ENABLED", "false");
+    const response = await POST(new Request("https://news.example/api/contact", {
+      method: "POST",
+      body: JSON.stringify({ inquiryType: "advertising" }),
+      headers: { "content-type": "application/json" },
+    }));
+
+    expect(response.status).toBe(403);
+    expect(await response.json()).toMatchObject({ code: "commercial_features_disabled" });
+    expect(contactMocks.createContactDependencies).not.toHaveBeenCalled();
   });
 
   it("rejects non-JSON bodies before creating service dependencies", async () => {

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { InfoPage } from "@/components/layout/info-page";
+import { commercialFeaturesEnabled } from "@/lib/config/commercial";
 
 export const metadata: Metadata = {
   title: "Advertise and partner",
@@ -16,6 +17,33 @@ const metrics = [
 ] as const;
 
 export default function AdvertisePage() {
+  if (!commercialFeaturesEnabled()) {
+    return (
+      <InfoPage
+        eyebrow="Preparation mode"
+        intro="OmniLede is currently operating without advertising, sponsorships, affiliate offers or paid partnerships."
+        title="Commercial enquiries are paused"
+      >
+        <h2>Reader-first publishing</h2>
+        <p>
+          The newsroom is available for reading, search and editorial updates, but it is not accepting commercial enquiries or displaying paid advertising.
+        </p>
+        <h2>What remains available</h2>
+        <p>
+          Readers can browse every desk, install the app, subscribe to the RSS feed and contact the editorial team about corrections, rights, privacy or support.
+        </p>
+        <p className="not-prose mt-6">
+          <Link
+            className="inline-flex border-2 border-ink px-5 py-3 text-sm font-black uppercase tracking-[0.12em] text-ink"
+            href="/about"
+          >
+            How OmniLede works
+          </Link>
+        </p>
+      </InfoPage>
+    );
+  }
+
   return (
     <InfoPage
       eyebrow="Commercial"

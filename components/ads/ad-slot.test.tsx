@@ -8,10 +8,28 @@ import { ConsentManager } from "@/components/privacy/consent-manager";
 describe("AdSlot", () => {
   beforeEach(() => localStorage.clear());
 
+  it("shows an editorial note without commercial invitations in preparation mode", () => {
+    render(
+      <ConsentManager adsenseEnabled={false}>
+        <AdSlot
+          variant="header"
+          adsenseEnabled={false}
+          commercialEnabled={false}
+        />
+      </ConsentManager>,
+    );
+
+    expect(screen.getByRole("complementary", { name: /publication note/i })).toBeVisible();
+    expect(screen.getByRole("link", { name: /how omnilede works/i })).toHaveAttribute("href", "/about");
+    expect(screen.queryByRole("link", { name: /advertise with omnilede/i })).toBeNull();
+    expect(screen.queryByText(/^advertisement$/i)).toBeNull();
+    expect(document.querySelector("ins.adsbygoogle")).toBeNull();
+  });
+
   it("renders a labelled house ad when third-party advertising is disabled", () => {
     render(
       <ConsentManager adsenseEnabled={false}>
-        <AdSlot variant="header" adsenseEnabled={false} />
+        <AdSlot variant="header" commercialEnabled adsenseEnabled={false} />
       </ConsentManager>,
     );
 
@@ -29,6 +47,7 @@ describe("AdSlot", () => {
       <ConsentManager adsenseClientId="ca-pub-test" adsenseEnabled>
         <AdSlot
           variant="article"
+          commercialEnabled
           adsenseClientId="ca-pub-test"
           slotId="1234567890"
           adsenseEnabled
@@ -52,6 +71,7 @@ describe("AdSlot", () => {
       <ConsentManager adsenseClientId="ca-pub-test" adsenseEnabled>
         <AdSlot
           variant="article"
+          commercialEnabled
           adsenseClientId="ca-pub-test"
           adsenseEnabled
         />
@@ -70,7 +90,7 @@ describe("AdSlot", () => {
   it("keeps the house ad when approval values are absent", () => {
     render(
       <ConsentManager adsenseEnabled adsenseClientId="">
-        <AdSlot variant="header" adsenseEnabled slotId="" />
+        <AdSlot variant="header" commercialEnabled adsenseEnabled slotId="" />
       </ConsentManager>,
     );
 

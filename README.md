@@ -52,6 +52,7 @@ Copy `.env.example` to `.env.local` and replace only values you own. Never expos
 | `ANTHROPIC_MODEL` | optional | Explicit Claude model name used by the drafting script. |
 | `STOCK_API_KEY` | optional | Financial Modeling Prep key for delayed market quotes. |
 | `GA4_ID` | optional | Consent-gated Google Analytics measurement ID. |
+| `COMMERCIAL_FEATURES_ENABLED` | optional | Master gate for advertising, sponsorship and partnership invitations. Keep `false` during preparation and enable only after the operator confirms permission and launch requirements. |
 | `ADSENSE_CLIENT_ID` | optional | Consent-gated AdSense client ID; keep ads disabled until approved. |
 | `ADSENSE_SLOT_HEADER` | optional | Approved numeric AdSense slot for the top leaderboard placement. |
 | `ADSENSE_SLOT_IN_FEED` | optional | Approved numeric AdSense slot for homepage/category feed placements. |
@@ -61,7 +62,7 @@ Copy `.env.example` to `.env.local` and replace only values you own. Never expos
 | `ADSENSE_ENABLED` | optional | Set `true` only after AdSense approval, the exact `public/ads.txt` seller record, valid slot IDs, consent review, and commercial hosting terms are ready. |
 | `CRON_SECRET` | optional | 16+ character bearer secret for the opt-in Vercel Cron endpoint. |
 
-The market strip remains truthful when `STOCK_API_KEY` is absent. When third-party ads are disabled or incomplete, the labelled placements show privacy-safe OmniLede house ads rather than empty placeholders. GA4 and AdSense scripts do not load until the reader grants consent, and an AdSense unit is created only when both its client ID and that placement's approved numeric slot ID are valid. Manual drafts never need an API key.
+The market strip remains truthful when `STOCK_API_KEY` is absent. With `COMMERCIAL_FEATURES_ENABLED=false`, advertising and partnership links are removed, commercial contact submissions are rejected, and placement areas show editorial publication notes. After commercial launch, missing or inactive third-party ads fall back to clearly labelled OmniLede house ads. GA4 and AdSense scripts do not load until the reader grants consent, and an AdSense unit is created only when both commercial gates, the client ID and that placement's approved numeric slot ID are valid. Manual drafts never need an API key.
 
 ## Editorial content
 
@@ -132,7 +133,7 @@ Netlify Free is the recommended launch host for a commercial OmniLede publicatio
 
 1. Create or sign in to Netlify and connect `Rickysharan/blog` on the `main` branch.
 2. Use `npm run build` as the build command and `.next` as the publish directory; the root `netlify.toml` supplies these defaults.
-3. Copy only the production runtime values into Netlify's Production environment. Keep `DRAFT_GENERATION_ENABLED=false` and `ADSENSE_ENABLED=false` initially.
+3. Copy only the production runtime values into Netlify's Production environment. Keep `DRAFT_GENERATION_ENABLED=false`, `COMMERCIAL_FEATURES_ENABLED=false` and `ADSENSE_ENABLED=false` initially.
 4. Keep GitHub Actions as the daily content scheduler; Netlify Git deploys do not replace the workflow in `.github/workflows/content-pipeline.yml`.
 5. Verify all public, PWA, admin, and API routes before changing the primary domain. Keep the existing Vercel deployment available as rollback until those checks pass.
 6. Netlify Free uses a hard usage limit and can pause the project. Leave auto-recharge disabled and do not add a payment card for this launch tier.
@@ -148,7 +149,7 @@ AdSense is deliberately disabled in this repository until the site has approval,
 3. Add `ADSENSE_CLIENT_ID`, each approved numeric `ADSENSE_SLOT_*`, and only then set `ADSENSE_ENABLED=true` in Netlify Production. Redeploy after saving the variables; keep them server-side unless a provider integration explicitly requires the client identifier.
 4. Test with optional consent denied and granted. Confirm no AdSense script or unit loads before consent, every live placement is labelled, and the house-ad fallback remains when any approved value is missing.
 5. For an Indian bank account, use AdSense **Payments → Payments info → Manage payment methods → Transfer to bank account**. Enter the account-holder name, bank name, account number, IFSC, and SWIFT/BIC exactly as the bank records them. Keep PAN, income-tax, GST, foreign-remittance, and business-structure decisions with an Indian chartered accountant.
-6. Keep `ADSENSE_ENABLED=false` until every preceding step is complete and the production route/privacy checks pass. Approval and payout setup are not the same as guaranteed revenue; Google can still withhold or adjust payments under its policies.
+6. Keep `COMMERCIAL_FEATURES_ENABLED=false` and `ADSENSE_ENABLED=false` until every preceding step is complete and the production route/privacy checks pass. Enable the commercial gate first, then AdSense, and redeploy. Approval and payout setup are not the same as guaranteed revenue; Google can still withhold or adjust payments under its policies.
 
 The committed `public/ads.txt` file intentionally contains only a placeholder. The operator must replace it after approval and review the result at `https://<production-domain>/ads.txt` before enabling ads.
 

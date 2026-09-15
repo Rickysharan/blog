@@ -7,7 +7,7 @@ import { InstallAppButton } from "@/components/pwa/install-app-button";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { SITE_CONFIG } from "@/lib/config/site";
 
-export function SiteHeader() {
+export function SiteHeader({ commercialEnabled }: { commercialEnabled: boolean }) {
   return (
     <header className="relative z-30 bg-canvas text-ink">
       <div className="border-b border-line/70">
@@ -17,7 +17,7 @@ export function SiteHeader() {
             <p className="hidden font-black text-cobalt lg:block">World wide signal · 24/7</p>
             <nav aria-label="Publication links" className="hidden items-center gap-5 sm:flex">
               <Link className="hover:text-ink" href="/about">About</Link>
-              <Link className="hover:text-ink" href="/advertise">Advertise</Link>
+              {commercialEnabled ? <Link className="hover:text-ink" href="/advertise">Advertise</Link> : null}
               <Link className="hover:text-ink" href="/feed.xml">RSS</Link>
             </nav>
           </div>

@@ -8,6 +8,7 @@ import { IosInstallBanner } from "@/components/pwa/ios-install-banner";
 import { InstallProvider } from "@/components/pwa/install-provider";
 import { ConsentManager } from "@/components/privacy/consent-manager";
 import { THEME_BOOTSTRAP } from "@/components/theme/theme-script";
+import { commercialFeaturesEnabled } from "@/lib/config/commercial";
 import { SITE_CONFIG } from "@/lib/config/site";
 
 import "./globals.css";
@@ -77,6 +78,8 @@ export const viewport: Viewport = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const commercialEnabled = commercialFeaturesEnabled();
+
   return (
     <html
       lang="en"
@@ -90,16 +93,16 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         </Script>
         <ConsentManager
           adsenseClientId={process.env.ADSENSE_CLIENT_ID}
-          adsenseEnabled={process.env.ADSENSE_ENABLED === "true"}
+          adsenseEnabled={commercialEnabled && process.env.ADSENSE_ENABLED === "true"}
           ga4Id={process.env.GA4_ID}
         >
           <InstallProvider>
             <a className="skip-link" href="#main-content">
               Skip to content
             </a>
-            <SiteHeader />
+            <SiteHeader commercialEnabled={commercialEnabled} />
             {children}
-            <SiteFooter />
+            <SiteFooter commercialEnabled={commercialEnabled} />
             <IosInstallBanner />
           </InstallProvider>
         </ConsentManager>

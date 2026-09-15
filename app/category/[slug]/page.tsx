@@ -15,6 +15,7 @@ import {
   paginateArticles,
 } from "@/lib/content/articles";
 import { SITE_CONFIG } from "@/lib/config/site";
+import { commercialFeaturesEnabled } from "@/lib/config/commercial";
 
 const PAGE_SIZE = 10;
 
@@ -68,6 +69,7 @@ export default async function CategoryPage({
   params,
   searchParams,
 }: CategoryPageProps) {
+  const commercialEnabled = commercialFeaturesEnabled();
   const [{ slug }, query] = await Promise.all([params, searchParams]);
   if (!isCategorySlug(slug)) {
     notFound();
@@ -106,6 +108,7 @@ export default async function CategoryPage({
         <AdSlot
           adsenseClientId={process.env.ADSENSE_CLIENT_ID}
           adsenseEnabled={process.env.ADSENSE_ENABLED === "true"}
+          commercialEnabled={commercialEnabled}
           slotId={process.env.ADSENSE_SLOT_IN_FEED}
           variant="header"
         />

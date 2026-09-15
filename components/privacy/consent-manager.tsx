@@ -134,6 +134,7 @@ export function ConsentManager({
       ) : null}
       {showBanner ? (
         <ConsentBanner
+          adsenseEnabled={adsenseEnabled}
           onAccept={() => choose("granted")}
           onDecline={() => choose("denied")}
         />
