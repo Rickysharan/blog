@@ -1,5 +1,5 @@
 import { cleanup, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import AdvertisePage from "@/app/advertise/page";
 import ContactPage from "@/app/contact/page";
@@ -8,7 +8,10 @@ import GuidelinesPage from "@/app/guidelines/page";
 import PrivacyPage from "@/app/privacy/page";
 import TermsPage from "@/app/terms/page";
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.unstubAllEnvs();
+});
 
 describe("governance and partner pages", () => {
   it("keeps every required operator fact as an exact visible placeholder", () => {
@@ -44,16 +47,22 @@ describe("governance and partner pages", () => {
     expect(copy).toMatch(/not verified professional financial advice/i);
   });
 
-  it("labels advertiser metrics as not connected and protects editorial independence", () => {
+  it("pauses advertising invitations when commercial features are disabled", () => {
+    vi.stubEnv("COMMERCIAL_FEATURES_ENABLED", "false");
+    render(<AdvertisePage />);
+
+    expect(screen.getByRole("heading", { name: /commercial enquiries are paused/i })).toBeVisible();
+    expect(screen.queryByRole("link", { name: /send an advertising enquiry/i })).toBeNull();
+  });
+
+  it("shows verified-only advertiser information after commercial launch", () => {
+    vi.stubEnv("COMMERCIAL_FEATURES_ENABLED", "true");
     render(<AdvertisePage />);
 
     expect(screen.getAllByText("Not connected").length).toBeGreaterThan(0);
     expect(document.body.textContent).toMatch(/no audience figures are estimated or invented/i);
     expect(document.body.textContent).toMatch(/editorial independence/i);
-    expect(screen.getByRole("link", { name: /send an advertising enquiry/i })).toHaveAttribute(
-      "href",
-      "/contact?subject=advertising",
-    );
+    expect(screen.getByRole("link", { name: /send an advertising enquiry/i })).toHaveAttribute("href", "/contact?subject=advertising");
   });
 
   it("retains the editorial and financial disclaimers", () => {
@@ -62,7 +71,8 @@ describe("governance and partner pages", () => {
     expect(document.body.textContent).toMatch(/source links.*do not imply sponsorship or endorsement/i);
   });
 
-  it("offers a routed contact form for support and commercial enquiries", async () => {
+  it("routes commercial enquiries only after commercial launch", async () => {
+    vi.stubEnv("COMMERCIAL_FEATURES_ENABLED", "true");
     const page = await ContactPage({
       searchParams: Promise.resolve({ subject: "partnerships" }),
     });

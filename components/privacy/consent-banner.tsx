@@ -3,9 +3,11 @@
 import Link from "next/link";
 
 export function ConsentBanner({
+  adsenseEnabled,
   onAccept,
   onDecline,
 }: {
+  adsenseEnabled: boolean;
   onAccept: () => void;
   onDecline: () => void;
 }) {
@@ -18,7 +20,7 @@ export function ConsentBanner({
         Your privacy choices
       </h2>
       <p className="mt-2 text-sm leading-6 text-muted">
-        OmniLede uses essential storage for your theme and sign-in. With your permission, it can also load analytics and advertising services. You can change this choice later in the footer. Read the{" "}
+        OmniLede uses essential storage for your theme and sign-in. With your permission, it can also load {adsenseEnabled ? "analytics and advertising services" : "analytics services"}. You can change this choice later in the footer. Read the{" "}
         <Link className="font-semibold underline" href="/privacy">
           privacy policy
         </Link>

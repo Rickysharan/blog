@@ -38,17 +38,20 @@ function validSlot(value: string | undefined): value is string {
 
 export function AdSlot({
   variant,
+  commercialEnabled,
   adsenseEnabled,
   adsenseClientId,
   slotId,
 }: {
   variant: AdVariant;
+  commercialEnabled: boolean;
   adsenseEnabled: boolean;
   adsenseClientId?: string;
   slotId?: string;
 }) {
   const { choice } = useConsent();
   const active =
+    commercialEnabled &&
     adsenseEnabled &&
     choice === "granted" &&
     validClient(adsenseClientId) &&
@@ -65,6 +68,30 @@ export function AdSlot({
       // Ad blockers and provider failures must never break article rendering.
     }
   }, [active]);
+
+  if (!commercialEnabled) {
+    return (
+      <aside
+        aria-label="Publication note"
+        className={`grid content-center border border-line border-l-4 border-l-cobalt bg-canvas px-5 py-5 text-ink ${houseLayoutClasses[variant]} ${variantClasses[variant]}`}
+      >
+        <div>
+          <p className="text-[0.65rem] font-black uppercase tracking-[0.2em] text-muted">
+            Reader-first edition
+          </p>
+          <p className="mt-2 font-serif text-2xl font-semibold leading-tight sm:text-3xl">
+            Independent reporting, visibly sourced.
+          </p>
+        </div>
+        <Link
+          href="/about"
+          className={`mt-4 inline-flex min-h-11 items-center justify-center border-2 border-ink px-5 text-xs font-black uppercase tracking-[0.14em] text-ink transition-colors hover:border-cobalt hover:bg-cobalt hover:text-white ${houseLinkClasses[variant]}`}
+        >
+          How OmniLede works
+        </Link>
+      </aside>
+    );
+  }
 
   if (!active) {
     return (

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { ContactForm, type ContactFormType } from "@/components/contact/contact-form";
 import { InfoPage } from "@/components/layout/info-page";
+import { commercialFeaturesEnabled } from "@/lib/config/commercial";
 
 export const metadata: Metadata = {
   title: "Contact",
@@ -18,11 +19,12 @@ type ContactPageProps = {
 };
 
 export default async function ContactPage({ searchParams }: ContactPageProps) {
+  const commercialEnabled = commercialFeaturesEnabled();
   const query = await searchParams;
   const subject = Array.isArray(query.subject) ? query.subject[0] : query.subject;
-  const initialType: ContactFormType = subject === "advertising"
+  const initialType: ContactFormType = commercialEnabled && subject === "advertising"
     ? "advertising"
-    : subject === "partnerships"
+    : commercialEnabled && subject === "partnerships"
       ? "partnership"
       : subject === "support"
         ? "support"
@@ -50,7 +52,7 @@ export default async function ContactPage({ searchParams }: ContactPageProps) {
       <p>
         The form separates editorial/support requests from advertising/partnership messages. It stores a validated enquiry before attempting an email notification, so a notification problem does not silently lose the message.
       </p>
-      <ContactForm initialType={initialType} />
+      <ContactForm commercialEnabled={commercialEnabled} initialType={initialType} />
       <h2>Editorial and corrections</h2>
       {email ? (
         <p>

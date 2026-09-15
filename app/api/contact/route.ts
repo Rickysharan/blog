@@ -3,6 +3,7 @@ import {
   hashContactIdentity,
   processContactPayload,
 } from "@/lib/contact/service";
+import { commercialFeaturesEnabled } from "@/lib/config/commercial";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +25,12 @@ function requestIdentity(request: Request): string {
 
   const forwarded = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
   return forwarded || "unknown";
+}
+
+function isCommercialInquiry(payload: unknown): boolean {
+  if (!payload || typeof payload !== "object") return false;
+  const inquiryType = (payload as Record<string, unknown>).inquiryType;
+  return inquiryType === "advertising" || inquiryType === "partnership";
 }
 
 export async function POST(request: Request): Promise<Response> {
@@ -56,6 +63,17 @@ export async function POST(request: Request): Promise<Response> {
     return json(
       { ok: false, code: "invalid_json", message: "The enquiry could not be read." },
       400,
+    );
+  }
+
+  if (!commercialFeaturesEnabled() && isCommercialInquiry(payload)) {
+    return json(
+      {
+        ok: false,
+        code: "commercial_features_disabled",
+        message: "Commercial enquiries are paused while OmniLede is in preparation mode.",
+      },
+      403,
     );
   }
 

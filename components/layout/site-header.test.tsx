@@ -5,7 +5,7 @@ import { SiteHeader } from "@/components/layout/site-header";
 
 describe("SiteHeader", () => {
   it("identifies the retro masthead as a numbered global edition", () => {
-    render(<SiteHeader />);
+    render(<SiteHeader commercialEnabled={false} />);
 
     const header = screen.getByRole("banner");
     expect(header).toHaveClass("bg-canvas", "text-ink");
@@ -13,5 +13,6 @@ describe("SiteHeader", () => {
     expect(screen.getByText("World wide signal · 24/7")).toBeInTheDocument();
     expect(screen.getByRole("navigation", { name: "News desks" }).closest(".bg-signal")).not.toBeNull();
     expect(screen.getByRole("button", { name: /theme:/i })).toHaveClass("border-ink/20", "text-ink");
+    expect(screen.queryByRole("link", { name: /^advertise$/i })).toBeNull();
   });
 });

@@ -8,14 +8,13 @@ import { ConsentSettingsButton } from "@/components/privacy/consent-manager";
 const policyLinks = [
   ["About", "/about"],
   ["Contact", "/contact"],
-  ["Advertise", "/advertise"],
   ["Guidelines", "/guidelines"],
   ["Privacy", "/privacy"],
   ["Terms", "/terms"],
   ["Disclaimer", "/disclaimer"],
 ] as const;
 
-export function SiteFooter() {
+export function SiteFooter({ commercialEnabled }: { commercialEnabled: boolean }) {
   return (
     <footer className="retro-footer mt-20 border-t border-brandInk/15 bg-brand text-brandInk">
       <div className="mx-auto grid max-w-7xl gap-10 px-5 py-12 sm:px-8 md:grid-cols-[1fr_2fr]">
@@ -26,9 +25,15 @@ export function SiteFooter() {
           <p className="mt-3 max-w-sm text-sm leading-6 text-brandInk/65">
             Global reporting with context, reviewed before publication and always linked to the original source.
           </p>
-          <Link className="mt-6 inline-flex border-b-2 border-signal pb-1 text-xs font-black uppercase tracking-[0.14em]" href="/contact?subject=partnerships">
-            Partner with OmniLede
-          </Link>
+          {commercialEnabled ? (
+            <Link className="mt-6 inline-flex border-b-2 border-signal pb-1 text-xs font-black uppercase tracking-[0.14em]" href="/contact?subject=partnerships">
+              Partner with OmniLede
+            </Link>
+          ) : (
+            <Link className="mt-6 inline-flex border-b-2 border-cobalt pb-1 text-xs font-black uppercase tracking-[0.14em]" href="/about">
+              About the newsroom
+            </Link>
+          )}
         </div>
         <div className="grid gap-8 sm:grid-cols-2">
           <nav aria-label="Footer news desks">
@@ -51,6 +56,11 @@ export function SiteFooter() {
                   <Link className="hover:underline" href={href}>{label}</Link>
                 </li>
               ))}
+              {commercialEnabled ? (
+                <li>
+                  <Link className="hover:underline" href="/advertise">Advertise</Link>
+                </li>
+              ) : null}
             </ul>
           </nav>
         </div>
@@ -60,6 +70,7 @@ export function SiteFooter() {
           <AdSlot
             adsenseClientId={process.env.ADSENSE_CLIENT_ID}
             adsenseEnabled={process.env.ADSENSE_ENABLED === "true"}
+            commercialEnabled={commercialEnabled}
             slotId={process.env.ADSENSE_SLOT_FOOTER}
             variant="footer"
           />

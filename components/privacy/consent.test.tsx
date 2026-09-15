@@ -59,4 +59,11 @@ describe("ConsentManager", () => {
 
     expect(screen.getByRole("button", { name: /accept optional cookies/i })).toBeVisible();
   });
+
+  it("does not claim advertising cookies are available when ads are disabled", () => {
+    render(<ConsentManager ga4Id="G-TEST" adsenseEnabled={false} />);
+
+    expect(screen.getByText(/load analytics services/i)).toBeVisible();
+    expect(screen.queryByText(/analytics and advertising services/i)).toBeNull();
+  });
 });

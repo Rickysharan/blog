@@ -12,7 +12,13 @@ type ContactResponse = {
 const inputClass =
   "mt-2 min-h-12 w-full border border-line bg-canvas px-3 py-2 text-base text-ink outline-none transition focus:border-signal focus:ring-2 focus:ring-signal/25";
 
-export function ContactForm({ initialType = "general" }: { initialType?: ContactFormType }) {
+export function ContactForm({
+  commercialEnabled,
+  initialType = "general",
+}: {
+  commercialEnabled: boolean;
+  initialType?: ContactFormType;
+}) {
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
   const submissionKey = useRef<string | null>(null);
@@ -70,8 +76,8 @@ export function ContactForm({ initialType = "general" }: { initialType?: Contact
           <select className={inputClass} defaultValue={initialType} name="inquiryType" required>
             <option value="general">General or editorial</option>
             <option value="support">Support</option>
-            <option value="advertising">Advertising</option>
-            <option value="partnership">Partnership</option>
+            {commercialEnabled ? <option value="advertising">Advertising</option> : null}
+            {commercialEnabled ? <option value="partnership">Partnership</option> : null}
           </select>
         </label>
         <label className="text-sm font-bold text-ink">
