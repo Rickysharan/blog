@@ -40,21 +40,22 @@ const supporting: ArticleSummary[] = [
 ];
 
 describe("LeadStory", () => {
-  it("pairs the top story with a latest-signals rail", () => {
+  it("pairs a publication-style lead with an illustrated Today rail", () => {
     render(<LeadStory article={lead} supportingArticles={supporting} />);
 
-    expect(screen.getByText("Top story")).toBeVisible();
     expect(
-      screen.getByRole("heading", { level: 2, name: lead.title }),
+      screen.getByRole("heading", { level: 1, name: lead.title }),
     ).toBeVisible();
+    expect(screen.getByRole("img", { name: lead.title })).toBeVisible();
     expect(
-      screen.getByRole("heading", { level: 2, name: "Latest signals" }),
+      screen.getByRole("heading", { level: 2, name: "Today" }),
     ).toBeVisible();
     for (const article of supporting) {
       expect(screen.getByRole("link", { name: article.title })).toHaveAttribute(
         "href",
         `/article/${article.slug}`,
       );
+      expect(screen.getByRole("img", { name: article.title })).toBeVisible();
     }
   });
 });
