@@ -40,14 +40,13 @@ describe("MarketStrip", () => {
     expect(screen.getByText(/not investment advice/i)).toBeVisible();
   });
 
-  it("collapses unavailable market data into one honest status message", () => {
-    render(
+  it("stays out of the layout when no verified market data is available", () => {
+    const { container } = render(
       <MarketStrip
         snapshot={{ status: "unavailable", quotes: [], asOf: null, delayed: true }}
       />,
     );
 
-    expect(screen.getByText("Market update pending")).toBeVisible();
-    expect(screen.queryByText("Unavailable")).toBeNull();
+    expect(container).toBeEmptyDOMElement();
   });
 });

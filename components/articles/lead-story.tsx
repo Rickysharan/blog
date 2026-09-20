@@ -2,48 +2,55 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { ArticleMeta } from "@/components/articles/article-meta";
-import { CategoryLabel } from "@/components/articles/category-label";
+import { DeskStoryGrid } from "@/components/articles/desk-story-grid";
+import { getCategory } from "@/lib/config/categories";
 import type { ArticleSummary } from "@/lib/content/schema";
+
+function CategoryLink({ article }: { article: ArticleSummary }) {
+  const category = getCategory(article.category);
+
+  return (
+    <Link
+      className="editorial-category"
+      data-accent={category.accent}
+      href={`/category/${article.category}`}
+    >
+      {category.label}
+    </Link>
+  );
+}
 
 export function LeadStory({
   article,
   supportingArticles = [],
+  deskArticles = [],
 }: {
   article: ArticleSummary;
   supportingArticles?: readonly ArticleSummary[];
+  deskArticles?: readonly ArticleSummary[];
 }) {
   return (
-    <section className="grid border-y-2 border-ink lg:grid-cols-[minmax(0,2fr)_minmax(19rem,0.8fr)]" aria-label="Top stories">
-      <article className="py-8 lg:pr-8">
-        <div className="print-shadow relative aspect-[16/9] overflow-hidden bg-panel">
-          <span aria-hidden="true" className="retro-lead-stamp">Lead / 01</span>
-          <Image
-            src={article.coverImage}
-            alt={article.title}
-            fill
-            loading="eager"
-            sizes="(max-width: 1023px) 100vw, 68vw"
-            className="object-cover transition-transform duration-500 hover:scale-[1.015]"
-          />
-        </div>
-        <div className="mt-6 grid gap-5 md:grid-cols-[minmax(0,1fr)_minmax(13rem,0.35fr)] md:items-start">
-          <div>
-            <p className="mb-3 text-xs font-black uppercase tracking-[0.2em] text-muted">
-              Top story
-            </p>
-            <CategoryLabel category={article.category} />
-            <h2 id="top-story-heading" className="mt-4 max-w-4xl font-serif text-4xl font-semibold leading-[0.98] tracking-[-0.045em] sm:text-5xl xl:text-6xl">
+    <section
+      aria-label="Top stories"
+      className="editorial-front-page grid border-y border-ink xl:grid-cols-[minmax(0,1fr)_22.5rem]"
+    >
+      <div className="min-w-0">
+        <article className="editorial-lead-grid grid overflow-hidden md:grid-cols-[minmax(20rem,0.88fr)_minmax(0,1.12fr)]">
+          <div className="editorial-lead-copy flex min-h-[29rem] flex-col px-5 py-8 sm:px-8 sm:py-10 lg:min-h-[35rem] lg:px-10">
+            <CategoryLink article={article} />
+            <h1 className="editorial-lead-title mt-5 font-serif font-semibold leading-[0.88] tracking-[-0.06em]">
               <Link
+                className="decoration-[5px] decoration-signal underline-offset-8 hover:underline"
                 href={`/article/${article.slug}`}
-                className="decoration-4 decoration-signal underline-offset-8 hover:underline"
               >
                 {article.title}
               </Link>
-            </h2>
-          </div>
-          <div className="border-l-2 border-signal pl-4">
-            <p className="text-sm leading-6 text-muted">{article.excerpt}</p>
-            <div className="mt-4">
+            </h1>
+            <p className="mt-6 max-w-xl font-serif text-xl leading-[1.28] text-ink/85 sm:text-2xl">
+              {article.excerpt}
+            </p>
+            <div className="mt-auto pt-8">
+              <span aria-hidden="true" className="mb-5 block h-[3px] w-14 bg-signal" />
               <ArticleMeta
                 author={article.author}
                 date={article.date}
@@ -51,32 +58,78 @@ export function LeadStory({
               />
             </div>
           </div>
-        </div>
-      </article>
 
-      <aside className="border-t-2 border-ink bg-canvas px-5 py-7 lg:border-l lg:border-t-0 lg:px-8" aria-labelledby="latest-signals-heading">
-        <p className="inline-flex bg-sun px-2 py-1 text-xs font-black uppercase tracking-[0.18em] text-[#15233b]">
-          Across the desks
-        </p>
-        <h2 id="latest-signals-heading" className="mt-2 font-serif text-3xl font-semibold tracking-[-0.035em]">
-          Latest signals
-        </h2>
-        <ol className="mt-5">
-          {supportingArticles.map((supportingArticle, index) => (
-            <li className="border-t border-line py-5 first:border-t-2 first:border-ink" key={supportingArticle.slug}>
-              <span aria-hidden="true" className="retro-signal-index">
-                {String(index + 1).padStart(2, "0")}
-              </span>
-              <CategoryLabel category={supportingArticle.category} />
-              <h3 className="mt-3 font-serif text-xl font-semibold leading-tight tracking-[-0.02em]">
-                <Link className="underline-offset-4 hover:underline" href={`/article/${supportingArticle.slug}`}>
-                  {supportingArticle.title}
+          <div className="editorial-lead-image relative min-h-[22rem] overflow-hidden bg-panel md:min-h-full">
+            <Image
+              alt={article.title}
+              className="object-cover transition-transform duration-700 hover:scale-[1.015]"
+              fetchPriority="high"
+              fill
+              loading="eager"
+              sizes="(max-width: 767px) 100vw, (max-width: 1279px) 62vw, 48vw"
+              src={article.coverImage}
+            />
+          </div>
+        </article>
+
+        <DeskStoryGrid articles={deskArticles.slice(0, 4)} compact />
+      </div>
+
+      <aside
+        aria-labelledby="today-heading"
+        className="border-t border-ink bg-canvas px-5 py-7 sm:px-8 xl:border-l xl:border-t-0 xl:px-6"
+      >
+        <div className="flex items-center gap-4 border-b border-line pb-3">
+          <h2
+            className="bg-signal px-3 py-1 font-sans text-sm font-black uppercase tracking-[0.17em] text-signalInk"
+            id="today-heading"
+          >
+            Today
+          </h2>
+          <span aria-hidden="true" className="h-px flex-1 bg-line" />
+        </div>
+        <ol className="mt-1 grid sm:grid-cols-2 sm:gap-x-6 xl:block">
+          {supportingArticles.slice(0, 5).map((supportingArticle) => {
+            const category = getCategory(supportingArticle.category);
+
+            return (
+              <li className="border-b border-line py-4" key={supportingArticle.slug}>
+                <Link
+                  aria-label={supportingArticle.title}
+                  className="group grid min-h-20 grid-cols-[6.4rem_1fr] items-center gap-4"
+                  href={`/article/${supportingArticle.slug}`}
+                >
+                  <span className="relative block aspect-[4/3] overflow-hidden bg-panel">
+                    <Image
+                      alt={supportingArticle.title}
+                      className="object-cover grayscale-[22%] transition duration-300 group-hover:grayscale-0"
+                      fill
+                      sizes="(max-width: 639px) 102px, (max-width: 1279px) 18vw, 102px"
+                      src={supportingArticle.coverImage}
+                    />
+                  </span>
+                  <span>
+                    <span
+                      className="editorial-category"
+                      data-accent={category.accent}
+                    >
+                      {category.label}
+                    </span>
+                    <span className="mt-1 block font-serif text-lg font-semibold leading-[1.05] tracking-[-0.025em] group-hover:underline">
+                      {supportingArticle.title}
+                    </span>
+                  </span>
                 </Link>
-              </h3>
-              <p className="mt-2 text-xs text-muted">{supportingArticle.readTime} min read</p>
-            </li>
-          ))}
+              </li>
+            );
+          })}
         </ol>
+        <div className="editorial-promise mt-8 border-t-2 border-ink pt-7">
+          <span aria-hidden="true" className="mb-5 block h-[3px] w-10 bg-signal" />
+          <p className="font-serif text-3xl font-semibold leading-[0.98] tracking-[-0.045em]">
+            A wider world.<br />A clearer view.
+          </p>
+        </div>
       </aside>
     </section>
   );

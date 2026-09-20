@@ -66,15 +66,17 @@ export function SiteFooter({ commercialEnabled }: { commercialEnabled: boolean }
         </div>
       </div>
       <div className="border-t border-brandInk/15 px-5 py-5 text-center text-xs text-brandInk/55">
-        <div className="mx-auto mb-5 max-w-3xl">
-          <AdSlot
-            adsenseClientId={process.env.ADSENSE_CLIENT_ID}
-            adsenseEnabled={process.env.ADSENSE_ENABLED === "true"}
-            commercialEnabled={commercialEnabled}
-            slotId={process.env.ADSENSE_SLOT_FOOTER}
-            variant="footer"
-          />
-        </div>
+        {commercialEnabled ? (
+          <div className="mx-auto mb-5 max-w-3xl">
+            <AdSlot
+              adsenseClientId={process.env.ADSENSE_CLIENT_ID}
+              adsenseEnabled={process.env.ADSENSE_ENABLED === "true"}
+              commercialEnabled={commercialEnabled}
+              slotId={process.env.ADSENSE_SLOT_FOOTER}
+              variant="footer"
+            />
+          </div>
+        ) : null}
         <p>© {new Date().getUTCFullYear()} {SITE_CONFIG.name}. Global context with visible sourcing and human review.</p>
         <div className="mt-2"><ConsentSettingsButton /></div>
       </div>

@@ -100,7 +100,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             <a className="skip-link" href="#main-content">
               Skip to content
             </a>
-            <SiteHeader commercialEnabled={commercialEnabled} />
+            <SiteHeader />
             {children}
             <SiteFooter commercialEnabled={commercialEnabled} />
             <IosInstallBanner />
