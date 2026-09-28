@@ -97,9 +97,9 @@ select is(
   'user metadata cannot grant a role'
 );
 
+select app_private.set_audit_context('system', null, 'Identity content pgTAP fixture');
 set local role service_role;
 do $$ begin perform set_config('request.jwt.claim.role', 'service_role', true); end $$;
-select app_private.set_audit_context('system', null, 'Identity content pgTAP fixture');
 insert into public.submissions (
   id, author_id, title, content_document, category, region, language,
   primary_source_name, primary_source_url, private_image_path, guidelines_version, guidelines_accepted
