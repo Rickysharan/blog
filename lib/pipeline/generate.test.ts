@@ -244,3 +244,82 @@ describe("generateDrafts", () => {
     expect(JSON.parse(await fs.readFile(queuePath, "utf8"))).toEqual([stories[1]]);
   });
 });
+
+describe("local Ollama drafting", () => {
+  const env = { DRAFT_GENERATION_ENABLED: "true", DRAFT_GENERATION_PROVIDER: "ollama", OLLAMA_MODEL: "local-test" };
+
+  it("creates a review draft without an Anthropic key or publishing", async () => {
+    const contentRoot = await temporaryContentRoot();
+    await fs.writeFile(path.join(contentRoot, "queue/trending.json"), JSON.stringify([queueStory()]));
+    const fetchImpl = vi.fn(async (url, init) => {
+      expect(url).toBe("http://127.0.0.1:11434/api/generate");
+      expect(init?.redirect).toBe("error");
+      const request = JSON.parse(String(init?.body));
+      expect(request).toMatchObject({ model: "local-test", stream: false, format: "json" });
+      expect(request.prompt).toContain("Central banks");
+      return Response.json({ done: true, done_reason: "stop", response: JSON.stringify(generatedDraft()) });
+    });
+    const result = await generateDrafts({ env, contentRoot, fetchImpl });
+    expect(result.failed).toEqual([]);
+    expect(result.created).toHaveLength(1);
+    expect(await fs.readFile(result.created[0], "utf8")).toContain("## Why it matters");
+    await expect(fs.access(path.join(contentRoot, "articles"))).rejects.toMatchObject({ code: "ENOENT" });
+  });
+
+  it.each([
+    { done: false, response: "{}" },
+    { done: true, done_reason: "length", response: "{}" },
+    { done: true, response: "not json" },
+    { done: true, response: JSON.stringify(generatedDraft({ body: "<script>bad</script>" })) },
+  ])("retains a story when local output is invalid: %j", async (payload) => {
+    const contentRoot = await temporaryContentRoot();
+    const queuePath = path.join(contentRoot, "queue/trending.json");
+    await fs.writeFile(queuePath, JSON.stringify([queueStory()]));
+    const result = await generateDrafts({ env, contentRoot, fetchImpl: async () => Response.json(payload) });
+    expect(result.created).toEqual([]);
+    expect(result.failed).toHaveLength(1);
+    expect(JSON.parse(await fs.readFile(queuePath, "utf8"))).toEqual([queueStory()]);
+  });
+
+  it("accepts a short grounded local brief instead of demanding padded prose", async () => {
+    const contentRoot = await temporaryContentRoot();
+    await fs.writeFile(path.join(contentRoot, "queue/trending.json"), JSON.stringify([queueStory()]));
+    const body = "## Why It Matters\n\n" + Array(15).fill("The source confirms a coordination timetable.").join(" ");
+    const result = await generateDrafts({ env, contentRoot, fetchImpl: async () => Response.json({
+      done: true, done_reason: "stop", response: JSON.stringify(generatedDraft({ body })),
+    }) });
+    expect(result.failed).toEqual([]);
+    expect(result.created).toHaveLength(1);
+  });
+
+  it("retains stories when Ollama is offline without falling back to a paid service", async () => {
+    const contentRoot = await temporaryContentRoot();
+    await fs.writeFile(path.join(contentRoot, "queue/trending.json"), JSON.stringify([queueStory()]));
+    const fetchImpl = vi.fn(async () => { throw new TypeError("fetch failed"); });
+    const result = await generateDrafts({ env, contentRoot, fetchImpl });
+    expect(result.failed).toHaveLength(1);
+    expect(result.remaining).toBe(1);
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
+  it("rejects an unknown provider before making requests", async () => {
+    const fetchImpl = vi.fn();
+    await expect(generateDrafts({ env: { ...env, DRAFT_GENERATION_PROVIDER: "typo" }, fetchImpl })).rejects.toThrow(/provider/i);
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+});
+
+describe("local provider configuration", () => {
+  it.each([
+    { NODE_ENV: "production", OLLAMA_MODEL: "local-test" },
+    { CI: "true", OLLAMA_MODEL: "local-test" },
+    { OLLAMA_MODEL: "model:cloud" },
+    { OLLAMA_MODEL: "" },
+  ])("rejects non-local or missing model configuration: %j", async (config) => {
+    const fetchImpl = vi.fn();
+    await expect(generateDrafts({
+      env: { DRAFT_GENERATION_ENABLED: "true", DRAFT_GENERATION_PROVIDER: "ollama", ...config }, fetchImpl,
+    })).rejects.toThrow(/local/i);
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+});
