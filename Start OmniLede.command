@@ -31,8 +31,18 @@ for attempt in {1..30}; do
   if curl --silent --fail http://127.0.0.1:3100/admin/login >/dev/null; then break; fi
   sleep 1
 done
-open http://127.0.0.1:3100/admin/review
 npm run content:local -- --limit 1 || echo "Writer needs attention; see the message above. The dashboard remains open."
-echo "Dashboard: http://127.0.0.1:3100/admin/review"
+review_url="$(node --env-file-if-exists=.env.local -e '
+const local = "http://127.0.0.1:3100/admin/review";
+const configured = process.env.LOCAL_WRITER_REVIEW_URL;
+if (process.env.LOCAL_WRITER_SYNC === "true") {
+  if (!configured) { console.error("Set LOCAL_WRITER_REVIEW_URL to your hosted review desk."); process.exit(1); }
+  const url = new URL(configured);
+  if (url.protocol !== "https:" || url.username || url.password) { console.error("Hosted review URL must be HTTPS without credentials."); process.exit(1); }
+  console.log(url.href);
+} else { console.log(local); }
+')"
+open "$review_url"
+echo "Review dashboard: $review_url"
 echo "Keep this window open. Press Control-C to stop."
 wait "$web_pid"

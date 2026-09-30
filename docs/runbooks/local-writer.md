@@ -22,7 +22,7 @@ Create `.env.local` with `OLLAMA_MODEL=qwen2.5:7b`. For the local review dashboa
 
 ## Launch as a local app
 
-On macOS, double-click `Start OmniLede.command` after setup. It starts the local model server if needed, opens the review dashboard on port 3100, and runs one discovery/drafting batch. Keep the terminal window open while using it. The local admin password is stored only in `.env.local`. The launcher uploads drafts when `LOCAL_WRITER_SYNC=true`; it never publishes them on the website.
+On macOS, double-click `Start OmniLede.command` after setup. It starts the local model server if needed, runs one discovery/drafting batch and opens the review dashboard. It uses port 3100 for local-only work or `LOCAL_WRITER_REVIEW_URL` for hosted delivery. Keep the terminal window open while using it. The local admin password is stored only in `.env.local`. The launcher uploads drafts when `LOCAL_WRITER_SYNC=true`; it never publishes them on the website.
 
 ## Write and review
 
@@ -46,6 +46,7 @@ GITHUB_REPOSITORY=Rickysharan/blog
 GITHUB_BRANCH=main
 GITHUB_TOKEN=
 LOCAL_WRITER_SYNC=false
+LOCAL_WRITER_REVIEW_URL=https://omnilede-news.netlify.app/admin/review
 ```
 
 The worker first uses `GITHUB_TOKEN` if configured. Otherwise it uses your existing `gh auth login` session for github.com, keeping the retrieved credential in memory only. You can also supply a repository-scoped token with Contents read/write directly in the local file. Use the same repository and branch as the hosted blog's moderation configuration. Never paste the token into chat. The worker prints the destination before writes.
