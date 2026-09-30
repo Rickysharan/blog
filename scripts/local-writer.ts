@@ -1,8 +1,10 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { parseArgs } from "node:util";
+import { isCategorySlug } from "@/lib/config/categories";
 import { GitHubDraftRepository } from "@/lib/drafts/github-repository";
 import { LocalDraftRepository } from "@/lib/drafts/local-repository";
+import type { DraftRef } from "@/lib/drafts/types";
 import { fetchTrendingStories, writeTrendingQueue } from "@/lib/pipeline/fetch";
 import { generateDrafts } from "@/lib/pipeline/generate";
 import { resolveLocalGitHubTarget } from "@/lib/pipeline/local-github";
@@ -21,6 +23,7 @@ const lock = path.join(process.cwd(), ".audit", "local-writer.lock");
 let locked = false;
 let createdCount = 0;
 let uploadedCount = 0;
+let currentRunDrafts: DraftRef[] | undefined = values["sync-only"] ? undefined : [];
 const progress = (phase: string, message: string, percent: number) => console.log("@omnilede " + JSON.stringify({ phase, message, percent }));
 progress("starting", "Starting your local writer…", 5);
 try {
@@ -72,13 +75,25 @@ try {
       env: { ...process.env, NODE_ENV: "development", DRAFT_GENERATION_ENABLED: "true", DRAFT_GENERATION_PROVIDER: "ollama" },
     });
     createdCount = result.created.length;
+    currentRunDrafts = result.created.map((draftPath) => {
+      const relative = path.relative(path.join(contentRoot, "drafts"), draftPath);
+      const [category, filename, ...extra] = relative.split(path.sep);
+      if (!isCategorySlug(category) || !filename || extra.length > 0) {
+        throw new Error(`Generated draft path is outside the local draft directory: ${draftPath}`);
+      }
+      return { category, filename };
+    });
     console.log(`${result.created.length} drafts created; ${result.remaining} stories remain queued.`);
     for (const item of result.failed) console.error(`Draft failed: ${item.title}: ${item.error}`);
     if (result.failed.length) process.exitCode = 1;
   }
   if (target) {
     progress("uploading", "Sending drafts to your dashboard…", 90);
-    const result = await syncDrafts(new LocalDraftRepository({ contentRoot }), target);
+    const result = await syncDrafts(
+      new LocalDraftRepository({ contentRoot }),
+      target,
+      currentRunDrafts,
+    );
     uploadedCount = result.created.length;
     console.log(`Dashboard handoff: ${result.created.length} uploaded, ${result.unchanged.length} already present, ${result.failed.length} conflicts/errors.`);
     for (const item of result.failed) console.error(`${item.ref.category}/${item.ref.filename}: ${item.code}`);

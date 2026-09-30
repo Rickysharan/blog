@@ -26,6 +26,23 @@ describe("draft handoff", () => {
     expect((await syncDrafts(source, target)).failed).toEqual([{ ref, code: "conflict" }]);
     expect((await target.read(ref)).title).toBe("Editor revised title");
   });
+  it("syncs only the drafts selected for the current delivery", async () => {
+    const source = await repository(); const target = await repository();
+    const currentRef = { category: "sports", filename: "current-story.mdx" } as const;
+    await source.create(currentRef, makeValidMdx({
+      category: "sports",
+      slug: "current-story",
+      title: "Current story",
+    }));
+    await source.create(ref, makeValidMdx());
+    await target.create(ref, makeValidMdx({ title: "Editor revised title" }));
+
+    const result = await syncDrafts(source, target, [currentRef]);
+
+    expect(result.created).toEqual([currentRef]);
+    expect(result.failed).toEqual([]);
+    expect((await target.read(ref)).title).toBe("Editor revised title");
+  });
   it("does not recreate an article already published by the editor", async () => {
     const source = await repository(); const target = await repository();
     await source.create(ref, makeValidMdx());

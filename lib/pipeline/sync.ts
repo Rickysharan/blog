@@ -4,11 +4,16 @@ import { DraftRepositoryError, type DraftRef, type DraftRepository } from "@/lib
 export async function syncDrafts(
   source: Pick<DraftRepository, "list" | "read">,
   target: Pick<DraftRepository, "read" | "create">,
+  selectedRefs?: readonly DraftRef[],
 ) {
   const result: { created: DraftRef[]; unchanged: DraftRef[]; failed: Array<{ ref: DraftRef; code: string }> } = {
     created: [], unchanged: [], failed: [],
   };
+  const selectedKeys = selectedRefs === undefined
+    ? undefined
+    : new Set(selectedRefs.map((ref) => `${ref.category}/${ref.filename}`));
   for (const { ref } of await source.list()) {
+    if (selectedKeys && !selectedKeys.has(`${ref.category}/${ref.filename}`)) continue;
     try {
       const draft = await source.read(ref);
       try {
