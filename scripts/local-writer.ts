@@ -19,6 +19,10 @@ const { values } = parseArgs({ options: {
 const contentRoot = path.join(process.cwd(), "content");
 const lock = path.join(process.cwd(), ".audit", "local-writer.lock");
 let locked = false;
+let createdCount = 0;
+let uploadedCount = 0;
+const progress = (phase: string, message: string, percent: number) => console.log("@omnilede " + JSON.stringify({ phase, message, percent }));
+progress("starting", "Starting your local writer…", 5);
 try {
   if (process.env.NODE_ENV === "production" || process.env.CI === "true") {
     throw new Error("Run this worker locally, not in production or CI.");
@@ -54,27 +58,35 @@ try {
       try { pending = JSON.parse(await fs.readFile(queuePath, "utf8")); }
       catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
       if (!Array.isArray(pending)) throw new Error("Existing story queue must be an array.");
+      progress("finding", "Finding recent news…", 15);
       const fetched = await fetchTrendingStories({ contentRoot });
       for (const item of fetched.summaries) console.log(`${item.source}: ${item.status} (${item.itemCount} stories)`);
       if (!fetched.successCount) throw new Error("No feeds succeeded; the existing queue is unchanged. Use --queue-only to process saved stories.");
       const written = await writeTrendingQueue([...pending, ...fetched.stories], { contentRoot });
       console.log(`${written.written} source stories queued. RSS recency is a discovery signal, not a measured popularity ranking.`);
     }
+    progress("writing", "Writing your article on this Mac…", 30);
     console.log(`Writing up to ${limit} drafts locally with ${model}…`);
     const result = await generateDrafts({
       contentRoot, maxDrafts: limit,
       env: { ...process.env, NODE_ENV: "development", DRAFT_GENERATION_ENABLED: "true", DRAFT_GENERATION_PROVIDER: "ollama" },
     });
+    createdCount = result.created.length;
     console.log(`${result.created.length} drafts created; ${result.remaining} stories remain queued.`);
     for (const item of result.failed) console.error(`Draft failed: ${item.title}: ${item.error}`);
     if (result.failed.length) process.exitCode = 1;
   }
   if (target) {
+    progress("uploading", "Sending drafts to your dashboard…", 90);
     const result = await syncDrafts(new LocalDraftRepository({ contentRoot }), target);
+    uploadedCount = result.created.length;
     console.log(`Dashboard handoff: ${result.created.length} uploaded, ${result.unchanged.length} already present, ${result.failed.length} conflicts/errors.`);
     for (const item of result.failed) console.error(`${item.ref.category}/${item.ref.filename}: ${item.code}`);
     if (result.failed.length) process.exitCode = 1;
   }
+  if (!process.exitCode) progress("done", target
+    ? (uploadedCount ? `${uploadedCount} draft${uploadedCount === 1 ? "" : "s"} delivered. Review and click Publish in the dashboard.` : "No new uploads. Existing drafts are already in your dashboard.")
+    : `${createdCount} draft${createdCount === 1 ? "" : "s"} saved locally. Review before publishing.`, 100);
   console.log("Review drafts at /admin/review. Only your Publish action puts them on the public website.");
 } catch (error) {
   const code = (error as NodeJS.ErrnoException).code;

@@ -22,7 +22,11 @@ Create `.env.local` with `OLLAMA_MODEL=qwen2.5:7b`. For the local review dashboa
 
 ## Launch as a local app
 
-On macOS, double-click `Start OmniLede.command` after setup. It starts the local model server if needed, runs one discovery/drafting batch and opens the review dashboard. It uses port 3100 for local-only work or `LOCAL_WRITER_REVIEW_URL` for hosted delivery. Keep the terminal window open while using it. The local admin password is stored only in `.env.local`. The launcher uploads drafts when `LOCAL_WRITER_SYNC=true`; it never publishes them on the website.
+I use **OmniLede.app** on my Desktop to write one article at a time. It shows the current step, a progress bar and an estimated wait, then opens my review dashboard after delivery. I select the draft, check it and click **Publish** myself. The writer runs in the background; I can minimise its window. No Terminal window is needed.
+
+To build or reinstall the Mac app, run `python3 desktop/install-app.py` from this repository (Xcode command-line tools required). The app points to this project folder; reinstall it if the folder moves. The installer keeps the previous app under `~/Library/Application Support/OmniLede/`.
+
+The app uses `LOCAL_WRITER_REVIEW_URL` when `LOCAL_WRITER_SYNC=true`, or the local dashboard on port 3100 otherwise. The hosted dashboard may require its own sign-in. A hosted run does not start a redundant local web server. Ollama stays available in the background, with the model kept in memory for up to 30 minutes to reduce repeated loading. The local admin password remains in `.env.local`. The shell launcher still works for troubleshooting.
 
 ## Write and review
 
@@ -68,3 +72,9 @@ The local writer is implemented and tested separately from the Contributor app's
 ## Recovery
 
 If Ollama is offline, start the local-only server again. If a model is missing, download it with `ollama pull`. If generation fails validation, keep the source queued and revise manually or try a different local model; never bypass content validation. If the process was forcibly killed, check that no writer is running before removing `.audit/local-writer.lock`.
+
+## Pictures and waiting time
+
+I want short, source-grounded drafts with two or three relevant pictures. The local writer aims for 150–300 words, or less when the source is thin. It searches Wikimedia Commons for named subjects from the source and adds up to three related archive photos inside the article, with photographer, source and licence links. These are not presented as photographs of the current event. The card cover remains the category artwork. If suitable reusable photos are unavailable, it keeps the article and reports the smaller image count; it does not substitute random pictures. Set `LOCAL_WRITER_IMAGES=false` to skip image search.
+
+The app's bar shows completed stages, not token-by-token completion. Remaining time is an estimate based on the last successful run (90 seconds initially); cold model loading and network delays can change it. Progress reaches delivered only after successful draft upload. Technical details stay in `.audit/desktop-writer.log`. Nothing is published automatically.

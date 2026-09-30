@@ -246,7 +246,7 @@ describe("generateDrafts", () => {
 });
 
 describe("local Ollama drafting", () => {
-  const env = { DRAFT_GENERATION_ENABLED: "true", DRAFT_GENERATION_PROVIDER: "ollama", OLLAMA_MODEL: "local-test" };
+  const env = { DRAFT_GENERATION_ENABLED: "true", DRAFT_GENERATION_PROVIDER: "ollama", OLLAMA_MODEL: "local-test", LOCAL_WRITER_IMAGES: "false" };
 
   it("creates a review draft without an Anthropic key or publishing", async () => {
     const contentRoot = await temporaryContentRoot();
@@ -311,8 +311,8 @@ describe("local Ollama drafting", () => {
 
 describe("local provider configuration", () => {
   it.each([
-    { NODE_ENV: "production", OLLAMA_MODEL: "local-test" },
-    { CI: "true", OLLAMA_MODEL: "local-test" },
+    { NODE_ENV: "production", OLLAMA_MODEL: "local-test", LOCAL_WRITER_IMAGES: "false" },
+    { CI: "true", OLLAMA_MODEL: "local-test", LOCAL_WRITER_IMAGES: "false" },
     { OLLAMA_MODEL: "model:cloud" },
     { OLLAMA_MODEL: "" },
   ])("rejects non-local or missing model configuration: %j", async (config) => {
@@ -322,4 +322,17 @@ describe("local provider configuration", () => {
     })).rejects.toThrow(/local/i);
     expect(fetchImpl).not.toHaveBeenCalled();
   });
+});
+
+it("includes three credited inline pictures while preserving final source attribution", () => {
+  const photos = [1, 2, 3].map(id => ({
+    title: `Archive photo ${id}`, url: `https://upload.wikimedia.org/photo${id}.jpg`,
+    page: `https://commons.wikimedia.org/wiki/File:Photo${id}.jpg`, artist: "Photographer",
+    license: "CC BY 4.0", licenseUrl: "https://creativecommons.org/licenses/by/4.0/",
+  }));
+  const mdx = buildDraftMdx(queueStory(), generatedDraft(), false, photos);
+  expect(mdx.match(/!\[/g)).toHaveLength(3);
+  expect(mdx.match(/Photo: Photographer/g)).toHaveLength(3);
+  expect(mdx.trimEnd()).toMatch(/Source: \[Example Outlet\]\(https:\/\/example.com\/story\)$/);
+  expect(parseArticleFile(mdx, "what-the-shared-stability-framework-changes.mdx").body).toContain("Related archive image");
 });
