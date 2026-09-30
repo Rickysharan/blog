@@ -22,7 +22,7 @@ Create `.env.local` with `OLLAMA_MODEL=qwen2.5:7b`. For the local review dashboa
 
 ## Launch as a local app
 
-On macOS, double-click `Start OmniLede.command` after setup. It starts the local model server if needed, opens the review dashboard on port 3100, and runs one discovery/drafting batch. Keep the terminal window open while using it. The local admin password is stored only in `.env.local`. The launcher never uploads drafts or publishes automatically.
+On macOS, double-click `Start OmniLede.command` after setup. It starts the local model server if needed, opens the review dashboard on port 3100, and runs one discovery/drafting batch. Keep the terminal window open while using it. The local admin password is stored only in `.env.local`. The launcher uploads drafts when `LOCAL_WRITER_SYNC=true`; it never publishes them on the website.
 
 ## Write and review
 
@@ -45,15 +45,20 @@ Configure these server-side values in `.env.local`:
 GITHUB_REPOSITORY=Rickysharan/blog
 GITHUB_BRANCH=main
 GITHUB_TOKEN=
+LOCAL_WRITER_SYNC=false
 ```
 
-Supply a repository-scoped token with Contents read/write directly in the local file. Use the same repository and branch as the hosted blog's moderation configuration. Never paste the token into chat. The worker prints the destination before writes.
+The worker first uses `GITHUB_TOKEN` if configured. Otherwise it uses your existing `gh auth login` session for github.com, keeping the retrieved credential in memory only. You can also supply a repository-scoped token with Contents read/write directly in the local file. Use the same repository and branch as the hosted blog's moderation configuration. Never paste the token into chat. The worker prints the destination before writes.
 
 ```sh
 npm run content:local -- --limit 1 --sync
 # Retry delivery without model inference or RSS:
 npm run content:local -- --sync-only
 ```
+
+Set `LOCAL_WRITER_SYNC=true` to deliver drafts after each local writing run, including the Mac launcher. Use `--local-only` to override this for a single run.
+
+The GitHub-backed dashboard stores drafts as repository files. In a public repository, those files can be read on GitHub before publication on the website; this is not confidential draft storage. Do not put private material in this workflow.
 
 `--sync` uploads all valid local drafts through the existing GitHub adapter as draft-only commits. Identical files are skipped on retry. Edited remote drafts and already-published slugs are not overwritten or republished; conflicts are reported. Local copies remain available after upload. Review at the hosted blog's `/admin/review`, then click Publish there. A site linked to the branch may redeploy after a draft commit, but drafts remain excluded from public pages.
 

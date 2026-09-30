@@ -5,6 +5,7 @@ import { GitHubDraftRepository } from "@/lib/drafts/github-repository";
 import { LocalDraftRepository } from "@/lib/drafts/local-repository";
 import { fetchTrendingStories, writeTrendingQueue } from "@/lib/pipeline/fetch";
 import { generateDrafts } from "@/lib/pipeline/generate";
+import { resolveLocalGitHubTarget } from "@/lib/pipeline/local-github";
 import { syncDrafts } from "@/lib/pipeline/sync";
 import type { QueueStory } from "@/lib/pipeline/types";
 
@@ -13,6 +14,7 @@ const { values } = parseArgs({ options: {
   sync: { type: "boolean", default: false },
   "queue-only": { type: "boolean", default: false },
   "sync-only": { type: "boolean", default: false },
+  "local-only": { type: "boolean", default: false },
 } });
 const contentRoot = path.join(process.cwd(), "content");
 const lock = path.join(process.cwd(), ".audit", "local-writer.lock");
@@ -24,11 +26,13 @@ try {
   const limit = Number(values.limit);
   if (!Number.isInteger(limit) || limit < 1 || limit > 10) throw new Error("--limit must be an integer from 1 to 10.");
   let target: GitHubDraftRepository | undefined;
-  if (values.sync || values["sync-only"]) {
-    const repository = process.env.GITHUB_REPOSITORY?.trim();
-    const branch = process.env.GITHUB_BRANCH?.trim();
-    const token = process.env.GITHUB_TOKEN?.trim();
-    if (!repository || !branch || !token) throw new Error("Draft upload needs GITHUB_REPOSITORY, GITHUB_BRANCH and GITHUB_TOKEN in .env.local.");
+  if (values["local-only"] && (values.sync || values["sync-only"])) {
+    throw new Error("Choose --local-only or --sync/--sync-only, not both.");
+  }
+  const syncEnabled = values.sync || values["sync-only"] ||
+    (process.env.LOCAL_WRITER_SYNC === "true" && !values["local-only"]);
+  if (syncEnabled) {
+    const { repository, branch, token } = await resolveLocalGitHubTarget(process.env);
     target = new GitHubDraftRepository({ repository, branch, token });
     console.log(`Draft upload target: ${repository}, branch ${branch}. Publishing is never automatic.`);
   }
@@ -71,7 +75,7 @@ try {
     for (const item of result.failed) console.error(`${item.ref.category}/${item.ref.filename}: ${item.code}`);
     if (result.failed.length) process.exitCode = 1;
   }
-  console.log("Review drafts at /admin/review. Only your Publish action makes them public.");
+  console.log("Review drafts at /admin/review. Only your Publish action puts them on the public website.");
 } catch (error) {
   const code = (error as NodeJS.ErrnoException).code;
   console.error(code === "EEXIST"
