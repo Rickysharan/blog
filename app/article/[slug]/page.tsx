@@ -26,6 +26,10 @@ type ArticlePageProps = { params: Promise<{ slug: string }> };
 
 const getArticle = cache((slug: string) => getArticleBySlug(slug));
 
+function bodyContainsSourceAttribution(body: string): boolean {
+  return /^\s*Source:\s*\[[^\]]+\]\(https:\/\/[^\s)]+\)\s*$/im.test(body);
+}
+
 export async function generateStaticParams() {
   return (await getAllArticles()).map(({ slug }) => ({ slug }));
 }
@@ -137,7 +141,9 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
         <div className="mx-auto mt-12 grid max-w-6xl gap-12 lg:grid-cols-[minmax(0,46rem)_minmax(17rem,1fr)] lg:items-start">
           <div>
             <ArticleBody>{body}</ArticleBody>
-            <SourceAttribution name={article.sourceName} url={article.sourceUrl} />
+            {bodyContainsSourceAttribution(article.body) ? null : (
+              <SourceAttribution name={article.sourceName} url={article.sourceUrl} />
+            )}
             <div className="mt-12">
               <AdSlot
                 adsenseClientId={process.env.ADSENSE_CLIENT_ID}

@@ -32,7 +32,8 @@
     "db:reset": "supabase db reset --local",
     "db:test": "supabase test db",
     "db:verify-target": "tsx scripts/verify-supabase-target.ts",
-    "db:types": "supabase gen types typescript --local > packages/contracts/src/database.generated.ts"
+    "db:types": "supabase gen types typescript --local > packages/contracts/src/database.generated.ts",
+    "content:local": "node --conditions=react-server --env-file-if-exists=.env.local --import tsx scripts/local-writer.ts"
   },
   "dependencies": {
     "@serwist/next": "9.5.12",

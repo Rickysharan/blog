@@ -125,6 +125,12 @@ export class LocalDraftRepository implements DraftRepository {
     const draftPath = this.draftPath(ref);
 
     try {
+      try {
+        await fs.access(this.articlePath(ref));
+        throw new DraftRepositoryError("conflict", "An article with this slug is already published");
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+      }
       await fs.mkdir(path.dirname(draftPath), { recursive: true });
       await fs.writeFile(draftPath, mdx, { encoding: "utf8", flag: "wx" });
       return await this.read(ref);

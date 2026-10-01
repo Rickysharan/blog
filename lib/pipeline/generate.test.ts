@@ -10,6 +10,7 @@ import {
   buildDraftPrompt,
   generateDrafts,
   requestClaudeDraft,
+  requestOllamaDraft,
   type GeneratedDraftContent,
 } from "@/lib/pipeline/generate";
 import type { QueueStory } from "@/lib/pipeline/types";
@@ -243,4 +244,152 @@ describe("generateDrafts", () => {
     expect(result.remaining).toBe(1);
     expect(JSON.parse(await fs.readFile(queuePath, "utf8"))).toEqual([stories[1]]);
   });
+});
+
+describe("local Ollama drafting", () => {
+  const env = { DRAFT_GENERATION_ENABLED: "true", DRAFT_GENERATION_PROVIDER: "ollama", OLLAMA_MODEL: "local-test", LOCAL_WRITER_IMAGES: "false" };
+
+  it("creates a review draft without an Anthropic key or publishing", async () => {
+    const contentRoot = await temporaryContentRoot();
+    await fs.writeFile(path.join(contentRoot, "queue/trending.json"), JSON.stringify([queueStory()]));
+    const fetchImpl = vi.fn(async (url, init) => {
+      expect(url).toBe("http://127.0.0.1:11434/api/generate");
+      expect(init?.redirect).toBe("error");
+      const request = JSON.parse(String(init?.body));
+      expect(request).toMatchObject({ model: "local-test", stream: false, format: "json" });
+      expect(request.prompt).toContain("Central banks");
+      return Response.json({ done: true, done_reason: "stop", response: JSON.stringify(generatedDraft()) });
+    });
+    const result = await generateDrafts({ env, contentRoot, fetchImpl });
+    expect(result.failed).toEqual([]);
+    expect(result.created).toHaveLength(1);
+    expect(await fs.readFile(result.created[0], "utf8")).toContain("## Why it matters");
+    await expect(fs.access(path.join(contentRoot, "articles"))).rejects.toMatchObject({ code: "ENOENT" });
+  });
+
+  it.each([
+    { done: false, response: "{}" },
+    { done: true, done_reason: "length", response: "{}" },
+    { done: true, response: "not json" },
+    { done: true, response: JSON.stringify(generatedDraft({ body: "<script>bad</script>" })) },
+  ])("retains a story when local output is invalid: %j", async (payload) => {
+    const contentRoot = await temporaryContentRoot();
+    const queuePath = path.join(contentRoot, "queue/trending.json");
+    await fs.writeFile(queuePath, JSON.stringify([queueStory()]));
+    const result = await generateDrafts({ env, contentRoot, fetchImpl: async () => Response.json(payload) });
+    expect(result.created).toEqual([]);
+    expect(result.failed).toHaveLength(1);
+    expect(JSON.parse(await fs.readFile(queuePath, "utf8"))).toEqual([queueStory()]);
+  });
+
+  it.each([
+    {
+      name: "truncated output",
+      payload: { done: true, done_reason: "length", response: "{}" },
+      category: "truncated",
+    },
+    {
+      name: "invalid JSON",
+      payload: { done: true, done_reason: "stop", response: "not json" },
+      category: "invalid-json",
+    },
+    {
+      name: "unsafe MDX",
+      payload: { done: true, done_reason: "stop", response: JSON.stringify(generatedDraft({ body: "<script>bad</script>" })) },
+      category: "unsafe-mdx",
+    },
+    {
+      name: "missing analysis",
+      payload: { done: true, done_reason: "stop", response: JSON.stringify(generatedDraft({ body: Array(20).fill("Grounded reporting from the supplied source.").join(" ") })) },
+      category: "missing-analysis",
+    },
+    {
+      name: "length violation",
+      payload: { done: true, done_reason: "stop", response: JSON.stringify(generatedDraft({ body: "## Why it matters\n\nToo short." })) },
+      category: "length",
+    },
+  ])("classifies $name for a bounded controller retry", async ({ payload, category }) => {
+    await expect(
+      requestOllamaDraft(queueStory(), {
+        model: "local-test",
+        fetchImpl: async () => Response.json(payload),
+      }),
+    ).rejects.toMatchObject({
+      name: "GenerationValidationError",
+      category,
+    });
+  });
+
+  it("accepts a short grounded local brief instead of demanding padded prose", async () => {
+    const contentRoot = await temporaryContentRoot();
+    await fs.writeFile(path.join(contentRoot, "queue/trending.json"), JSON.stringify([queueStory()]));
+    const body = "## Why It Matters\n\n" + Array(15).fill("The source confirms a coordination timetable.").join(" ");
+    const result = await generateDrafts({ env, contentRoot, fetchImpl: async () => Response.json({
+      done: true, done_reason: "stop", response: JSON.stringify(generatedDraft({ body })),
+    }) });
+    expect(result.failed).toEqual([]);
+    expect(result.created).toHaveLength(1);
+  });
+
+  it("adds the prior validation failure to a corrected local retry prompt", async () => {
+    let prompt = "";
+    await requestOllamaDraft(queueStory(), {
+      model: "local-test",
+      validationReason: "missing-analysis",
+      fetchImpl: async (_input, init) => {
+        prompt = String(JSON.parse(String(init?.body)).prompt);
+        return Response.json({
+          done: true,
+          done_reason: "stop",
+          response: JSON.stringify(generatedDraft()),
+        });
+      },
+    });
+    expect(prompt).toContain("missing-analysis");
+    expect(prompt).toContain("Correct the previous draft");
+  });
+
+  it("retains stories when Ollama is offline without falling back to a paid service", async () => {
+    const contentRoot = await temporaryContentRoot();
+    await fs.writeFile(path.join(contentRoot, "queue/trending.json"), JSON.stringify([queueStory()]));
+    const fetchImpl = vi.fn(async () => { throw new TypeError("fetch failed"); });
+    const result = await generateDrafts({ env, contentRoot, fetchImpl });
+    expect(result.failed).toHaveLength(1);
+    expect(result.remaining).toBe(1);
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
+  it("rejects an unknown provider before making requests", async () => {
+    const fetchImpl = vi.fn();
+    await expect(generateDrafts({ env: { ...env, DRAFT_GENERATION_PROVIDER: "typo" }, fetchImpl })).rejects.toThrow(/provider/i);
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+});
+
+describe("local provider configuration", () => {
+  it.each([
+    { NODE_ENV: "production", OLLAMA_MODEL: "local-test", LOCAL_WRITER_IMAGES: "false" },
+    { CI: "true", OLLAMA_MODEL: "local-test", LOCAL_WRITER_IMAGES: "false" },
+    { OLLAMA_MODEL: "model:cloud" },
+    { OLLAMA_MODEL: "" },
+  ])("rejects non-local or missing model configuration: %j", async (config) => {
+    const fetchImpl = vi.fn();
+    await expect(generateDrafts({
+      env: { DRAFT_GENERATION_ENABLED: "true", DRAFT_GENERATION_PROVIDER: "ollama", ...config }, fetchImpl,
+    })).rejects.toThrow(/local/i);
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+});
+
+it("includes three credited inline pictures while preserving final source attribution", () => {
+  const photos = [1, 2, 3].map(id => ({
+    title: `Archive photo ${id}`, url: `https://upload.wikimedia.org/photo${id}.jpg`,
+    page: `https://commons.wikimedia.org/wiki/File:Photo${id}.jpg`, artist: "Photographer",
+    license: "CC BY 4.0", licenseUrl: "https://creativecommons.org/licenses/by/4.0/",
+  }));
+  const mdx = buildDraftMdx(queueStory(), generatedDraft(), false, photos);
+  expect(mdx.match(/!\[/g)).toHaveLength(3);
+  expect(mdx.match(/Photo: Photographer/g)).toHaveLength(3);
+  expect(mdx.trimEnd()).toMatch(/Source: \[Example Outlet\]\(https:\/\/example.com\/story\)$/);
+  expect(parseArticleFile(mdx, "what-the-shared-stability-framework-changes.mdx").body).toContain("Related archive image");
 });
