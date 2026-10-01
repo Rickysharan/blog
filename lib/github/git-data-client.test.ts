@@ -233,4 +233,23 @@ describe("GitDataClient", () => {
     expect(String(caught)).not.toContain("super-secret-token");
     expect(JSON.stringify(caught)).not.toContain("super-secret-token");
   });
+
+  it.each([
+    { status: 429, category: "rate-limited", retryable: true },
+    { status: 500, category: "remote-service", retryable: true },
+    { status: 503, category: "remote-service", retryable: true },
+    { status: 401, category: "authentication", retryable: false },
+    { status: 403, category: "permission", retryable: false },
+  ])("classifies HTTP $status without exposing its response body", async ({ status, category, retryable }) => {
+    const response = new Response("secret response details", { status });
+    let caught: unknown;
+    try {
+      await client(vi.fn(async () => response)).snapshot();
+    } catch (error) {
+      caught = error;
+    }
+    expect(caught).toMatchObject({ category, retryable });
+    expect(String(caught)).not.toContain("secret response details");
+    expect(JSON.stringify(caught)).not.toContain("secret response details");
+  });
 });
