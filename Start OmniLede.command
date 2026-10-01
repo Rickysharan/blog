@@ -2,10 +2,6 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
-if ! command -v ollama >/dev/null; then
-  echo "Install Ollama first. See docs/runbooks/local-writer.md."
-  exit 1
-fi
 if [ ! -d node_modules ]; then npm ci; fi
 mkdir -p .audit
 web_pid=""
@@ -14,13 +10,6 @@ cleanup() {
 }
 trap cleanup EXIT
 trap 'exit 130' INT TERM
-if ! curl --silent --fail http://127.0.0.1:11434/api/tags >/dev/null; then
-  OLLAMA_NO_CLOUD=1 OLLAMA_HOST=127.0.0.1:11434 nohup ollama serve > .audit/ollama.log 2>&1 &
-  for attempt in {1..30}; do
-    if curl --silent --fail http://127.0.0.1:11434/api/tags >/dev/null; then break; fi
-    sleep 1
-  done
-fi
 review_url="$(node --env-file-if-exists=.env.local -e '
 const local = "http://127.0.0.1:3100/admin/review";
 const configured = process.env.LOCAL_WRITER_REVIEW_URL;
