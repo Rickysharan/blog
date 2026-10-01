@@ -77,6 +77,32 @@ describe("owned local writer lock", () => {
     ).rejects.toMatchObject({ category: "unknown" } satisfies Partial<LocalRuntimeError>);
     await expect(readFile(lockPath, "utf8")).resolves.toContain("not-a-process");
   });
+
+  it("preserves a lock when operating-system process inspection fails", async () => {
+    const lockPath = await lockFixture({ version: 1, pid: 412, processIdentity: "born-at-10" });
+    await expect(acquireWriterLock({
+      lockPath,
+      pid: 900,
+      processIdentity: "born-at-11",
+      inspectProcess: async () => { throw new Error("ps unavailable"); },
+    })).rejects.toMatchObject({ category: "unknown" } satisfies Partial<LocalRuntimeError>);
+    await expect(readFile(lockPath, "utf8")).resolves.toContain('"pid":412');
+  });
+
+  it("serializes simultaneous reclamation of one stale lock", async () => {
+    const lockPath = await lockFixture({ version: 1, pid: 412, processIdentity: "born-at-10" });
+    const identities = new Map([[900, "born-at-11"], [901, "born-at-12"]]);
+    const inspectProcess = async (pid: number) => pid === 412 ? null : identities.get(pid) ?? null;
+    const results = await Promise.allSettled([
+      acquireWriterLock({ lockPath, pid: 900, processIdentity: "born-at-11", inspectProcess }),
+      acquireWriterLock({ lockPath, pid: 901, processIdentity: "born-at-12", inspectProcess }),
+    ]);
+    expect(results.filter((result) => result.status === "fulfilled")).toHaveLength(1);
+    const rejection = results.find((result) => result.status === "rejected") as PromiseRejectedResult;
+    expect(rejection.reason).toMatchObject({ category: "already-running" });
+    const winner = results.find((result) => result.status === "fulfilled") as PromiseFulfilledResult<Awaited<ReturnType<typeof acquireWriterLock>>>;
+    await winner.value.release();
+  });
 });
 
 describe("local Ollama repair", () => {

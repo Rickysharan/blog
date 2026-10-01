@@ -37,7 +37,7 @@ npm run dev
 
 Open `http://localhost:3000/admin/login`, then `/admin/review`. Review the claims against the linked source, edit and save, then use Publish deliberately. Source snippets can be incomplete; generated prose is not verified reporting.
 
-The worker merges new feed stories with the pending queue and avoids existing source URLs. It creates at most one draft by default (`--limit 1` through `10`). Invalid or failed model outputs stay queued. Use `--queue-only` to skip RSS and retry the saved queue. An owned process lock prevents two instances from changing the queue at once and removes itself only when the recorded process is no longer alive.
+The worker merges new feed stories with the pending queue and avoids existing source URLs. It creates one draft by default; `--limit 2` through `10` runs that same guarded workflow sequentially for additional stories. Invalid or failed model outputs stay queued. Use `--queue-only` to skip RSS and retry the saved queue. An owned process lock prevents two instances from changing the queue at once and removes itself only when the recorded process is no longer alive.
 
 Local Publish updates the local repository only. To publish through the hosted dashboard, deliver the drafts first.
 
@@ -65,7 +65,7 @@ Set `LOCAL_WRITER_SYNC=true` to deliver drafts after each local writing run, inc
 
 The GitHub-backed dashboard stores drafts as repository files. In a public repository, those files can be read on GitHub before publication on the website; this is not confidential draft storage. Do not put private material in this workflow.
 
-`--sync` uploads all valid local drafts through the existing GitHub adapter as draft-only commits. Identical files are skipped on retry. Edited remote drafts and already-published slugs are not overwritten or republished; conflicts are reported. Local copies remain available after upload. Review at the hosted blog's `/admin/review`, then click Publish there. A site linked to the branch may redeploy after a draft commit, but drafts remain excluded from public pages.
+`--sync` uploads each newly generated article through the GitHub adapter as a draft-only commit. `--sync-only` retries one saved draft at a time. Identical files are skipped on retry. Edited remote drafts and already-published slugs are not overwritten or republished; conflicts are reported. Local copies remain available after upload. Review at the hosted blog's `/admin/review`, then click Publish there. A site linked to the branch may redeploy after a draft commit, but drafts remain excluded from public pages.
 
 The local writer is implemented and tested separately from the Contributor app's submission pipeline. Hosted delivery requires a configured token and confirmation that the deployed dashboard reads this repository; it is not implied configured by installing the local worker.
 

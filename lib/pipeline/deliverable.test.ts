@@ -61,6 +61,11 @@ describe("deliverable validation", () => {
       category: "generation-invalid",
     },
     {
+      name: "multiline MDX expression",
+      change: (mdx: string) => mdx.replace("## What happened", "{\n  1 + 1\n}\n\n## What happened"),
+      category: "generation-invalid",
+    },
+    {
       name: "missing analysis",
       change: (mdx: string) => mdx.replace("## Why it matters", "## Context"),
       category: "generation-invalid",

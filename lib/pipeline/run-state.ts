@@ -28,6 +28,13 @@ const selectedStorySchema = z
   })
   .strict();
 
+const generatedDraftSchema = z.object({
+  title: z.string().min(1),
+  excerpt: z.string().min(1),
+  tags: z.array(z.string().min(1)).min(1),
+  body: z.string().min(1),
+}).strict();
+
 const runStateSchema: z.ZodType<LocalRunState> = z
   .object({
     version: z.literal(1),
@@ -44,6 +51,7 @@ const runStateSchema: z.ZodType<LocalRunState> = z
     errorCategory: z.enum(RECOVERY_CATEGORIES).optional(),
     deliveryStatus: z.enum(["pending", "delivered", "not-delivered"]),
     selectedStory: selectedStorySchema.optional(),
+    generatedDraft: generatedDraftSchema.optional(),
     startedAt: z.iso.datetime(),
     updatedAt: z.iso.datetime(),
   })

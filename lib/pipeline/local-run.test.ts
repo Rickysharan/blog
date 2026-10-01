@@ -62,6 +62,8 @@ function dependencies(overrides: Partial<LocalRunDependencies> = {}): LocalRunDe
     generate: vi.fn(async () => generated),
     findPhotos: vi.fn(async () => ({ ok: true as const, photos, attempts: 1 })),
     deliver: vi.fn(async (_contentRoot, ref) => ({ status: "created" as const, ref, attempts: 1 })),
+    preflight: vi.fn(async () => ({ ok: true as const })),
+    wait: vi.fn(async () => undefined),
     now: vi.fn(() => new Date("2026-09-30T10:00:00.000Z")),
     runId: vi.fn(() => "run-test-001"),
     ...overrides,
@@ -232,6 +234,172 @@ describe("resumable local writer controller", () => {
 
     expect(result).toMatchObject({ status: "cancelled", resumable: true, errorCategory: "cancelled" });
     expect(deps.discover).not.toHaveBeenCalled();
+    expect(deps.generate).not.toHaveBeenCalled();
+  });
+
+  it("does not mutate shared state when another writer owns the lock", async () => {
+    const root = await temporaryRoot();
+    const first = dependencies({
+      deliver: vi.fn(async (_contentRoot, ref) => ({
+        status: "retryableFailure" as const,
+        ref,
+        attempts: 3,
+        category: "network" as const,
+        message: "offline",
+      })),
+    });
+    await run(root, first);
+    const statePath = path.join(root, ".audit/current-run.json");
+    const before = await readFile(statePath, "utf8");
+    const result = await run(root, dependencies({
+      acquireLock: vi.fn(async () => {
+        const error = new Error("already running") as Error & { category: "already-running" };
+        error.category = "already-running";
+        error.name = "LocalRuntimeError";
+        throw error;
+      }),
+    }));
+    expect(result).toMatchObject({ status: "human-required", errorCategory: "already-running" });
+    await expect(readFile(statePath, "utf8")).resolves.toBe(before);
+  });
+
+  it("requires manual reconciliation before repairing a hashless draft", async () => {
+    const root = await temporaryRoot();
+    const onePhoto: PhotoSearchResult = {
+      ok: false, category: "insufficient-images", message: "one", photos: [photos[0]], attempts: 2,
+    };
+    const firstResult = await run(root, dependencies({ findPhotos: vi.fn(async () => onePhoto) }));
+    const statePath = path.join(root, ".audit/current-run.json");
+    const state = JSON.parse(await readFile(statePath, "utf8"));
+    delete state.draftHash;
+    await writeFile(statePath, `${JSON.stringify(state)}\n`, "utf8");
+    const draftPath = path.join(root, "content/drafts", firstResult.draftRef!.category, firstResult.draftRef!.filename);
+    const edited = (await readFile(draftPath, "utf8")).replace("OmniLede Editorial", "Human Editor");
+    await writeFile(draftPath, edited, "utf8");
+
+    const second = dependencies();
+    const result = await run(root, second);
+    expect(result).toMatchObject({ status: "human-required", errorCategory: "content-conflict" });
+    await expect(readFile(draftPath, "utf8")).resolves.toBe(edited);
+    expect(second.findPhotos).not.toHaveBeenCalled();
+  });
+
+  it("starts a fresh run after a completed article", async () => {
+    const root = await temporaryRoot();
+    const runId = vi.fn().mockReturnValueOnce("run-one").mockReturnValueOnce("run-two");
+    await run(root, dependencies({ runId }));
+    const generate = vi.fn(async () => ({ ...generated, title: "A Different Team Update" }));
+    const nextStory = { ...story, title: "A different team update", sourceUrl: "https://example.com/story-two" };
+    const second = await run(root, dependencies({
+      runId,
+      generate,
+      discover: vi.fn(async () => ({
+        stories: [nextStory], summaries: [], successCount: 1, failureCount: 0, skippedCount: 0,
+      })),
+    }));
+    expect(second.runId).toBe("run-two");
+    expect(generate).toHaveBeenCalledTimes(1);
+  });
+
+  it("retries discovery twice before requiring a person", async () => {
+    const root = await temporaryRoot();
+    const discover = vi.fn()
+      .mockResolvedValueOnce({ stories: [], summaries: [], successCount: 0, failureCount: 3, skippedCount: 0 })
+      .mockResolvedValueOnce({ stories: [], summaries: [], successCount: 0, failureCount: 3, skippedCount: 0 })
+      .mockResolvedValueOnce({ stories: [story], summaries: [], successCount: 1, failureCount: 2, skippedCount: 0 });
+    const result = await run(root, dependencies({ discover }));
+    expect(result.status).toBe("completed");
+    expect(discover).toHaveBeenCalledTimes(3);
+  });
+
+  it("repairs Ollama after a transport generation failure", async () => {
+    const root = await temporaryRoot();
+    const generate = vi.fn().mockRejectedValueOnce(new TypeError("fetch failed")).mockResolvedValueOnce(generated);
+    const ensureModel = vi.fn(async () => ({ ok: true as const, repairs: [] }));
+    const result = await run(root, dependencies({ generate, ensureModel }));
+    expect(result.status).toBe("completed");
+    expect(ensureModel).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not deliver bytes changed after local validation", async () => {
+    const root = await temporaryRoot();
+    const deliver = vi.fn(async (_contentRoot, ref) => ({ status: "created" as const, ref, attempts: 1 }));
+    const events: LocalWriterEvent[] = [];
+    const result = await runLocalWriter({
+      projectRoot: root,
+      contentRoot: path.join(root, "content"),
+      auditRoot: path.join(root, ".audit"),
+      env: { OLLAMA_MODEL: "qwen2.5:7b", LOCAL_WRITER_SYNC: "true" },
+      sync: true,
+      dependencies: dependencies({ deliver }),
+      onEvent: async (event) => {
+        events.push(event);
+        if (event.stage === "local-validation" && event.status === "progress" && event.draftRef) {
+          const draftPath = path.join(root, "content/drafts", event.draftRef.category, event.draftRef.filename);
+          await writeFile(draftPath, `${await readFile(draftPath, "utf8")}\n{\n  1 + 1\n}\n`, "utf8");
+        }
+      },
+    });
+    expect(result).toMatchObject({ status: "human-required", errorCategory: "content-conflict" });
+    expect(deliver).not.toHaveBeenCalled();
+  });
+
+  it("reports a zero-create remote conflict without corrupting run state", async () => {
+    const root = await temporaryRoot();
+    const result = await run(root, dependencies({
+      deliver: vi.fn(async (_contentRoot, ref) => ({
+        status: "conflict" as const,
+        ref,
+        attempts: 0,
+        category: "content-conflict" as const,
+        message: "different",
+      })),
+    }));
+    expect(result).toMatchObject({ status: "human-required", errorCategory: "content-conflict" });
+    const state = JSON.parse(await readFile(path.join(root, ".audit/current-run.json"), "utf8"));
+    expect(state.attempt).toBe(1);
+  });
+
+  it("resumes a durably checkpointed generated article after interruption", async () => {
+    const root = await temporaryRoot();
+    let interrupted = false;
+    const controller = new AbortController();
+    const firstDeps = dependencies();
+    const first = await runLocalWriter({
+      projectRoot: root,
+      contentRoot: path.join(root, "content"),
+      auditRoot: path.join(root, ".audit"),
+      env: { OLLAMA_MODEL: "qwen2.5:7b", LOCAL_WRITER_SYNC: "true" },
+      sync: true,
+      dependencies: firstDeps,
+      signal: controller.signal,
+      onEvent(event) {
+        if (!interrupted && event.stage === "generation" && event.status === "progress") {
+          interrupted = true;
+          controller.abort();
+        }
+      },
+    });
+    expect(first.status).toBe("cancelled");
+    const state = JSON.parse(await readFile(path.join(root, ".audit/current-run.json"), "utf8"));
+    expect(state.generatedDraft).toMatchObject({ title: generated.title });
+
+    const generate = vi.fn(async () => generated);
+    const discover = vi.fn();
+    const resumed = await run(root, dependencies({ generate, discover }));
+    expect(resumed.status).toBe("completed");
+    expect(generate).not.toHaveBeenCalled();
+    expect(discover).not.toHaveBeenCalled();
+  });
+
+  it("stops before model work when a delivery preflight is not configured", async () => {
+    const root = await temporaryRoot();
+    const deps = dependencies({
+      preflight: vi.fn(async () => ({ ok: false as const, category: "configuration" as const })),
+    });
+    const result = await run(root, deps);
+    expect(result).toMatchObject({ status: "human-required", errorCategory: "configuration" });
+    expect(deps.ensureModel).not.toHaveBeenCalled();
     expect(deps.generate).not.toHaveBeenCalled();
   });
 });

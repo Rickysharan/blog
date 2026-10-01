@@ -139,7 +139,7 @@ function assertSafeGeneratedBody(body: string): void {
   const unsafe =
     /^(?:import|export)\s/m.test(body) ||
     /<\/?[A-Za-z][^>]*>/.test(body) ||
-    /\{[^\n{}]*\}/.test(body) ||
+    /[{}]/.test(body) ||
     /<!--/.test(body);
   if (unsafe) {
     throw new GenerationValidationError("unsafe-mdx", "Generated body contains unsafe MDX syntax");
@@ -340,22 +340,32 @@ export async function requestClaudeDraft(
 /** Local worker only: fixed loopback endpoint, no redirect or paid-provider fallback. */
 export async function requestOllamaDraft(
   story: QueueStory,
-  config: { model: string; fetchImpl?: FetchLike },
+  config: {
+    model: string;
+    fetchImpl?: FetchLike;
+    validationReason?: string;
+    signal?: AbortSignal;
+  },
 ): Promise<GeneratedDraftContent> {
   const fetchImpl = config.fetchImpl ?? fetch;
+  const correction = config.validationReason
+    ? `\n\nCorrect the previous draft. It failed validation for: ${config.validationReason}. Return a fully corrected replacement, not an explanation.`
+    : "";
   const response = await fetchImpl("http://127.0.0.1:11434/api/generate", {
     method: "POST",
     redirect: "error",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({
       model: config.model,
-      prompt: buildDraftPrompt(story, true),
+      prompt: `${buildDraftPrompt(story, true)}${correction}`,
       stream: false,
       format: "json",
       keep_alive: "30m",
       options: { temperature: 0.2, num_predict: 1200, num_ctx: 4096 },
     }),
-    signal: AbortSignal.timeout(180_000),
+    signal: config.signal
+      ? AbortSignal.any([config.signal, AbortSignal.timeout(180_000)])
+      : AbortSignal.timeout(180_000),
   });
   if (!response.ok) {
     throw new Error(`Local Ollama request failed with HTTP ${response.status}`);

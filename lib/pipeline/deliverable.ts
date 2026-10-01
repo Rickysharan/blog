@@ -46,7 +46,7 @@ export async function validateDeliverable(
   if (article.category !== ref.category) {
     return invalid("validation-failed", "The draft category does not match its folder.");
   }
-  if (/^(?:import|export)\s/m.test(article.body) || /<\/?[A-Za-z][^>]*>/.test(article.body) || /\{[^\n{}]*\}/.test(article.body) || /<!--/.test(article.body)) {
+  if (/^(?:import|export)\s/m.test(article.body) || /<\/?[A-Za-z][^>]*>/.test(article.body) || /[{}]/.test(article.body) || /<!--/.test(article.body)) {
     return invalid("generation-invalid", "The draft contains unsafe MDX.");
   }
   if (!/^## Why it matters\s*$/m.test(article.body)) {

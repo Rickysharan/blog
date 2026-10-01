@@ -331,6 +331,24 @@ describe("local Ollama drafting", () => {
     expect(result.created).toHaveLength(1);
   });
 
+  it("adds the prior validation failure to a corrected local retry prompt", async () => {
+    let prompt = "";
+    await requestOllamaDraft(queueStory(), {
+      model: "local-test",
+      validationReason: "missing-analysis",
+      fetchImpl: async (_input, init) => {
+        prompt = String(JSON.parse(String(init?.body)).prompt);
+        return Response.json({
+          done: true,
+          done_reason: "stop",
+          response: JSON.stringify(generatedDraft()),
+        });
+      },
+    });
+    expect(prompt).toContain("missing-analysis");
+    expect(prompt).toContain("Correct the previous draft");
+  });
+
   it("retains stories when Ollama is offline without falling back to a paid service", async () => {
     const contentRoot = await temporaryContentRoot();
     await fs.writeFile(path.join(contentRoot, "queue/trending.json"), JSON.stringify([queueStory()]));

@@ -188,6 +188,22 @@ describe("required article photo policy", () => {
     expect(queries[0]).toBe("Philadelphia 76ers");
   });
 
+  it("does not accept an unrelated team that only shares a place-name URL token", async () => {
+    const fetcher = vi.fn();
+    const result = await findRequiredArticlePhotos(
+      {
+        ...namedStory,
+        title: "Coaching changes to monitor",
+        snippet: "Several coaches could face scrutiny this season.",
+        sourceUrl: "https://example.com/los-angeles-lakers-coaching-preview",
+      },
+      ["Los Angeles Dodgers"],
+      { fetchImpl: fetcher },
+    );
+    expect(result).toMatchObject({ ok: false, attempts: 0 });
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+
   it.each([
     {
       name: "unsupported MIME type",

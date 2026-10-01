@@ -1,12 +1,14 @@
-import { appendFile, mkdir, readFile, writeFile } from "node:fs/promises";
+import { access, appendFile, constants, mkdir, readFile, rename, rm, statfs, writeFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import path from "node:path";
 import matter from "gray-matter";
 import { z } from "zod";
 import { isCategorySlug } from "@/lib/config/categories";
 import { GitHubDraftRepository } from "@/lib/drafts/github-repository";
+import { GitDataClientError } from "@/lib/github/git-data-client";
 import { LocalDraftRepository } from "@/lib/drafts/local-repository";
-import type { DraftRef } from "@/lib/drafts/types";
+import type { DraftDocument, DraftRef } from "@/lib/drafts/types";
+import { parseArticleFile } from "@/lib/content/schema";
 import { validateDeliverable } from "@/lib/pipeline/deliverable";
 import { fetchTrendingStories, writeTrendingQueue } from "@/lib/pipeline/fetch";
 import {
@@ -53,14 +55,21 @@ export interface LocalRunDependencies {
   discover(options: { contentRoot: string }): Promise<FetchTrendingResult>;
   generate(
     story: QueueStory,
-    options: { model: string; attempt: number; validationReason?: string },
+    options: { model: string; attempt: number; validationReason?: string; signal?: AbortSignal },
   ): Promise<GeneratedDraftContent>;
   findPhotos(story: QueueStory, tags: string[]): Promise<PhotoSearchResult>;
   deliver(
     contentRoot: string,
     ref: DraftRef,
     env: Record<string, string | undefined>,
+    validatedMdx: string,
   ): Promise<DeliveryResult>;
+  preflight?(options: {
+    contentRoot: string;
+    env: Record<string, string | undefined>;
+    syncEnabled: boolean;
+  }): Promise<{ ok: true } | { ok: false; category: RecoveryCategory }>;
+  wait?(milliseconds: number): Promise<void>;
   now(): Date;
   runId(): string;
 }
@@ -70,11 +79,11 @@ export interface RunLocalWriterOptions {
   contentRoot?: string;
   auditRoot?: string;
   env?: Record<string, string | undefined>;
-  limit?: number;
   sync?: boolean;
   queueOnly?: boolean;
   syncOnly?: boolean;
   localOnly?: boolean;
+  newRun?: boolean;
   onEvent?: (event: LocalWriterEvent) => void | Promise<void>;
   signal?: AbortSignal;
   dependencies?: Partial<LocalRunDependencies>;
@@ -84,16 +93,53 @@ const defaultDependencies: LocalRunDependencies = {
   acquireLock: (options) => acquireWriterLock(options),
   ensureModel: (options) => ensureLocalModel(options),
   discover: (options) => fetchTrendingStories(options),
-  generate: (story, options) => requestOllamaDraft(story, { model: options.model }),
+  generate: (story, options) => requestOllamaDraft(story, {
+    model: options.model,
+    validationReason: options.validationReason,
+    signal: options.signal,
+  }),
   findPhotos: (story, tags) => findRequiredArticlePhotos(story, tags),
-  async deliver(contentRoot, ref, env) {
+  async deliver(_contentRoot, ref, env, validatedMdx) {
     const targetConfig = await resolveLocalGitHubTarget(env);
+    const article = parseArticleFile(validatedMdx, ref.filename);
+    const document: DraftDocument = {
+      ref,
+      title: article.title,
+      date: article.date,
+      excerpt: article.excerpt,
+      category: article.category,
+      version: contentHash(validatedMdx),
+      mdx: validatedMdx,
+      article,
+    };
     return deliverDraft(
-      new LocalDraftRepository({ contentRoot }),
+      { read: async () => document },
       new GitHubDraftRepository(targetConfig),
       ref,
     );
   },
+  async preflight({ contentRoot, env, syncEnabled }) {
+    try {
+      const draftsRoot = path.join(contentRoot, "drafts");
+      await mkdir(draftsRoot, { recursive: true });
+      await access(draftsRoot, constants.W_OK);
+      const probe = path.join(draftsRoot, `.omnilede-write-check-${process.pid}-${crypto.randomUUID()}`);
+      await writeFile(probe, "ok", { encoding: "utf8", mode: 0o600, flag: "wx" });
+      await rm(probe, { force: true });
+      const disk = await statfs(draftsRoot);
+      if (Number(disk.bavail) * Number(disk.bsize) < 100 * 1024 * 1024) {
+        return { ok: false as const, category: "disk-space" as const };
+      }
+      if (syncEnabled) {
+        const target = await resolveLocalGitHubTarget(env);
+        await new GitHubDraftRepository(target).list();
+      }
+      return { ok: true as const };
+    } catch (error) {
+      return { ok: false as const, category: preflightCategory(error) };
+    }
+  },
+  wait: (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds)),
   now: () => new Date(),
   runId: () => crypto.randomUUID(),
 };
@@ -118,6 +164,9 @@ function safeTerminalMessage(category: RecoveryCategory): string {
     case "local-model-missing": return "The configured local model is not installed. Install it in Ollama, then try again.";
     case "local-model-unavailable": return "Ollama could not be started locally after two repair attempts.";
     case "already-running": return "Another OmniLede writer is already running.";
+    case "configuration": return "The dashboard repository settings need attention before writing starts.";
+    case "credentials": return "Sign in to GitHub locally before writing starts.";
+    case "disk-space": return "The draft folder is not writable or this Mac needs more free disk space.";
     case "authentication": return "GitHub authentication needs attention before delivery can resume.";
     case "permission": return "GitHub permission needs attention before delivery can resume.";
     case "published-conflict": return "An article with this slug is already published.";
@@ -159,6 +208,18 @@ function contentHash(value: string): string {
   return createHash("sha256").update(value, "utf8").digest("hex");
 }
 
+function preflightCategory(error: unknown): RecoveryCategory {
+  let current: unknown = error;
+  for (let depth = 0; depth < 4 && current instanceof Error; depth += 1) {
+    if (current instanceof GitDataClientError) return current.category;
+    current = current.cause;
+  }
+  const message = error instanceof Error ? error.message : "";
+  if (/Sign in|GITHUB_TOKEN|credential/i.test(message)) return "credentials";
+  if (/GITHUB_REPOSITORY|GITHUB_BRANCH|repository and branch/i.test(message)) return "configuration";
+  return "disk-space";
+}
+
 function generatedFromSavedDraft(mdx: string): GeneratedDraftContent | undefined {
   const parsed = matter(mdx);
   const title = parsed.data.title;
@@ -191,21 +252,94 @@ export async function runLocalWriter(
     options.sync || options.syncOnly || env.LOCAL_WRITER_SYNC === "true",
   );
   await mkdir(auditRoot, { recursive: true });
+  let lock: WriterLock | undefined;
+
+  const ephemeralTerminal = async (
+    runId: string,
+    status: "human-required" | "cancelled",
+    category: RecoveryCategory,
+    message: string,
+  ): Promise<LocalRunResult> => {
+    const event = {
+      runId,
+      stage: "preflight" as const,
+      attempt: 1,
+      percent: stagePercent.preflight,
+      status,
+      message,
+      imageCount: 0,
+      repairs: [],
+      errorCategory: category,
+    } as LocalWriterEvent;
+    await options.onEvent?.(event);
+    return {
+      runId,
+      status,
+      stage: "preflight",
+      imageCount: 0,
+      repairs: [],
+      message,
+      errorCategory: status === "cancelled" ? "cancelled" : category,
+      deliveryStatus: "not-delivered",
+      resumable: true,
+    } as LocalRunResult;
+  };
+
+  const initialRunId = deps.runId();
+  if (options.signal?.aborted) {
+    return ephemeralTerminal(
+      initialRunId,
+      "cancelled",
+      "cancelled",
+      "The run was cancelled before it changed any saved work.",
+    );
+  }
+  try {
+    lock = await deps.acquireLock({ lockPath: path.join(auditRoot, "local-writer.lock") });
+  } catch (error) {
+    const category = error instanceof LocalRuntimeError
+      ? error.category
+      : (error as { category?: RecoveryCategory }).category ?? "unknown";
+    return ephemeralTerminal(initialRunId, "human-required", category, safeTerminalMessage(category));
+  }
 
   let previous: LocalRunState | null = null;
   try {
-    previous = await loadRunState(statePath);
+    try {
+      previous = await loadRunState(statePath);
+    } catch {
+      await archiveInvalidRunState(statePath, deps.now());
+    }
+    if (previous?.status === "completed") {
+      const stamp = deps.now().toISOString().replace(/[-:.]/g, "");
+      await rename(statePath, path.join(auditRoot, `completed-run-${stamp}-${crypto.randomUUID()}.json`));
+      previous = null;
+    }
+    if (options.newRun && previous) {
+      await lock.release();
+      lock = undefined;
+      return ephemeralTerminal(
+        previous.runId,
+        "human-required",
+        "content-conflict",
+        "Resume the saved article before starting a different one.",
+      );
+    }
   } catch {
-    await archiveInvalidRunState(statePath, deps.now());
+    await lock?.release();
+    lock = undefined;
+    return ephemeralTerminal(initialRunId, "human-required", "unknown", safeTerminalMessage("unknown"));
   }
+
   const startedAt = previous?.startedAt ?? deps.now().toISOString();
-  const runId = previous?.runId ?? deps.runId();
-  let repairs = previous?.repairs ?? [];
+  const runId = previous?.runId ?? initialRunId;
+  let repairs = [...(previous?.repairs ?? []), ...lock.repairs];
   let draftRef = previous?.draftRef as DraftRef | undefined;
   let draftHash = previous?.draftHash;
   let imageCount = previous?.imageCount ?? 0;
   let selectedStory = stateStory(previous);
-  let lock: WriterLock | undefined;
+  let generatedDraft = previous?.generatedDraft;
+  let currentStage: LocalRunStage = previous?.stage ?? "preflight";
 
   const persistAndEmit = async (
     stage: LocalRunStage,
@@ -215,6 +349,8 @@ export async function runLocalWriter(
     errorCategory?: RecoveryCategory,
     deliveryStatus: LocalRunState["deliveryStatus"] = "pending",
   ) => {
+    currentStage = stage;
+    const safeAttempt = Math.max(1, Math.min(3, attempt));
     const terminalStatus = status === "completed" ? "completed" :
       status === "cancelled" ? "cancelled" :
       status === "human-required" || status === "failed" ? "human-required" : "running";
@@ -223,7 +359,7 @@ export async function runLocalWriter(
       runId,
       status: terminalStatus,
       stage,
-      attempt,
+      attempt: safeAttempt,
       percent: stagePercent[stage],
       message,
       draftRef,
@@ -233,6 +369,7 @@ export async function runLocalWriter(
       errorCategory,
       deliveryStatus,
       selectedStory,
+      generatedDraft,
       startedAt,
       updatedAt: deps.now().toISOString(),
     };
@@ -240,7 +377,7 @@ export async function runLocalWriter(
     const base = {
       runId,
       stage,
-      attempt,
+      attempt: safeAttempt,
       percent: stagePercent[stage],
       status,
       message,
@@ -283,8 +420,9 @@ export async function runLocalWriter(
 
   try {
     if (options.signal?.aborted) return await cancelled("preflight");
-    lock = await deps.acquireLock({ lockPath: path.join(auditRoot, "local-writer.lock") });
-    repairs = [...repairs, ...lock.repairs];
+
+    const preflight = await deps.preflight!({ contentRoot, env, syncEnabled });
+    if (!preflight.ok) return await humanRequired("preflight", preflight.category);
 
     let resumableMdx: string | undefined;
     let pictureRepairDraft: GeneratedDraftContent | undefined;
@@ -295,7 +433,7 @@ export async function runLocalWriter(
           "utf8",
         );
         const currentHash = contentHash(resumableMdx);
-        if (draftHash && currentHash !== draftHash) {
+        if (!draftHash || currentHash !== draftHash) {
           return await humanRequired("local-validation", "content-conflict");
         }
         const validation = await validateDeliverable(draftRef, resumableMdx);
@@ -312,7 +450,7 @@ export async function runLocalWriter(
       }
     }
 
-    if (!options.syncOnly && !resumableMdx && !pictureRepairDraft) {
+    if (!options.syncOnly && !resumableMdx && !pictureRepairDraft && !generatedDraft) {
       const model = env.OLLAMA_MODEL?.trim() ?? "";
       const runtime = await deps.ensureModel({ model });
       repairs = [...repairs, ...runtime.repairs];
@@ -332,24 +470,38 @@ export async function runLocalWriter(
     }
 
     if (!resumableMdx) {
-      let queue: QueueStory[] = [];
-      let generated = pictureRepairDraft;
+      const savedQueue = await readQueue(queuePath);
+      let queue: QueueStory[] = savedQueue.stories;
+      let generated = pictureRepairDraft ?? generatedDraft;
       const repairingPictures = Boolean(generated && selectedStory && draftRef);
       if (!generated) {
-        const savedQueue = await readQueue(queuePath);
-        queue = savedQueue.stories;
-        if (!options.queueOnly) {
-          const discovered = await deps.discover({ contentRoot });
-          if (discovered.successCount > 0) {
-            const written = await writeTrendingQueue([...queue, ...discovered.stories], { contentRoot });
-            queue = written.stories;
-          } else if (!savedQueue.valid || queue.length === 0) {
-            return await humanRequired("discovery", "discovery-unavailable");
+        if (!selectedStory) {
+          if (!options.queueOnly) {
+            for (let attempt = 1; attempt <= 3; attempt += 1) {
+              const discovered = await deps.discover({ contentRoot });
+              if (discovered.successCount > 0) {
+                const written = await writeTrendingQueue([...queue, ...discovered.stories], { contentRoot });
+                queue = written.stories;
+                break;
+              }
+              if (savedQueue.valid && queue.length > 0) break;
+              if (attempt < 3) {
+                await persistAndEmit(
+                  "discovery",
+                  "retrying",
+                  "Recent sources were unavailable; trying discovery again.",
+                  attempt + 1,
+                  "discovery-unavailable",
+                );
+                await deps.wait!(Math.min(250 * 2 ** (attempt - 1), 1_000));
+              }
+            }
           }
-        } else if (!savedQueue.valid || queue.length === 0) {
-          return await humanRequired("discovery", "discovery-unavailable");
+          if (!savedQueue.valid || queue.length === 0) {
+            return await humanRequired("discovery", "discovery-unavailable", 3);
+          }
+          selectedStory = queue[0];
         }
-        selectedStory = queue[0];
         if (!selectedStory) return await humanRequired("discovery", "discovery-unavailable");
         await persistAndEmit("discovery", "progress", "Selected a recent source story.");
         if (options.signal?.aborted) return await cancelled("discovery");
@@ -361,13 +513,24 @@ export async function runLocalWriter(
               model: env.OLLAMA_MODEL?.trim() ?? "",
               attempt,
               validationReason,
+              signal: options.signal,
             });
+            generatedDraft = generated;
             await persistAndEmit("generation", "progress", "The local article draft is written.", attempt);
             break;
           } catch (error) {
+            if (options.signal?.aborted) return await cancelled("generation");
             const validation = error instanceof GenerationValidationError;
             validationReason = validation ? error.category : "local-model-unavailable";
             if (attempt < 3) {
+              if (!validation) {
+                const runtime = await deps.ensureModel({ model: env.OLLAMA_MODEL?.trim() ?? "" });
+                repairs = [...repairs, ...runtime.repairs];
+                for (const repair of runtime.repairs) {
+                  await persistAndEmit("generation", "repaired", repair, attempt);
+                }
+                if (!runtime.ok) return await humanRequired("generation", runtime.category, attempt);
+              }
               await persistAndEmit(
                 "generation",
                 "retrying",
@@ -392,11 +555,7 @@ export async function runLocalWriter(
 
       const photoResult = await deps.findPhotos(selectedStory, generated.tags);
       imageCount = photoResult.photos.length;
-      await persistAndEmit(
-        "image-selection",
-        "progress",
-        photoResult.ok ? `${imageCount} related credited pictures are ready.` : `${imageCount} suitable credited pictures were found.`,
-      );
+      if (options.signal?.aborted) return await cancelled("image-selection");
 
       let mdx: string;
       try {
@@ -429,6 +588,12 @@ export async function runLocalWriter(
         }
       }
       draftHash = contentHash(mdx);
+      generatedDraft = undefined;
+      await persistAndEmit(
+        "image-selection",
+        "progress",
+        photoResult.ok ? `${imageCount} related credited pictures are ready.` : `${imageCount} suitable credited pictures were found.`,
+      );
       if (!repairingPictures) {
         await writeQueueBytes(queuePath, queue.filter((candidate) => candidate.sourceUrl !== selectedStory!.sourceUrl));
       }
@@ -443,25 +608,44 @@ export async function runLocalWriter(
     await persistAndEmit("local-validation", "progress", "The article and picture credits passed local checks.");
     if (options.signal?.aborted) return await cancelled("local-validation");
 
+    if (selectedStory) {
+      const currentQueue = await readQueue(queuePath);
+      if (currentQueue.valid) {
+        await writeQueueBytes(
+          queuePath,
+          currentQueue.stories.filter((candidate) => candidate.sourceUrl !== selectedStory!.sourceUrl),
+        );
+      }
+    }
+
     if (!syncEnabled) {
-      const message = "The validated article was saved locally for review.";
+      const message = `“${validation.article.title}” was validated and saved locally for review.`;
       await persistAndEmit("delivery-verification", "completed", message, 1, undefined, "not-delivered");
       return { runId, status: "completed", stage: "delivery-verification", draftRef, imageCount, repairs, message, deliveryStatus: "not-delivered" };
     }
 
     await persistAndEmit("dashboard-delivery", "progress", "Sending the validated draft to the review dashboard.");
-    const delivery = await deps.deliver(contentRoot, draftRef, env);
+    if (options.signal?.aborted) return await cancelled("dashboard-delivery");
+    const currentBytes = await readFile(
+      path.join(contentRoot, "drafts", draftRef.category, draftRef.filename),
+      "utf8",
+    );
+    if (currentBytes !== resumableMdx || contentHash(currentBytes) !== draftHash) {
+      return await humanRequired("local-validation", "content-conflict");
+    }
+    const delivery = await deps.deliver(contentRoot, draftRef, env, resumableMdx);
     if (delivery.status === "conflict" || delivery.status === "humanRequired" || delivery.status === "retryableFailure") {
       return await humanRequired("dashboard-delivery", delivery.category, delivery.attempts);
     }
-    await persistAndEmit("delivery-verification", "completed", "Draft delivered and verified. Review it, then click Publish.", delivery.attempts || 1, undefined, "delivered");
+    const completionMessage = `“${validation.article.title}” was delivered and verified. Review it, then click Publish.`;
+    await persistAndEmit("delivery-verification", "completed", completionMessage, delivery.attempts || 1, undefined, "delivered");
     return {
       runId, status: "completed", stage: "delivery-verification", draftRef, imageCount,
-      repairs, message: "Draft delivered and verified. Review it, then click Publish.", deliveryStatus: "delivered",
+      repairs, message: completionMessage, deliveryStatus: "delivered",
     };
   } catch (error) {
     return await humanRequired(
-      previous?.stage ?? "preflight",
+      currentStage,
       error instanceof LocalRuntimeError ? error.category : "unknown",
     );
   } finally {

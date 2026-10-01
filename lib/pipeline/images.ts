@@ -102,6 +102,9 @@ type CommonsPage = {
 };
 
 const genericSubject = /^(?:news|sports?|politics|finance|movies?|anime|share market|team update|club update)$/i;
+const genericPlaceToken = new Set([
+  "los", "angeles", "san", "new", "york", "city", "united", "states", "north", "south",
+]);
 
 function namedEntityQueries(story: QueueStory, tags: string[]): string[] {
   const context = `${story.title} ${story.snippet}`;
@@ -127,7 +130,8 @@ function namedEntityQueries(story: QueueStory, tags: string[]): string[] {
       const looksNamed = subject.split(" ").length >= 2 || /^[A-Z]{3,6}$/.test(subject);
       const subjectTokens = subject.toLocaleLowerCase().split(/\s+/);
       const appearsInSourcePath = subjectTokens.some(
-        (token) => token.length >= 4 && sourcePathTokens.has(token),
+        (token) => (/[0-9]/.test(token) || token.length >= 5) &&
+          !genericPlaceToken.has(token) && sourcePathTokens.has(token),
       );
       return looksNamed && (
         lowerContext.includes(subject.toLocaleLowerCase()) || appearsInSourcePath

@@ -5,11 +5,17 @@ export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
 if [ ! -d node_modules ]; then npm ci; fi
 mkdir -p .audit
 web_pid=""
+writer_pid=""
 cleanup() {
+  if [ -n "$writer_pid" ]; then kill -TERM "$writer_pid" 2>/dev/null || true; wait "$writer_pid" 2>/dev/null || true; fi
   if [ -n "$web_pid" ]; then kill "$web_pid" 2>/dev/null || true; fi
 }
 trap cleanup EXIT
-trap 'exit 130' INT TERM
+cancel_writer() {
+  if [ -n "$writer_pid" ]; then kill -TERM "$writer_pid" 2>/dev/null || true; fi
+  exit 130
+}
+trap cancel_writer INT TERM
 review_url="$(node --env-file-if-exists=.env.local -e '
 const local = "http://127.0.0.1:3100/admin/review";
 const configured = process.env.LOCAL_WRITER_REVIEW_URL;
@@ -28,14 +34,28 @@ if [[ "$review_url" == http://127.0.0.1:* ]]; then
 fi
 echo "Finding recent news and writing an article with related photos…"
 started=$SECONDS
-npm run content:local -- --limit 1
+writer_args=(--limit 1)
+if [ "${OMNILEDE_START_NEW:-}" = "true" ]; then writer_args+=(--new); fi
+if [ -n "${OMNILEDE_WRITER_EXECUTABLE:-}" ]; then
+  "$OMNILEDE_WRITER_EXECUTABLE" "${writer_args[@]}" &
+else
+  node --conditions=react-server --env-file-if-exists=.env.local --import tsx scripts/local-writer.ts "${writer_args[@]}" &
+fi
+writer_pid=$!
+set +e
+wait "$writer_pid"
+writer_status=$?
+set -e
+writer_pid=""
+if [ "$writer_status" -ne 0 ]; then exit "$writer_status"; fi
 echo "Writer finished in $((SECONDS - started)) seconds."
 echo "@omnilede $(node -e 'console.log(JSON.stringify({phase:"dashboard",url:process.argv[1]}))' "$review_url")"
 if [ "${OMNILEDE_DESKTOP:-}" != "true" ]; then open "$review_url"; fi
 echo "Review dashboard: $review_url"
 if [ -n "$web_pid" ]; then
-  echo "Keep this window open for the local dashboard. Press Control-C to stop."
-  wait "$web_pid"
+  disown "$web_pid" 2>/dev/null || true
+  web_pid=""
+  echo "The local dashboard is running in the background."
 else
   echo "You can close this window. Open OmniLede again for another article."
 fi

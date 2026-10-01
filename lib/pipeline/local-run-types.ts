@@ -71,6 +71,12 @@ export interface LocalRunState {
     snippet: string;
     category: string;
   };
+  generatedDraft?: {
+    title: string;
+    excerpt: string;
+    tags: string[];
+    body: string;
+  };
   startedAt: string;
   updatedAt: string;
 }

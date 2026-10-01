@@ -44,7 +44,12 @@ async function inspectProcessIdentity(pid: number): Promise<string | null> {
     const identity = stdout.trim();
     return identity || null;
   } catch {
-    return null;
+    try {
+      process.kill(pid, 0);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "ESRCH") return null;
+    }
+    throw new LocalRuntimeError("The writer process could not be inspected safely.", "unknown");
   }
 }
 
@@ -77,41 +82,60 @@ export async function acquireWriterLock(
     options.processIdentity ?? (await inspectProcess(pid)) ?? `pid-${pid}-unknown-start`;
   const ownMetadata: LockMetadata = { version: 1, pid, processIdentity };
   const repairs: string[] = [];
+  const reclaimPath = `${options.lockPath}.reclaim`;
 
-  for (let acquisitionAttempt = 0; acquisitionAttempt < 3; acquisitionAttempt += 1) {
+  for (let acquisitionAttempt = 0; acquisitionAttempt < 50; acquisitionAttempt += 1) {
+    let guard;
     try {
-      const handle = await open(options.lockPath, "wx", 0o600);
-      await handle.writeFile(`${JSON.stringify(ownMetadata)}\n`, "utf8");
-      await handle.close();
-      return {
-        repairs,
-        async release() {
-          try {
-            const current = await readLock(options.lockPath);
-            if (
-              current.pid === ownMetadata.pid &&
-              current.processIdentity === ownMetadata.processIdentity
-            ) {
-              await rm(options.lockPath, { force: true });
-            }
-          } catch (error) {
-            if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
-          }
-        },
-      };
+      guard = await open(reclaimPath, "wx", 0o600);
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      continue;
     }
+    try {
+      try {
+        const handle = await open(options.lockPath, "wx", 0o600);
+        await handle.writeFile(`${JSON.stringify(ownMetadata)}\n`, "utf8");
+        await handle.close();
+        return {
+          repairs,
+          async release() {
+            try {
+              const current = await readLock(options.lockPath);
+              if (
+                current.pid === ownMetadata.pid &&
+                current.processIdentity === ownMetadata.processIdentity
+              ) {
+                await rm(options.lockPath, { force: true });
+              }
+            } catch (error) {
+              if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+            }
+          },
+        };
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
+      }
 
-    const recorded = await readLock(options.lockPath);
-    const liveIdentity = await inspectProcess(recorded.pid);
-    if (liveIdentity === recorded.processIdentity) {
-      throw new LocalRuntimeError("Another local writer is already running.", "already-running");
+      const recorded = await readLock(options.lockPath);
+      let liveIdentity: string | null;
+      try {
+        liveIdentity = await inspectProcess(recorded.pid);
+      } catch {
+        throw new LocalRuntimeError("The existing writer process could not be inspected safely.", "unknown");
+      }
+      if (liveIdentity === recorded.processIdentity) {
+        throw new LocalRuntimeError("Another local writer is already running.", "already-running");
+      }
+      await rm(options.lockPath, { force: true });
+      repairs.push("Removed a stale local writer lock");
+    } finally {
+      await guard.close();
+      await rm(reclaimPath, { force: true });
     }
-    await rm(options.lockPath, { force: true });
-    repairs.push("Removed a stale local writer lock");
   }
-  throw new LocalRuntimeError("The local writer lock changed during recovery.", "unknown");
+  throw new LocalRuntimeError("The local writer lock is busy during recovery.", "already-running");
 }
 
 export type RuntimeCheckResult =

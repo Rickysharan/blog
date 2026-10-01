@@ -20,6 +20,8 @@ final class WriterApp: NSObject, NSApplicationDelegate {
     var buffer = ""
     var finished = false
     var delivered = false
+    var reviewReady = false
+    var startNewRequested = false
     var cancelledByUser = false
     var resumableFailure = false
     var photoCount: Int?
@@ -59,7 +61,7 @@ final class WriterApp: NSObject, NSApplicationDelegate {
         resume.bezelStyle = .rounded
         resume.isHidden = true
         startNew.target = self
-        startNew.action = #selector(start)
+        startNew.action = #selector(startNewArticle)
         startNew.bezelStyle = .rounded
         startNew.isHidden = true
         cancel.target = self
@@ -102,6 +104,7 @@ final class WriterApp: NSObject, NSApplicationDelegate {
         guard task?.isRunning != true else { return }
         finished = false
         delivered = false
+        reviewReady = false
         cancelledByUser = false
         resumableFailure = false
         photoCount = nil
@@ -127,6 +130,8 @@ final class WriterApp: NSObject, NSApplicationDelegate {
         var env = ProcessInfo.processInfo.environment
         env["PATH"] = "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
         env["OMNILEDE_DESKTOP"] = "true"
+        if startNewRequested { env["OMNILEDE_START_NEW"] = "true" }
+        startNewRequested = false
         process.environment = env
         let output = Pipe()
         process.standardOutput = output
@@ -161,6 +166,12 @@ final class WriterApp: NSObject, NSApplicationDelegate {
             detail.stringValue = "The project launcher could not start. Reinstall OmniLede.app from this project folder."
             resume.isHidden = false
         }
+    }
+
+    @objc func startNewArticle() {
+        guard !resumableFailure else { return }
+        startNewRequested = true
+        start()
     }
 
     @objc func cancelRun() {
@@ -206,8 +217,8 @@ final class WriterApp: NSObject, NSApplicationDelegate {
                let raw = event["url"] as? String,
                let url = safeDashboardURL(raw) {
                 dashboardURL = url
-                dashboard.isEnabled = delivered
-                if delivered {
+                dashboard.isEnabled = reviewReady
+                if reviewReady {
                     if !isSmokeTesting { openDashboard() }
                     finishDisplay()
                 }
@@ -219,6 +230,10 @@ final class WriterApp: NSObject, NSApplicationDelegate {
             if let percent = event["percent"] as? Int { bar.doubleValue = Double(percent) }
             if let message = event["message"] as? String { status.stringValue = message }
             if let repairs = event["repairs"] as? [String] { repairMessages.append(contentsOf: repairs) }
+            if event["stage"] as? String == "dashboard-delivery" {
+                cancel.isEnabled = false
+                cancel.isHidden = true
+            }
 
             let eventStatus = event["status"] as? String ?? ""
             if eventStatus == "repaired", let message = event["message"] as? String {
@@ -236,8 +251,9 @@ final class WriterApp: NSObject, NSApplicationDelegate {
             } else if eventStatus == "cancelled" {
                 lastTerminalMessage = event["message"] as? String ?? "Completed work is safe and resumable."
                 resumableFailure = true
-            } else if eventStatus == "completed" && event["deliveryStatus"] as? String == "delivered" {
-                delivered = true
+            } else if eventStatus == "completed" {
+                delivered = event["deliveryStatus"] as? String == "delivered"
+                reviewReady = true
                 resumableFailure = false
                 showRepairs()
                 finishDisplay()
@@ -262,7 +278,7 @@ final class WriterApp: NSObject, NSApplicationDelegate {
 
     func finishDisplay() {
         guard !finished else {
-            dashboard.isEnabled = delivered && dashboardURL != nil
+            dashboard.isEnabled = reviewReady && dashboardURL != nil
             return
         }
         finished = true
@@ -270,11 +286,11 @@ final class WriterApp: NSObject, NSApplicationDelegate {
         bar.doubleValue = 100
         cancel.isHidden = true
         let seconds = Int(Date().timeIntervalSince(began))
-        if delivered { UserDefaults.standard.set(seconds, forKey: "lastSuccessfulDuration") }
+        if reviewReady { UserDefaults.standard.set(seconds, forKey: "lastSuccessfulDuration") }
         time.stringValue = "Completed in \(seconds) seconds"
         let photos = photoCount.map { "\($0)/3 related photos included. " } ?? ""
         detail.stringValue = photos + "Select your draft in the dashboard, check the text and pictures, then click Publish. Sign in there if asked."
-        dashboard.isEnabled = delivered && dashboardURL != nil
+        dashboard.isEnabled = reviewReady && dashboardURL != nil
         resume.isHidden = true
         startNew.isHidden = false
         startNew.isEnabled = true
@@ -286,7 +302,7 @@ final class WriterApp: NSObject, NSApplicationDelegate {
         pipe?.fileHandleForReading.readabilityHandler = nil
         cancel.isHidden = true
         timer?.invalidate()
-        if code == 0 && delivered {
+        if code == 0 && reviewReady {
             finishDisplay()
             return
         }
@@ -355,6 +371,12 @@ final class WriterApp: NSObject, NSApplicationDelegate {
         precondition(detail.stringValue.contains("2/3"))
         precondition(startNew.isEnabled)
 
+        finished = false
+        delivered = false
+        reviewReady = false
+        consume("@omnilede {\"runId\":\"local-smoke\",\"stage\":\"delivery-verification\",\"attempt\":1,\"percent\":100,\"status\":\"completed\",\"message\":\"Draft saved locally for review.\",\"draftRef\":{\"category\":\"sports\",\"filename\":\"local-safe.mdx\"},\"imageCount\":3,\"repairs\":[],\"deliveryStatus\":\"not-delivered\"}\n")
+        precondition(reviewReady && dashboard.isEnabled)
+
         let view = window.contentView!
         view.layoutSubtreeIfNeeded()
         precondition(title.frame.height > 0 && status.frame.height > 0 && time.frame.height > 0)
@@ -370,7 +392,7 @@ final class WriterApp: NSObject, NSApplicationDelegate {
     #endif
 
     @objc func openDashboard() {
-        guard delivered, let url = dashboardURL else { return }
+        guard reviewReady, let url = dashboardURL else { return }
         NSWorkspace.shared.open(url)
     }
 
@@ -380,7 +402,7 @@ final class WriterApp: NSObject, NSApplicationDelegate {
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
-        return task?.isRunning != true
+        return true
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
