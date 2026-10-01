@@ -10,6 +10,7 @@ import {
   buildDraftPrompt,
   generateDrafts,
   requestClaudeDraft,
+  requestOllamaDraft,
   type GeneratedDraftContent,
 } from "@/lib/pipeline/generate";
 import type { QueueStory } from "@/lib/pipeline/types";
@@ -279,6 +280,44 @@ describe("local Ollama drafting", () => {
     expect(result.created).toEqual([]);
     expect(result.failed).toHaveLength(1);
     expect(JSON.parse(await fs.readFile(queuePath, "utf8"))).toEqual([queueStory()]);
+  });
+
+  it.each([
+    {
+      name: "truncated output",
+      payload: { done: true, done_reason: "length", response: "{}" },
+      category: "truncated",
+    },
+    {
+      name: "invalid JSON",
+      payload: { done: true, done_reason: "stop", response: "not json" },
+      category: "invalid-json",
+    },
+    {
+      name: "unsafe MDX",
+      payload: { done: true, done_reason: "stop", response: JSON.stringify(generatedDraft({ body: "<script>bad</script>" })) },
+      category: "unsafe-mdx",
+    },
+    {
+      name: "missing analysis",
+      payload: { done: true, done_reason: "stop", response: JSON.stringify(generatedDraft({ body: Array(20).fill("Grounded reporting from the supplied source.").join(" ") })) },
+      category: "missing-analysis",
+    },
+    {
+      name: "length violation",
+      payload: { done: true, done_reason: "stop", response: JSON.stringify(generatedDraft({ body: "## Why it matters\n\nToo short." })) },
+      category: "length",
+    },
+  ])("classifies $name for a bounded controller retry", async ({ payload, category }) => {
+    await expect(
+      requestOllamaDraft(queueStory(), {
+        model: "local-test",
+        fetchImpl: async () => Response.json(payload),
+      }),
+    ).rejects.toMatchObject({
+      name: "GenerationValidationError",
+      category,
+    });
   });
 
   it("accepts a short grounded local brief instead of demanding padded prose", async () => {

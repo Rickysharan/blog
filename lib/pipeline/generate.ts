@@ -13,6 +13,7 @@ import { parseArticleFile } from "@/lib/content/schema";
 import { getDraftRepository } from "@/lib/drafts/repository";
 import type { DraftRepository } from "@/lib/drafts/types";
 import { canonicalizeSourceUrl } from "@/lib/pipeline/dedupe";
+import { normalizeGeneratedBody } from "@/lib/pipeline/normalize-draft";
 import type { FetchLike, QueueStory } from "@/lib/pipeline/types";
 
 const ANTHROPIC_MESSAGES_URL = "https://api.anthropic.com/v1/messages";
@@ -49,6 +50,23 @@ export interface GeneratedDraftContent {
   excerpt: string;
   tags: string[];
   body: string;
+}
+
+export type GenerationValidationCategory =
+  | "truncated"
+  | "invalid-json"
+  | "unsafe-mdx"
+  | "missing-analysis"
+  | "length";
+
+export class GenerationValidationError extends Error {
+  constructor(
+    readonly category: GenerationValidationCategory,
+    message: string,
+  ) {
+    super(message);
+    this.name = "GenerationValidationError";
+  }
 }
 
 export interface GenerationConfig {
@@ -124,23 +142,34 @@ function assertSafeGeneratedBody(body: string): void {
     /\{[^\n{}]*\}/.test(body) ||
     /<!--/.test(body);
   if (unsafe) {
-    throw new Error("Generated body contains unsafe MDX syntax");
+    throw new GenerationValidationError("unsafe-mdx", "Generated body contains unsafe MDX syntax");
   }
 }
 
 function validateGeneratedDraft(value: unknown, brief = false): GeneratedDraftContent {
-  const parsed = generatedDraftSchema.parse(value);
+  const result = generatedDraftSchema.safeParse(value);
+  if (!result.success) {
+    throw new GenerationValidationError(
+      "invalid-json",
+      "Drafting model returned JSON that does not match the article format",
+    );
+  }
+  const parsed = result.data;
   assertSafeGeneratedBody(parsed.body);
 
   const wordCount = countWords(parsed.body);
   const minimumWords = brief ? 80 : 700;
   if (wordCount < minimumWords || wordCount > 1_000) {
-    throw new Error(
+    throw new GenerationValidationError(
+      "length",
       `Generated body must contain ${minimumWords}–1,000 words; received ${wordCount}`,
     );
   }
   if (!/^## Why it matters\s*$/m.test(parsed.body)) {
-    throw new Error('Generated body must include the heading "## Why it matters"');
+    throw new GenerationValidationError(
+      "missing-analysis",
+      'Generated body must include the heading "## Why it matters"',
+    );
   }
 
   return parsed;
@@ -155,19 +184,12 @@ function extractJson(text: string): unknown {
   try {
     return JSON.parse(withoutFence);
   } catch {
-    throw new Error("Drafting model returned invalid JSON");
+    throw new GenerationValidationError("invalid-json", "Drafting model returned invalid JSON");
   }
 }
 
 function escapeMarkdownLabel(value: string): string {
   return value.replace(/([\\\]])/g, "\\$1");
-}
-
-function removeSourceLines(body: string): string {
-  return body
-    .replace(/^Source:\s*\[[^\]]*\]\([^\n]*\)\s*$/gim, "")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
 }
 
 export function buildDraftPrompt(story: QueueStory, brief = false): string {
@@ -198,10 +220,14 @@ export function buildDraftMdx(
   photos: ArticlePhoto[] = [],
 ): string {
   const safeStory = queueStorySchema.parse(story) as QueueStory;
-  const safeGenerated = validateGeneratedDraft(generated, brief);
+  const normalized = normalizeGeneratedBody(generated.title, generated.body);
+  const safeGenerated = validateGeneratedDraft(
+    { ...generated, body: normalized.body },
+    brief,
+  );
   const slug = slugify(safeGenerated.title);
   const sourceUrl = canonicalizeSourceUrl(safeStory.sourceUrl);
-  const body = removeSourceLines(safeGenerated.body);
+  const body = safeGenerated.body;
   const sourceLine = `Source: [${escapeMarkdownLabel(safeStory.source)}](${sourceUrl})`;
   const paragraphs = body.split("\n\n");
   const imageBlocks = photos.slice(0, 3).map(photoMarkdown);
@@ -250,7 +276,7 @@ async function readAnthropicResponse(response: Response): Promise<GeneratedDraft
   }
 
   if (payload.stop_reason === "max_tokens") {
-    throw new Error("Claude response was truncated at the token limit");
+    throw new GenerationValidationError("truncated", "Claude response was truncated at the token limit");
   }
   const output = payload.content
     ?.filter((block) => block.type === "text" && typeof block.text === "string")
@@ -354,18 +380,37 @@ export async function requestOllamaDraft(
     await reader.cancel();
     reader.releaseLock();
   }
-  const payload = z.object({
-    done: z.literal(true),
+  const payloadResult = z.object({
+    done: z.boolean(),
     done_reason: z.string().optional(),
     response: z.string().min(1),
-  }).parse(extractJson(text));
-  if (payload.done_reason === "length") {
-    throw new Error("Ollama response was truncated at the token limit");
+  }).safeParse(extractJson(text));
+  if (!payloadResult.success) {
+    throw new GenerationValidationError(
+      "invalid-json",
+      "Ollama returned JSON that does not match the generation response format",
+    );
   }
-  const generated = generatedDraftSchema.parse(extractJson(payload.response));
-  // Local models often title-case headings; normalise spelling, never add missing analysis.
-  generated.body = generated.body.replace(/^## Why it matters[ \t]*$/gim, "## Why it matters");
-  return validateGeneratedDraft(generated, true);
+  const payload = payloadResult.data;
+  if (!payload.done || payload.done_reason === "length") {
+    throw new GenerationValidationError("truncated", "Ollama response was truncated at the token limit");
+  }
+  const rawGenerated = extractJson(payload.response);
+  const parsedGenerated = generatedDraftSchema.safeParse(rawGenerated);
+  if (!parsedGenerated.success) {
+    throw new GenerationValidationError(
+      "invalid-json",
+      "Ollama returned JSON that does not match the article format",
+    );
+  }
+  const normalized = normalizeGeneratedBody(
+    parsedGenerated.data.title,
+    parsedGenerated.data.body,
+  );
+  return validateGeneratedDraft(
+    { ...parsedGenerated.data, body: normalized.body },
+    true,
+  );
 }
 
 async function slugExists(contentRoot: string, slug: string): Promise<boolean> {
