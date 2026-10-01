@@ -1,4 +1,4 @@
-"""Build my local writer app and put it on my Desktop. Requires Xcode command-line tools."""
+"""Build my local writer app and put a shortcut on my Desktop. Requires Xcode command-line tools."""
 from pathlib import Path
 import plistlib
 import shutil
@@ -6,7 +6,8 @@ import subprocess
 import tempfile
 
 repo = Path(__file__).resolve().parent.parent
-app = Path.home() / "Desktop" / "OmniLede.app"
+installed_app = Path.home() / "Applications" / "OmniLede.app"
+desktop_app = Path.home() / "Desktop" / "OmniLede.app"
 for required in (repo / "Start OmniLede.command", repo / "package.json", repo / "desktop/OmniLede.swift"):
     if not required.is_file():
         raise SystemExit(f"OmniLede project is incomplete: missing {required}")
@@ -30,15 +31,25 @@ with tempfile.TemporaryDirectory(prefix="omnilede-app-") as temp:
     with (bundle / "Contents/Info.plist").open("wb") as file:
         plistlib.dump(info, file)
     subprocess.run(["/usr/bin/codesign", "--force", "--sign", "-", str(bundle)], check=True)
-    if app.exists():
-        archive = Path.home() / "Library/Application Support/OmniLede"
-        archive.mkdir(parents=True, exist_ok=True)
-        backup = Path(tempfile.mkdtemp(prefix="previous-app-", dir=archive)) / "OmniLede.app"
-        shutil.move(str(app), str(backup))
-    shutil.copytree(bundle, app, copy_function=shutil.copyfile)
-    (app / "Contents/MacOS/OmniLede").chmod(0o755)
-    # Desktop providers may attach Finder metadata after the copy; sign the final clean bundle.
-    subprocess.run(["/usr/bin/xattr", "-cr", str(app)], check=True)
-    subprocess.run(["/usr/bin/codesign", "--force", "--sign", "-", str(app)], check=True)
-    subprocess.run(["/usr/bin/codesign", "--verify", "--deep", "--strict", "--verbose", str(app)], check=True)
-    print(f"Installed {app}")
+    archive = Path.home() / "Library/Application Support/OmniLede"
+    archive.mkdir(parents=True, exist_ok=True)
+
+    def archive_existing(candidate: Path) -> None:
+        if candidate.is_symlink():
+            candidate.unlink()
+        elif candidate.exists():
+            backup = Path(tempfile.mkdtemp(prefix="previous-app-", dir=archive)) / "OmniLede.app"
+            shutil.move(str(candidate), str(backup))
+
+    archive_existing(desktop_app)
+    archive_existing(installed_app)
+    installed_app.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copytree(bundle, installed_app, copy_function=shutil.copyfile)
+    (installed_app / "Contents/MacOS/OmniLede").chmod(0o755)
+    # Keep the signed bundle outside Desktop's file provider, which can add FinderInfo later.
+    subprocess.run(["/usr/bin/xattr", "-cr", str(installed_app)], check=True)
+    subprocess.run(["/usr/bin/codesign", "--force", "--sign", "-", str(installed_app)], check=True)
+    subprocess.run(["/usr/bin/codesign", "--verify", "--deep", "--strict", "--verbose", str(installed_app)], check=True)
+    desktop_app.symlink_to(installed_app)
+    print(f"Installed {installed_app}")
+    print(f"Desktop shortcut {desktop_app}")
