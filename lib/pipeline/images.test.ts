@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { findArticlePhotos, photoMarkdown } from "./images";
+import { findArticlePhotos, findRequiredArticlePhotos, photoMarkdown } from "./images";
 
 function page(id: number, license = "CC BY-SA 4.0", host = "thumb.wikimedia.org") {
   return { title: `File:Photo ${id}.jpg`, index: id, imageinfo: [{ mime: "image/jpeg",
@@ -45,4 +45,143 @@ it("does not substitute generic category pictures for a named subject", async ()
   expect(fetcher).toHaveBeenCalledTimes(1);
   const requested = new URL(String(fetcher.mock.calls[0]?.[0]));
   expect(requested.searchParams.get("gsrsearch")).toContain("Baker Mayfield");
+});
+
+function relevantPage(id: number, overrides: Record<string, unknown> = {}) {
+  const base = page(id) as ReturnType<typeof page> & {
+    imageinfo: Array<ReturnType<typeof page>["imageinfo"][number] & { width?: number; height?: number }>;
+  };
+  base.title = `File:Baker Mayfield ${id}.jpg`;
+  base.imageinfo[0].width = 1200;
+  base.imageinfo[0].height = 800;
+  (base.imageinfo[0].extmetadata as Record<string, { value: string }>).ImageDescription = {
+    value: `Baker Mayfield at a team event ${id}`,
+  };
+  Object.assign(base.imageinfo[0], overrides);
+  return base;
+}
+
+const namedStory = {
+  title: "Baker Mayfield provides team update",
+  snippet: "Baker Mayfield spoke after the team session.",
+  source: "Example Outlet",
+  sourceUrl: "https://example.com/story",
+  date: "2026-09-30T10:00:00.000Z",
+  category: "sports" as const,
+};
+
+describe("required article photo policy", () => {
+  it("returns three relevant unique credited photos", async () => {
+    const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+      if (init?.method === "HEAD") {
+        return new Response(null, { status: 200, headers: { "content-type": "image/jpeg" } });
+      }
+      return Response.json({ query: { pages: {
+        a: relevantPage(1), b: relevantPage(2), c: relevantPage(3),
+      } } });
+    });
+
+    const result = await findRequiredArticlePhotos(namedStory, ["Baker Mayfield", "sports"], { fetchImpl: fetcher });
+
+    expect(result).toMatchObject({ ok: true, attempts: 1 });
+    expect(result.photos).toHaveLength(3);
+    expect(new Set(result.photos.map((photo) => photo.page)).size).toBe(3);
+  });
+
+  it("accepts two photos found across bounded alternative queries", async () => {
+    let search = 0;
+    const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+      if (init?.method === "HEAD") {
+        return new Response(null, { status: 200, headers: { "content-type": "image/jpeg" } });
+      }
+      search += 1;
+      const query = new URL(String(input)).searchParams.get("gsrsearch")?.match(/^"([^"]+)"/)?.[1] ?? "Baker Mayfield";
+      const candidate = relevantPage(search);
+      candidate.title = `File:${query} ${search}.jpg`;
+      (candidate.imageinfo[0].extmetadata as Record<string, { value: string }>).ImageDescription = {
+        value: `${query} at an event`,
+      };
+      return Response.json({ query: { pages: { photo: candidate } } });
+    });
+
+    const result = await findRequiredArticlePhotos(
+      { ...namedStory, snippet: "Baker Mayfield met Tampa Bay Buccaneers officials." },
+      ["Baker Mayfield", "Tampa Bay Buccaneers"],
+      { fetchImpl: fetcher },
+    );
+
+    expect(result).toMatchObject({ ok: true, attempts: 2 });
+    expect(result.photos).toHaveLength(2);
+    expect(search).toBe(2);
+  });
+
+  it("returns an explicit insufficient-images result when only one photo is usable", async () => {
+    const fetcher = vi.fn(async (_input: string | URL | Request, init?: RequestInit) => {
+      if (init?.method === "HEAD") {
+        return new Response(null, { status: 200, headers: { "content-type": "image/jpeg" } });
+      }
+      return Response.json({ query: { pages: { only: relevantPage(1) } } });
+    });
+
+    const result = await findRequiredArticlePhotos(namedStory, ["Baker Mayfield"], { fetchImpl: fetcher });
+
+    expect(result).toMatchObject({ ok: false, category: "insufficient-images" });
+    expect(result.photos).toHaveLength(1);
+  });
+
+  it("deduplicates Commons pages before applying the minimum", async () => {
+    const duplicate = relevantPage(2);
+    duplicate.imageinfo[0].descriptionurl = relevantPage(1).imageinfo[0].descriptionurl;
+    const fetcher = vi.fn(async (_input: string | URL | Request, init?: RequestInit) => {
+      if (init?.method === "HEAD") return new Response(null, { headers: { "content-type": "image/jpeg" } });
+      return Response.json({ query: { pages: { a: relevantPage(1), b: duplicate } } });
+    });
+
+    const result = await findRequiredArticlePhotos(namedStory, ["Baker Mayfield"], { fetchImpl: fetcher });
+    expect(result.ok).toBe(false);
+    expect(result.photos).toHaveLength(1);
+  });
+
+  it("does not search a generic category that is not a named source entity", async () => {
+    const fetcher = vi.fn();
+    const result = await findRequiredArticlePhotos(
+      { ...namedStory, title: "Team update", snippet: "The club issued an update." },
+      ["sports", "news"],
+      { fetchImpl: fetcher },
+    );
+    expect(result).toMatchObject({ ok: false, category: "insufficient-images", attempts: 0 });
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    {
+      name: "unsupported MIME type",
+      mutate: (candidate: ReturnType<typeof relevantPage>) => { candidate.imageinfo[0].mime = "image/png"; },
+      head: new Response(null, { headers: { "content-type": "image/png" } }),
+    },
+    {
+      name: "missing credits",
+      mutate: (candidate: ReturnType<typeof relevantPage>) => { candidate.imageinfo[0].extmetadata.Artist.value = ""; },
+      head: new Response(null, { headers: { "content-type": "image/jpeg" } }),
+    },
+    {
+      name: "unreachable image",
+      mutate: (_candidate: ReturnType<typeof relevantPage>) => undefined,
+      head: new Response(null, { status: 503, headers: { "content-type": "image/jpeg" } }),
+    },
+    {
+      name: "unusable dimensions",
+      mutate: (candidate: ReturnType<typeof relevantPage>) => { candidate.imageinfo[0].width = 120; candidate.imageinfo[0].height = 80; },
+      head: new Response(null, { headers: { "content-type": "image/jpeg" } }),
+    },
+  ])("rejects a photo with $name", async ({ mutate, head }) => {
+    const candidate = relevantPage(1);
+    mutate(candidate);
+    const fetcher = vi.fn(async (_input: string | URL | Request, init?: RequestInit) =>
+      init?.method === "HEAD" ? head : Response.json({ query: { pages: { candidate } } }));
+
+    const result = await findRequiredArticlePhotos(namedStory, ["Baker Mayfield"], { fetchImpl: fetcher });
+    expect(result.ok).toBe(false);
+    expect(result.photos).toEqual([]);
+  });
 });
