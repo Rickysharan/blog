@@ -58,6 +58,7 @@ export interface LocalRunState {
   percent: number;
   message: string;
   draftRef?: LocalDraftRef;
+  draftHash?: string;
   imageCount: number;
   repairs: string[];
   errorCategory?: RecoveryCategory;

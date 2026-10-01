@@ -169,6 +169,27 @@ describe("resumable local writer controller", () => {
     expect(deps.deliver).not.toHaveBeenCalled();
   });
 
+  it("resumes an unchanged picture-blocked draft without regenerating the article", async () => {
+    const root = await temporaryRoot();
+    const onePhoto: PhotoSearchResult = {
+      ok: false, category: "insufficient-images", message: "Only one photo was found.", photos: [photos[0]], attempts: 2,
+    };
+    const first = dependencies({ findPhotos: vi.fn(async () => onePhoto) });
+    expect((await run(root, first)).status).toBe("human-required");
+
+    const generate = vi.fn(async () => generated);
+    const discover = vi.fn(async () => ({
+      stories: [story], summaries: [], successCount: 1, failureCount: 0, skippedCount: 0,
+    }));
+    const second = dependencies({ generate, discover });
+    const resumed = await run(root, second);
+
+    expect(resumed).toMatchObject({ status: "completed", deliveryStatus: "delivered", imageCount: 2 });
+    expect(generate).not.toHaveBeenCalled();
+    expect(discover).not.toHaveBeenCalled();
+    expect(second.findPhotos).toHaveBeenCalledTimes(1);
+  });
+
   it("resumes a preserved draft without generating another article", async () => {
     const root = await temporaryRoot();
     const firstDeps = dependencies({

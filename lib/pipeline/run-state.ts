@@ -38,6 +38,7 @@ const runStateSchema: z.ZodType<LocalRunState> = z
     percent: z.number().min(0).max(100),
     message: z.string(),
     draftRef: draftRefSchema.optional(),
+    draftHash: z.string().regex(/^[a-f0-9]{64}$/).optional(),
     imageCount: z.number().int().min(0).max(3),
     repairs: z.array(z.string()),
     errorCategory: z.enum(RECOVERY_CATEGORIES).optional(),

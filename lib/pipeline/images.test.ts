@@ -153,6 +153,41 @@ describe("required article photo policy", () => {
     expect(fetcher).not.toHaveBeenCalled();
   });
 
+  it("uses a named tag when its distinctive subject appears in the source URL", async () => {
+    const queries: string[] = [];
+    const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+      if (init?.method === "HEAD") {
+        return new Response(null, { headers: { "content-type": "image/jpeg" } });
+      }
+      const query = new URL(String(input)).searchParams.get("gsrsearch")?.match(/^"([^"]+)"/)?.[1] ?? "";
+      queries.push(query);
+      const candidates = [1, 2].map((id) => {
+        const candidate = relevantPage(id);
+        candidate.title = `File:${query} ${id}.jpg`;
+        (candidate.imageinfo[0].extmetadata as Record<string, { value: string }>).ImageDescription = {
+          value: `${query} at an event`,
+        };
+        return candidate;
+      });
+      return Response.json({ query: { pages: { a: candidates[0], b: candidates[1] } } });
+    });
+    const sourceUrlStory = {
+      ...namedStory,
+      title: "Five coaching situations to monitor",
+      snippet: "Several coaches could face scrutiny this season.",
+      sourceUrl: "https://example.com/nba-preview-76ers-nurse-spurs-johnson",
+    };
+
+    const result = await findRequiredArticlePhotos(
+      sourceUrlStory,
+      ["Philadelphia 76ers", "San Antonio Spurs"],
+      { fetchImpl: fetcher },
+    );
+
+    expect(result.ok).toBe(true);
+    expect(queries[0]).toBe("Philadelphia 76ers");
+  });
+
   it.each([
     {
       name: "unsupported MIME type",
@@ -166,7 +201,7 @@ describe("required article photo policy", () => {
     },
     {
       name: "unreachable image",
-      mutate: (_candidate: ReturnType<typeof relevantPage>) => undefined,
+      mutate: () => undefined,
       head: new Response(null, { status: 503, headers: { "content-type": "image/jpeg" } }),
     },
     {

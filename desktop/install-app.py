@@ -7,6 +7,9 @@ import tempfile
 
 repo = Path(__file__).resolve().parent.parent
 app = Path.home() / "Desktop" / "OmniLede.app"
+for required in (repo / "Start OmniLede.command", repo / "package.json", repo / "desktop/OmniLede.swift"):
+    if not required.is_file():
+        raise SystemExit(f"OmniLede project is incomplete: missing {required}")
 # Build and sign away from Desktop's file-provider metadata before replacing the launcher.
 with tempfile.TemporaryDirectory(prefix="omnilede-app-") as temp:
     bundle = Path(temp) / "OmniLede.app"
@@ -21,7 +24,8 @@ with tempfile.TemporaryDirectory(prefix="omnilede-app-") as temp:
     subprocess.run(["/usr/bin/iconutil", "-c", "icns", str(iconset), "-o", str(resources / "OmniLede.icns")], check=True)
     info = dict(CFBundleIdentifier="com.rickysharan.omnilede.localwriter", CFBundleName="OmniLede",
                 CFBundleDisplayName="OmniLede", CFBundleExecutable="OmniLede", CFBundlePackageType="APPL",
-                CFBundleIconFile="OmniLede", CFBundleShortVersionString="2.0", LSMinimumSystemVersion="12.0",
+                CFBundleIconFile="OmniLede", CFBundleShortVersionString="3.0", CFBundleVersion="3",
+                LSMinimumSystemVersion="12.0",
                 NSHighResolutionCapable=True, OmniLedeProjectPath=str(repo))
     with (bundle / "Contents/Info.plist").open("wb") as file:
         plistlib.dump(info, file)
@@ -33,5 +37,8 @@ with tempfile.TemporaryDirectory(prefix="omnilede-app-") as temp:
         shutil.move(str(app), str(backup))
     shutil.copytree(bundle, app, copy_function=shutil.copyfile)
     (app / "Contents/MacOS/OmniLede").chmod(0o755)
-    subprocess.run(["/usr/bin/codesign", "--verify", "--verbose", str(app)], check=True)
+    # Desktop providers may attach Finder metadata after the copy; sign the final clean bundle.
+    subprocess.run(["/usr/bin/xattr", "-cr", str(app)], check=True)
+    subprocess.run(["/usr/bin/codesign", "--force", "--sign", "-", str(app)], check=True)
+    subprocess.run(["/usr/bin/codesign", "--verify", "--deep", "--strict", "--verbose", str(app)], check=True)
     print(f"Installed {app}")

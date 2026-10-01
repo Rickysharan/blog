@@ -1,6 +1,5 @@
 import { execFile as execFileCallback, spawn } from "node:child_process";
 import { open, readFile, rm } from "node:fs/promises";
-import path from "node:path";
 import { promisify } from "node:util";
 import { z } from "zod";
 import type { RecoveryCategory } from "@/lib/pipeline/local-run-types";

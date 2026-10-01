@@ -106,6 +106,17 @@ const genericSubject = /^(?:news|sports?|politics|finance|movies?|anime|share ma
 function namedEntityQueries(story: QueueStory, tags: string[]): string[] {
   const context = `${story.title} ${story.snippet}`;
   const lowerContext = context.toLocaleLowerCase();
+  let sourcePathTokens = new Set<string>();
+  try {
+    sourcePathTokens = new Set(
+      decodeURIComponent(new URL(story.sourceUrl).pathname)
+        .toLocaleLowerCase()
+        .split(/[^\p{L}\p{N}]+/u)
+        .filter(Boolean),
+    );
+  } catch {
+    // Queue validation reports malformed source URLs before image selection.
+  }
   const extracted = [...context.matchAll(/\b[A-Z][\p{L}'’-]+(?:\s+[A-Z][\p{L}'’-]+){1,4}\b/gu)]
     .map((match) => match[0]);
   const acronyms = context.match(/\b[A-Z]{3,6}\b/g) ?? [];
@@ -114,7 +125,13 @@ function namedEntityQueries(story: QueueStory, tags: string[]): string[] {
     .filter((subject) => {
       if (!subject || genericSubject.test(subject)) return false;
       const looksNamed = subject.split(" ").length >= 2 || /^[A-Z]{3,6}$/.test(subject);
-      return looksNamed && lowerContext.includes(subject.toLocaleLowerCase());
+      const subjectTokens = subject.toLocaleLowerCase().split(/\s+/);
+      const appearsInSourcePath = subjectTokens.some(
+        (token) => token.length >= 4 && sourcePathTokens.has(token),
+      );
+      return looksNamed && (
+        lowerContext.includes(subject.toLocaleLowerCase()) || appearsInSourcePath
+      );
     }))];
 }
 

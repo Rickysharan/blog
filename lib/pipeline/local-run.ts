@@ -1,4 +1,5 @@
 import { appendFile, mkdir, readFile, writeFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
 import path from "node:path";
 import matter from "gray-matter";
 import { z } from "zod";
@@ -154,6 +155,27 @@ function stateStory(state: LocalRunState | null): QueueStory | undefined {
   return { ...candidate, category: candidate.category };
 }
 
+function contentHash(value: string): string {
+  return createHash("sha256").update(value, "utf8").digest("hex");
+}
+
+function generatedFromSavedDraft(mdx: string): GeneratedDraftContent | undefined {
+  const parsed = matter(mdx);
+  const title = parsed.data.title;
+  const excerpt = parsed.data.excerpt;
+  const tags = parsed.data.tags;
+  if (typeof title !== "string" || typeof excerpt !== "string" ||
+      !Array.isArray(tags) || !tags.every((tag) => typeof tag === "string")) {
+    return undefined;
+  }
+  const body = parsed.content
+    .replace(/^!\[[^\n]+\]\([^\n]+\)\n\nRelated archive image:[^\n]+(?:\n|$)/gm, "")
+    .replace(/^\s*Source:\s*\[[^\]]+\]\(https:\/\/[^\s)]+\)\s*$/gim, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+  return { title, excerpt, tags, body };
+}
+
 export async function runLocalWriter(
   options: RunLocalWriterOptions = {},
 ): Promise<LocalRunResult> {
@@ -180,6 +202,7 @@ export async function runLocalWriter(
   const runId = previous?.runId ?? deps.runId();
   let repairs = previous?.repairs ?? [];
   let draftRef = previous?.draftRef as DraftRef | undefined;
+  let draftHash = previous?.draftHash;
   let imageCount = previous?.imageCount ?? 0;
   let selectedStory = stateStory(previous);
   let lock: WriterLock | undefined;
@@ -204,6 +227,7 @@ export async function runLocalWriter(
       percent: stagePercent[stage],
       message,
       draftRef,
+      draftHash,
       imageCount,
       repairs,
       errorCategory,
@@ -263,21 +287,32 @@ export async function runLocalWriter(
     repairs = [...repairs, ...lock.repairs];
 
     let resumableMdx: string | undefined;
+    let pictureRepairDraft: GeneratedDraftContent | undefined;
     if (draftRef && previous?.deliveryStatus !== "delivered") {
       try {
         resumableMdx = await readFile(
           path.join(contentRoot, "drafts", draftRef.category, draftRef.filename),
           "utf8",
         );
+        const currentHash = contentHash(resumableMdx);
+        if (draftHash && currentHash !== draftHash) {
+          return await humanRequired("local-validation", "content-conflict");
+        }
         const validation = await validateDeliverable(draftRef, resumableMdx);
-        if (!validation.ok) resumableMdx = undefined;
-        else imageCount = validation.imageCount;
+        if (!validation.ok) {
+          if (previous?.errorCategory === "insufficient-images" && selectedStory) {
+            pictureRepairDraft = generatedFromSavedDraft(resumableMdx);
+          }
+          resumableMdx = undefined;
+        } else {
+          imageCount = validation.imageCount;
+        }
       } catch {
         resumableMdx = undefined;
       }
     }
 
-    if (!options.syncOnly && !resumableMdx) {
+    if (!options.syncOnly && !resumableMdx && !pictureRepairDraft) {
       const model = env.OLLAMA_MODEL?.trim() ?? "";
       const runtime = await deps.ensureModel({ model });
       repairs = [...repairs, ...runtime.repairs];
@@ -297,56 +332,61 @@ export async function runLocalWriter(
     }
 
     if (!resumableMdx) {
-      const savedQueue = await readQueue(queuePath);
-      let queue = savedQueue.stories;
-      if (!options.queueOnly) {
-        const discovered = await deps.discover({ contentRoot });
-        if (discovered.successCount > 0) {
-          const written = await writeTrendingQueue([...queue, ...discovered.stories], { contentRoot });
-          queue = written.stories;
+      let queue: QueueStory[] = [];
+      let generated = pictureRepairDraft;
+      const repairingPictures = Boolean(generated && selectedStory && draftRef);
+      if (!generated) {
+        const savedQueue = await readQueue(queuePath);
+        queue = savedQueue.stories;
+        if (!options.queueOnly) {
+          const discovered = await deps.discover({ contentRoot });
+          if (discovered.successCount > 0) {
+            const written = await writeTrendingQueue([...queue, ...discovered.stories], { contentRoot });
+            queue = written.stories;
+          } else if (!savedQueue.valid || queue.length === 0) {
+            return await humanRequired("discovery", "discovery-unavailable");
+          }
         } else if (!savedQueue.valid || queue.length === 0) {
           return await humanRequired("discovery", "discovery-unavailable");
         }
-      } else if (!savedQueue.valid || queue.length === 0) {
-        return await humanRequired("discovery", "discovery-unavailable");
-      }
-      selectedStory = queue[0];
-      if (!selectedStory) return await humanRequired("discovery", "discovery-unavailable");
-      await persistAndEmit("discovery", "progress", "Selected a recent source story.");
-      if (options.signal?.aborted) return await cancelled("discovery");
+        selectedStory = queue[0];
+        if (!selectedStory) return await humanRequired("discovery", "discovery-unavailable");
+        await persistAndEmit("discovery", "progress", "Selected a recent source story.");
+        if (options.signal?.aborted) return await cancelled("discovery");
 
-      let generated: GeneratedDraftContent | undefined;
-      let validationReason: string | undefined;
-      for (let attempt = 1; attempt <= 3; attempt += 1) {
-        try {
-          generated = await deps.generate(selectedStory, {
-            model: env.OLLAMA_MODEL?.trim() ?? "",
-            attempt,
-            validationReason,
-          });
-          await persistAndEmit("generation", "progress", "The local article draft is written.", attempt);
-          break;
-        } catch (error) {
-          const validation = error instanceof GenerationValidationError;
-          validationReason = validation ? error.category : "local-model-unavailable";
-          if (attempt < 3) {
-            await persistAndEmit(
+        let validationReason: string | undefined;
+        for (let attempt = 1; attempt <= 3; attempt += 1) {
+          try {
+            generated = await deps.generate(selectedStory, {
+              model: env.OLLAMA_MODEL?.trim() ?? "",
+              attempt,
+              validationReason,
+            });
+            await persistAndEmit("generation", "progress", "The local article draft is written.", attempt);
+            break;
+          } catch (error) {
+            const validation = error instanceof GenerationValidationError;
+            validationReason = validation ? error.category : "local-model-unavailable";
+            if (attempt < 3) {
+              await persistAndEmit(
+                "generation",
+                "retrying",
+                validation ? "The draft needed correction; regenerating from the original source." : "The local model stopped responding; trying again.",
+                attempt + 1,
+                validation ? "generation-invalid" : "generation-unavailable",
+              );
+              continue;
+            }
+            return await humanRequired(
               "generation",
-              "retrying",
-              validation ? "The draft needed correction; regenerating from the original source." : "The local model stopped responding; trying again.",
-              attempt + 1,
               validation ? "generation-invalid" : "generation-unavailable",
+              attempt,
             );
-            continue;
           }
-          return await humanRequired(
-            "generation",
-            validation ? "generation-invalid" : "generation-unavailable",
-            attempt,
-          );
         }
       }
       if (!generated) return await humanRequired("generation", "generation-invalid", 3);
+      if (!selectedStory) return await humanRequired("discovery", "discovery-unavailable");
       await persistAndEmit("article-normalization", "progress", "Article formatting was checked and corrected.");
       if (options.signal?.aborted) return await cancelled("article-normalization");
 
@@ -371,14 +411,27 @@ export async function runLocalWriter(
       draftRef = { category: selectedStory.category, filename: `${frontmatter.slug}.mdx` };
       const draftPath = path.join(contentRoot, "drafts", draftRef.category, draftRef.filename);
       await mkdir(path.dirname(draftPath), { recursive: true });
-      try {
-        await writeFile(draftPath, mdx, { encoding: "utf8", flag: "wx" });
-      } catch (error) {
-        if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
+      if (repairingPictures) {
         const existing = await readFile(draftPath, "utf8");
-        if (existing !== mdx) return await humanRequired("local-validation", "content-conflict");
+        if (draftHash && contentHash(existing) !== draftHash) {
+          return await humanRequired("local-validation", "content-conflict");
+        }
+        const temporary = `${draftPath}.${process.pid}.${crypto.randomUUID()}.tmp`;
+        await writeFile(temporary, mdx, "utf8");
+        await import("node:fs/promises").then(({ rename }) => rename(temporary, draftPath));
+      } else {
+        try {
+          await writeFile(draftPath, mdx, { encoding: "utf8", flag: "wx" });
+        } catch (error) {
+          if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
+          const existing = await readFile(draftPath, "utf8");
+          if (existing !== mdx) return await humanRequired("local-validation", "content-conflict");
+        }
       }
-      await writeQueueBytes(queuePath, queue.filter((candidate) => candidate.sourceUrl !== selectedStory!.sourceUrl));
+      draftHash = contentHash(mdx);
+      if (!repairingPictures) {
+        await writeQueueBytes(queuePath, queue.filter((candidate) => candidate.sourceUrl !== selectedStory!.sourceUrl));
+      }
       resumableMdx = mdx;
       if (!photoResult.ok) return await humanRequired("image-selection", "insufficient-images");
     }

@@ -19,7 +19,7 @@ const article = {
 };
 
 vi.mock("next/image", () => ({
-  default: ({ fill: _fill, ...props }: React.ImgHTMLAttributes<HTMLImageElement> & { fill?: boolean }) => <img {...props} />,
+  default: ({ alt }: { alt: string }) => <div aria-label={alt} role="img" />,
 }));
 vi.mock("next/link", () => ({ default: (props: React.AnchorHTMLAttributes<HTMLAnchorElement>) => <a {...props} /> }));
 vi.mock("next/navigation", () => ({ notFound: () => { throw new Error("not found"); } }));
