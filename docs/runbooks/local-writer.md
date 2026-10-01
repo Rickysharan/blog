@@ -4,7 +4,7 @@ This worker discovers recent stories from the configured RSS feeds, writes draft
 
 ## Setup on this Mac
 
-Use Node 22 or later. Run `npm ci` in the repository root. Install Ollama, then start a local-only server in a terminal:
+Use Node 22 or later. Run `npm ci` in the repository root and install Ollama. The desktop app starts the local-only Ollama server in the background when it is not already running. For manual troubleshooting, the equivalent command is:
 
 ```sh
 OLLAMA_NO_CLOUD=1 OLLAMA_HOST=127.0.0.1:11434 ollama serve
@@ -37,7 +37,7 @@ npm run dev
 
 Open `http://localhost:3000/admin/login`, then `/admin/review`. Review the claims against the linked source, edit and save, then use Publish deliberately. Source snippets can be incomplete; generated prose is not verified reporting.
 
-The worker merges new feed stories with the pending queue and avoids existing source URLs. It creates at most one draft by default (`--limit 1` through `10`). Invalid or failed model outputs stay queued. Use `--queue-only` to skip RSS and retry the saved queue. A directory lock prevents two instances of this local command from overwriting each other's queue; do not run the legacy fetch/generate commands concurrently.
+The worker merges new feed stories with the pending queue and avoids existing source URLs. It creates at most one draft by default (`--limit 1` through `10`). Invalid or failed model outputs stay queued. Use `--queue-only` to skip RSS and retry the saved queue. An owned process lock prevents two instances from changing the queue at once and removes itself only when the recorded process is no longer alive.
 
 Local Publish updates the local repository only. To publish through the hosted dashboard, deliver the drafts first.
 
@@ -71,10 +71,14 @@ The local writer is implemented and tested separately from the Contributor app's
 
 ## Recovery
 
-If Ollama is offline, start the local-only server again. If a model is missing, download it with `ollama pull`. If generation fails validation, keep the source queued and revise manually or try a different local model; never bypass content validation. If the process was forcibly killed, check that no writer is running before removing `.audit/local-writer.lock`.
+The app repairs predictable failures automatically. It can restart the local-only Ollama server, remove a lock whose recorded process has stopped, correct duplicate generated formatting, retry invalid local output from the original source, retry temporary GitHub failures, and reconcile a delivery whose response was lost. A recoverable stage gets its initial attempt plus at most two retries.
+
+Progress and sanitized repair details appear in the app. `.audit/current-run.json` records only non-secret stage data and is replaced atomically after verified boundaries. If the app or Mac stops mid-run, **Try again** resumes a valid saved draft instead of generating a duplicate. A malformed state file is moved to a timestamped diagnostic file; local drafts are not deleted. **Cancel** stops after the current atomic file operation and leaves completed work resumable.
+
+The app asks for one manual action when repair would require a model download, credentials, permission changes, choosing different pictures, or resolving an editor conflict. Install a missing model yourself with `ollama pull MODEL_NAME`, then use **Try again**. Never bypass content validation or delete `.audit/local-writer.lock` while a writer process is active.
 
 ## Pictures and waiting time
 
-I want short, source-grounded drafts with two or three relevant pictures. The local writer aims for 150–300 words, or less when the source is thin. It searches Wikimedia Commons for named subjects from the source and adds up to three related archive photos inside the article, with photographer, source and licence links. These are not presented as photographs of the current event. The card cover remains the category artwork. If suitable reusable photos are unavailable, it keeps the article and reports the smaller image count; it does not substitute random pictures. Set `LOCAL_WRITER_IMAGES=false` to skip image search.
+I want short, source-grounded drafts with two or three relevant pictures. The local writer aims for 150–300 words, or less when the source is thin. It searches Wikimedia Commons only for named subjects from the source and requires two or three related archive photos inside the article, with photographer, source and licence links. It verifies supported image types, useful dimensions and reachability. These are not presented as photographs of the current event. The card cover remains the category artwork. If fewer than two suitable reusable photos are available, it keeps the text draft locally and blocks dashboard delivery; it does not substitute random pictures.
 
 The app's bar shows completed stages, not token-by-token completion. Remaining time is an estimate based on the last successful run (90 seconds initially); cold model loading and network delays can change it. Progress reaches delivered only after successful draft upload. Technical details stay in `.audit/desktop-writer.log`. Nothing is published automatically.

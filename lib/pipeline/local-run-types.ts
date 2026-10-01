@@ -93,7 +93,7 @@ export type LocalWriterEvent =
     })
   | (LocalWriterEventBase & {
       status: "completed";
-      deliveryStatus: "delivered";
+      deliveryStatus: "delivered" | "not-delivered";
     })
   | (LocalWriterEventBase & {
       status: "cancelled";
@@ -112,7 +112,7 @@ interface LocalRunResultBase {
 export type LocalRunResult =
   | (LocalRunResultBase & {
       status: "completed";
-      deliveryStatus: "delivered";
+      deliveryStatus: "delivered" | "not-delivered";
     })
   | (LocalRunResultBase & {
       status: "human-required" | "failed";
