@@ -12,6 +12,7 @@ import {
   RECOVERY_CATEGORIES,
   type LocalRunState,
 } from "@/lib/pipeline/local-run-types";
+import { CATEGORY_SLUGS } from "@/lib/config/categories";
 
 const draftRefSchema = z
   .object({ category: z.string().min(1), filename: z.string().min(1) })
@@ -50,6 +51,7 @@ const runStateSchema: z.ZodType<LocalRunState> = z
     repairs: z.array(z.string()),
     errorCategory: z.enum(RECOVERY_CATEGORIES).optional(),
     deliveryStatus: z.enum(["pending", "delivered", "not-delivered"]),
+    requestedCategory: z.enum(CATEGORY_SLUGS).optional(),
     selectedStory: selectedStorySchema.optional(),
     generatedDraft: generatedDraftSchema.optional(),
     startedAt: z.iso.datetime(),

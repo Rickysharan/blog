@@ -1,3 +1,5 @@
+import type { CategorySlug } from "@/lib/config/categories";
+
 export const LOCAL_RUN_STAGES = [
   "preflight",
   "discovery",
@@ -63,6 +65,7 @@ export interface LocalRunState {
   repairs: string[];
   errorCategory?: RecoveryCategory;
   deliveryStatus: DeliveryStatus;
+  requestedCategory?: CategorySlug;
   selectedStory?: {
     title: string;
     source: string;
@@ -90,6 +93,7 @@ interface LocalWriterEventBase {
   draftRef?: LocalDraftRef;
   imageCount: number;
   repairs: string[];
+  category?: CategorySlug;
 }
 
 export type LocalWriterEvent =

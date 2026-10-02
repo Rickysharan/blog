@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 import path from "node:path";
 import matter from "gray-matter";
 import { z } from "zod";
-import { isCategorySlug } from "@/lib/config/categories";
+import { isCategorySlug, type CategorySlug } from "@/lib/config/categories";
 import { GitHubDraftRepository } from "@/lib/drafts/github-repository";
 import { GitDataClientError } from "@/lib/github/git-data-client";
 import { LocalDraftRepository } from "@/lib/drafts/local-repository";
@@ -84,6 +84,7 @@ export interface RunLocalWriterOptions {
   syncOnly?: boolean;
   localOnly?: boolean;
   newRun?: boolean;
+  category?: CategorySlug;
   onEvent?: (event: LocalWriterEvent) => void | Promise<void>;
   signal?: AbortSignal;
   dependencies?: Partial<LocalRunDependencies>;
@@ -204,6 +205,15 @@ function stateStory(state: LocalRunState | null): QueueStory | undefined {
   return { ...candidate, category: candidate.category };
 }
 
+function storyForCategory(
+  stories: QueueStory[],
+  category?: CategorySlug,
+): QueueStory | undefined {
+  return category
+    ? stories.find((story) => story.category === category)
+    : stories[0];
+}
+
 function contentHash(value: string): string {
   return createHash("sha256").update(value, "utf8").digest("hex");
 }
@@ -248,6 +258,7 @@ export async function runLocalWriter(
   const queuePath = path.join(contentRoot, "queue", "trending.json");
   const env = options.env ?? process.env;
   const deps: LocalRunDependencies = { ...defaultDependencies, ...options.dependencies };
+  let requestedCategory = isCategorySlug(options.category ?? "") ? options.category : undefined;
   const syncEnabled = !options.localOnly && Boolean(
     options.sync || options.syncOnly || env.LOCAL_WRITER_SYNC === "true",
   );
@@ -269,6 +280,7 @@ export async function runLocalWriter(
       message,
       imageCount: 0,
       repairs: [],
+      category: requestedCategory,
       errorCategory: category,
     } as LocalWriterEvent;
     await options.onEvent?.(event);
@@ -286,6 +298,14 @@ export async function runLocalWriter(
   };
 
   const initialRunId = deps.runId();
+  if (options.category !== undefined && !isCategorySlug(options.category)) {
+    return ephemeralTerminal(
+      initialRunId,
+      "human-required",
+      "configuration",
+      "Choose one of OmniLede's supported article categories.",
+    );
+  }
   if (options.signal?.aborted) {
     return ephemeralTerminal(
       initialRunId,
@@ -325,6 +345,23 @@ export async function runLocalWriter(
         "Resume the saved article before starting a different one.",
       );
     }
+    const savedCategoryCandidate = previous?.requestedCategory ??
+      previous?.selectedStory?.category ??
+      previous?.draftRef?.category;
+    const savedCategory = isCategorySlug(savedCategoryCandidate ?? "")
+      ? savedCategoryCandidate as CategorySlug
+      : undefined;
+    if (requestedCategory && savedCategory && requestedCategory !== savedCategory) {
+      await lock.release();
+      lock = undefined;
+      return ephemeralTerminal(
+        previous!.runId,
+        "human-required",
+        "content-conflict",
+        "Resume the saved category before starting a different one.",
+      );
+    }
+    requestedCategory = savedCategory ?? requestedCategory;
   } catch {
     await lock?.release();
     lock = undefined;
@@ -368,6 +405,7 @@ export async function runLocalWriter(
       repairs,
       errorCategory,
       deliveryStatus,
+      requestedCategory,
       selectedStory,
       generatedDraft,
       startedAt,
@@ -384,6 +422,7 @@ export async function runLocalWriter(
       draftRef,
       imageCount,
       repairs,
+      category: requestedCategory,
     };
     const event = (
       status === "completed" ? { ...base, deliveryStatus: deliveryStatus === "delivered" ? "delivered" as const : "not-delivered" as const } :
@@ -482,9 +521,9 @@ export async function runLocalWriter(
               if (discovered.successCount > 0) {
                 const written = await writeTrendingQueue([...queue, ...discovered.stories], { contentRoot });
                 queue = written.stories;
-                break;
               }
-              if (savedQueue.valid && queue.length > 0) break;
+              selectedStory = storyForCategory(queue, requestedCategory);
+              if (selectedStory) break;
               if (attempt < 3) {
                 await persistAndEmit(
                   "discovery",
@@ -497,10 +536,10 @@ export async function runLocalWriter(
               }
             }
           }
-          if (!savedQueue.valid || queue.length === 0) {
+          if (!savedQueue.valid && queue.length === 0) {
             return await humanRequired("discovery", "discovery-unavailable", 3);
           }
-          selectedStory = queue[0];
+          selectedStory ??= storyForCategory(queue, requestedCategory);
         }
         if (!selectedStory) return await humanRequired("discovery", "discovery-unavailable");
         await persistAndEmit("discovery", "progress", "Selected a recent source story.");

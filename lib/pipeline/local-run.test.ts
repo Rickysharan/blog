@@ -70,7 +70,13 @@ function dependencies(overrides: Partial<LocalRunDependencies> = {}): LocalRunDe
   };
 }
 
-async function run(root: string, deps: LocalRunDependencies, events: LocalWriterEvent[] = [], signal?: AbortSignal) {
+async function run(
+  root: string,
+  deps: LocalRunDependencies,
+  events: LocalWriterEvent[] = [],
+  signal?: AbortSignal,
+  category?: "anime" | "movies" | "politics" | "sports" | "finance" | "share-market",
+) {
   return runLocalWriter({
     projectRoot: root,
     contentRoot: path.join(root, "content"),
@@ -78,12 +84,102 @@ async function run(root: string, deps: LocalRunDependencies, events: LocalWriter
     env: { OLLAMA_MODEL: "qwen2.5:7b", LOCAL_WRITER_SYNC: "true" },
     sync: true,
     dependencies: deps,
+    category,
     onEvent: (event) => { events.push(event); },
     signal,
   });
 }
 
 describe("resumable local writer controller", () => {
+  it("writes the first queued story from the explicitly selected category", async () => {
+    const root = await temporaryRoot();
+    const politicsStory: QueueStory = {
+      ...story,
+      title: "Parliament approves a policy update",
+      sourceUrl: "https://example.com/politics-story",
+      category: "politics",
+    };
+    const generate = vi.fn(async (_story: QueueStory) => generated);
+    const events: LocalWriterEvent[] = [];
+    const result = await run(root, dependencies({
+      discover: vi.fn(async () => ({
+        stories: [story, politicsStory], summaries: [], successCount: 1, failureCount: 0, skippedCount: 0,
+      })),
+      generate,
+    }), events, undefined, "politics");
+
+    expect(result.status).toBe("completed");
+    expect(generate.mock.calls[0]?.[0]).toEqual(politicsStory);
+    expect(result.draftRef?.category).toBe("politics");
+    expect(events.every((event) => event.category === "politics")).toBe(true);
+    expect(JSON.parse(await readFile(path.join(root, ".audit/current-run.json"), "utf8"))).toMatchObject({
+      requestedCategory: "politics",
+    });
+  });
+
+  it("refreshes discovery when the saved queue lacks the selected category", async () => {
+    const root = await temporaryRoot();
+    await writeFile(path.join(root, "content/queue/trending.json"), JSON.stringify([story]), "utf8");
+    const politicsStory: QueueStory = {
+      ...story,
+      sourceUrl: "https://example.com/fresh-politics",
+      category: "politics",
+    };
+    const discover = vi.fn(async () => ({
+      stories: [politicsStory], summaries: [], successCount: 1, failureCount: 0, skippedCount: 0,
+    }));
+    const generate = vi.fn(async (_story: QueueStory) => generated);
+
+    const result = await run(root, dependencies({ discover, generate }), [], undefined, "politics");
+
+    expect(result.status).toBe("completed");
+    expect(discover).toHaveBeenCalledTimes(1);
+    expect(generate.mock.calls[0]?.[0]).toEqual(politicsStory);
+  });
+
+  it("does not fall back to a different category when no selected story exists", async () => {
+    const root = await temporaryRoot();
+    await writeFile(path.join(root, "content/queue/trending.json"), JSON.stringify([story]), "utf8");
+    const discover = vi.fn(async () => ({
+      stories: [story], summaries: [], successCount: 1, failureCount: 0, skippedCount: 0,
+    }));
+    const deps = dependencies({ discover });
+
+    const result = await run(root, deps, [], undefined, "politics");
+
+    expect(result).toMatchObject({ status: "human-required", errorCategory: "discovery-unavailable" });
+    expect(deps.generate).not.toHaveBeenCalled();
+  });
+
+  it("resumes the same category and rejects a different category without changing saved work", async () => {
+    const root = await temporaryRoot();
+    const first = dependencies({
+      deliver: vi.fn(async (_contentRoot, ref) => ({
+        status: "retryableFailure" as const,
+        ref,
+        attempts: 3,
+        category: "network" as const,
+        message: "offline",
+      })),
+    });
+    expect((await run(root, first, [], undefined, "sports")).status).toBe("human-required");
+    const statePath = path.join(root, ".audit/current-run.json");
+    const saved = await readFile(statePath, "utf8");
+
+    const wrongCategory = dependencies();
+    const rejected = await run(root, wrongCategory, [], undefined, "politics");
+    expect(rejected).toMatchObject({ status: "human-required", errorCategory: "content-conflict" });
+    expect(wrongCategory.discover).not.toHaveBeenCalled();
+    expect(wrongCategory.generate).not.toHaveBeenCalled();
+    await expect(readFile(statePath, "utf8")).resolves.toBe(saved);
+
+    const sameCategory = dependencies();
+    const resumed = await run(root, sameCategory, [], undefined, "sports");
+    expect(resumed.status).toBe("completed");
+    expect(sameCategory.discover).not.toHaveBeenCalled();
+    expect(sameCategory.generate).not.toHaveBeenCalled();
+  });
+
   it("runs every successful stage in order and verifies delivery", async () => {
     const root = await temporaryRoot();
     const events: LocalWriterEvent[] = [];
