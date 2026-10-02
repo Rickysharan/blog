@@ -4,6 +4,26 @@ cd "$(dirname "$0")"
 export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
 if [ ! -d node_modules ]; then npm ci; fi
 mkdir -p .audit
+action="${OMNILEDE_ACTION:-write}"
+if [ "$action" = "plan-snapshot" ] || [ "$action" = "plan-replace" ]; then
+  if [ "$action" = "plan-snapshot" ]; then
+    planner_args=(--action snapshot)
+  else
+    planner_args=(--action replace)
+    if [ -n "${OMNILEDE_CATEGORY:-}" ]; then planner_args+=(--category "$OMNILEDE_CATEGORY"); fi
+  fi
+  if [ -n "${OMNILEDE_PLAN_DATE:-}" ]; then planner_args+=(--date "$OMNILEDE_PLAN_DATE"); fi
+  if [ -n "${OMNILEDE_PLANNER_EXECUTABLE:-}" ]; then
+    "$OMNILEDE_PLANNER_EXECUTABLE" "${planner_args[@]}"
+  else
+    node --conditions=react-server --env-file-if-exists=.env.local --import tsx scripts/desktop-plan.ts "${planner_args[@]}"
+  fi
+  exit $?
+fi
+if [ "$action" != "write" ]; then
+  echo "Unknown OmniLede action." >&2
+  exit 1
+fi
 web_pid=""
 writer_pid=""
 cleanup() {
@@ -36,6 +56,8 @@ echo "Finding recent news and writing an article with related photos…"
 started=$SECONDS
 writer_args=(--limit 1)
 if [ "${OMNILEDE_START_NEW:-}" = "true" ]; then writer_args+=(--new); fi
+if [ -n "${OMNILEDE_CATEGORY:-}" ]; then writer_args+=(--category "$OMNILEDE_CATEGORY"); fi
+if [ -n "${OMNILEDE_PLAN_DATE:-}" ]; then writer_args+=(--plan-date "$OMNILEDE_PLAN_DATE"); fi
 if [ -n "${OMNILEDE_WRITER_EXECUTABLE:-}" ]; then
   "$OMNILEDE_WRITER_EXECUTABLE" "${writer_args[@]}" &
 else
