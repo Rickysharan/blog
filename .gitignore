@@ -29,3 +29,4 @@ npm-debug.log*
 /supabase/backups/*.dump
 /supabase/backups/*.age
 /backup-artifacts/
+.superpowers/sdd/
