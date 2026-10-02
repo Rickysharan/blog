@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="OmniLede Studio">
+  <rect width="512" height="512" fill="#173f35"/>
+  <circle cx="256" cy="256" r="148" fill="#f3efe5"/>
+  <path d="M160 256c0-66 39-108 96-108s96 42 96 108-39 108-96 108-96-42-96-108Zm58 0c0 37 14 57 38 57s38-20 38-57-14-57-38-57-38 20-38 57Z" fill="#173f35"/>
+</svg>

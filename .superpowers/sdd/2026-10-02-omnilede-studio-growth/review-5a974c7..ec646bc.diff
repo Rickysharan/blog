@@ -1,0 +1,269 @@
+# Review package: 5a974c7..ec646bc
+
+## Commits
+ec646bc Harden Studio publication history and task validation
+
+## Files changed
+ packages/contracts/src/studio.test.ts              | 47 +++++++++++++++++++++
+ packages/contracts/src/studio.ts                   | 48 +++++++++++++++++++---
+ .../202610020001_studio_control_plane.sql          |  1 +
+ supabase/tests/014_studio_control_plane.sql        | 45 ++++++++++++++++++++
+ tests/database/studio-control-plane.test.ts        |  1 +
+ 5 files changed, 136 insertions(+), 6 deletions(-)
+
+## Diff
+diff --git a/packages/contracts/src/studio.test.ts b/packages/contracts/src/studio.test.ts
+index 5c648ef..94b1e4e 100644
+--- a/packages/contracts/src/studio.test.ts
++++ b/packages/contracts/src/studio.test.ts
+@@ -34,20 +34,67 @@ describe("Studio contracts", () => {
+       studioTaskInputSchema.parse({
+         evidenceKey: "coverage:invalid",
+         kind: "writing",
+         title: "Invalid category",
+         category,
+         source: "editorial"
+       })
+     ).toThrow();
+   });
+
++  test.each([
++    ["completed", null, null, "completed tasks require a completion timestamp"],
++    ["completed", "2026-10-02T08:00:00.000Z", "2026-10-03T08:00:00.000Z", "completed tasks cannot be postponed"],
++    ["postponed", null, null, "postponed tasks require a postponement timestamp"],
++    ["postponed", "2026-10-02T08:00:00.000Z", "2026-10-03T08:00:00.000Z", "postponed tasks cannot be completed"],
++    ["open", "2026-10-02T08:00:00.000Z", null, "open tasks cannot retain a completion timestamp"],
++    ["open", null, "2026-10-03T08:00:00.000Z", "open tasks cannot retain a postponement timestamp"]
++  ] as const)("rejects %s task timestamps: %s", (state, completedAt, postponedUntil, _reason) => {
++    const input = {
++      evidenceKey: `state:${state}:${completedAt ?? "none"}:${postponedUntil ?? "none"}`,
++      kind: "writing" as const,
++      title: "Validate task timestamps",
++      source: "editorial",
++      state,
++      completedAt,
++      postponedUntil
++    };
++
++    expect(() => studioTaskInputSchema.parse(input)).toThrow();
++    expect(() =>
++      studioTaskSchema.parse({
++        ...input,
++        id: "00000000-0000-4000-8000-000000000001",
++        createdAt: "2026-10-02T08:00:00.000Z",
++        updatedAt: "2026-10-02T08:00:00.000Z"
++      })
++    ).toThrow();
++  });
++
++  test.each([
++    ["open", null, null],
++    ["completed", "2026-10-02T08:00:00.000Z", null],
++    ["postponed", null, "2026-10-03T08:00:00.000Z"]
++  ] as const)("accepts valid %s task timestamps", (state, completedAt, postponedUntil) => {
++    expect(
++      studioTaskInputSchema.parse({
++        evidenceKey: `state:${state}`,
++        kind: "writing",
++        title: "Validate task timestamps",
++        source: "editorial",
++        state,
++        completedAt,
++        postponedUntil
++      }).state
++    ).toBe(state);
++  });
++
+   test.each(["connected", "delayed", "stale", "unavailable", "disconnected"] as const)(
+     "accepts the truthful %s report state",
+     (state) => {
+       const report = reportEnvelopeSchema.parse({
+         source: "Google Analytics",
+         range: { start: "2026-09-05", end: "2026-10-02" },
+         fetchedAt: state === "disconnected" || state === "unavailable" ? null : "2026-10-02T08:00:00.000Z",
+         state,
+         data: state === "disconnected" || state === "unavailable" ? null : { users: 12 }
+       });
+diff --git a/packages/contracts/src/studio.ts b/packages/contracts/src/studio.ts
+index 24483b4..b7320f9 100644
+--- a/packages/contracts/src/studio.ts
++++ b/packages/contracts/src/studio.ts
+@@ -20,40 +20,76 @@ export const PROVIDER_STATES = [
+   "disconnected"
+ ] as const;
+
+ export const studioTaskKindSchema = z.enum(STUDIO_TASK_KINDS);
+ export const studioTaskStateSchema = z.enum(STUDIO_TASK_STATES);
+ export const providerStateSchema = z.enum(PROVIDER_STATES);
+
+ const timestampSchema = z.string().datetime({ offset: true });
+ const dateSchema = z.string().date();
+
+-export const studioTaskInputSchema = z
++const studioTaskFieldsSchema = z
+   .object({
+     evidenceKey: z.string().trim().min(1).max(240),
+     kind: studioTaskKindSchema,
+     title: z.string().trim().min(1).max(180),
+     detail: z.string().trim().min(1).max(2_000).nullable().default(null),
+     category: categorySchema.nullable().default(null),
+     state: studioTaskStateSchema.default("open"),
+     priority: z.number().int().min(0).max(100).default(50),
+     source: z.string().trim().min(1).max(80),
+     postponedUntil: timestampSchema.nullable().default(null),
+     completedAt: timestampSchema.nullable().default(null)
+   })
+   .strict();
+
+-export const studioTaskSchema = studioTaskInputSchema.extend({
+-  id: z.string().uuid(),
+-  createdAt: timestampSchema,
+-  updatedAt: timestampSchema
+-});
++function validateStudioTaskTimestamps(
++  task: { state: StudioTaskState; completedAt: string | null; postponedUntil: string | null },
++  context: z.RefinementCtx
++) {
++  if (task.state === "completed") {
++    if (task.completedAt === null) {
++      context.addIssue({ code: "custom", path: ["completedAt"], message: "Completed tasks require completedAt" });
++    }
++    if (task.postponedUntil !== null) {
++      context.addIssue({ code: "custom", path: ["postponedUntil"], message: "Completed tasks cannot be postponed" });
++    }
++    return;
++  }
++
++  if (task.state === "postponed") {
++    if (task.postponedUntil === null) {
++      context.addIssue({ code: "custom", path: ["postponedUntil"], message: "Postponed tasks require postponedUntil" });
++    }
++    if (task.completedAt !== null) {
++      context.addIssue({ code: "custom", path: ["completedAt"], message: "Postponed tasks cannot be completed" });
++    }
++    return;
++  }
++
++  if (task.completedAt !== null) {
++    context.addIssue({ code: "custom", path: ["completedAt"], message: "Open tasks cannot be completed" });
++  }
++  if (task.postponedUntil !== null) {
++    context.addIssue({ code: "custom", path: ["postponedUntil"], message: "Open tasks cannot be postponed" });
++  }
++}
++
++export const studioTaskInputSchema = studioTaskFieldsSchema.superRefine(validateStudioTaskTimestamps);
++
++export const studioTaskSchema = studioTaskFieldsSchema
++  .extend({
++    id: z.string().uuid(),
++    createdAt: timestampSchema,
++    updatedAt: timestampSchema
++  })
++  .superRefine(validateStudioTaskTimestamps);
+
+ export const reportRangeSchema = z
+   .object({
+     start: dateSchema,
+     end: dateSchema
+   })
+   .strict()
+   .refine(({ start, end }) => start <= end, "Report range start must not be after its end");
+
+ const jsonDataSchema = z
+diff --git a/supabase/migrations/202610020001_studio_control_plane.sql b/supabase/migrations/202610020001_studio_control_plane.sql
+index 42532b3..aa177af 100644
+--- a/supabase/migrations/202610020001_studio_control_plane.sql
++++ b/supabase/migrations/202610020001_studio_control_plane.sql
+@@ -76,20 +76,21 @@ alter table public.studio_tasks enable row level security;
+ alter table public.provider_connections enable row level security;
+ alter table app_private.provider_credentials enable row level security;
+ alter table public.provider_report_cache enable row level security;
+ alter table public.publication_events enable row level security;
+
+ revoke all on table public.studio_tasks from public, anon, authenticated;
+ revoke all on table public.provider_connections from public, anon, authenticated;
+ revoke all on table app_private.provider_credentials from public, anon, authenticated;
+ revoke all on table public.provider_report_cache from public, anon, authenticated;
+ revoke all on table public.publication_events from public, anon, authenticated;
++revoke all on table public.publication_events from service_role;
+
+ grant all on table public.studio_tasks to service_role;
+ grant all on table public.provider_connections to service_role;
+ grant all on table app_private.provider_credentials to service_role;
+ grant all on table public.provider_report_cache to service_role;
+ grant select, insert on table public.publication_events to service_role;
+
+ create trigger studio_tasks_touch_updated_at
+ before update on public.studio_tasks
+ for each row execute function app_private.touch_updated_at();
+diff --git a/supabase/tests/014_studio_control_plane.sql b/supabase/tests/014_studio_control_plane.sql
+new file mode 100644
+index 0000000..d3b734d
+--- /dev/null
++++ b/supabase/tests/014_studio_control_plane.sql
+@@ -0,0 +1,45 @@
++begin;
++
++select plan(9);
++
++select has_table('public', 'publication_events', 'Studio publication history table exists');
++select ok(has_table_privilege('service_role', 'public.publication_events', 'SELECT'), 'service role can read publication history');
++select ok(has_table_privilege('service_role', 'public.publication_events', 'INSERT'), 'service role can append publication history');
++select ok(not has_table_privilege('service_role', 'public.publication_events', 'UPDATE'), 'service role cannot update publication history');
++select ok(not has_table_privilege('service_role', 'public.publication_events', 'DELETE'), 'service role cannot delete publication history');
++select ok(not has_table_privilege('service_role', 'public.publication_events', 'TRUNCATE'), 'service role cannot truncate publication history');
++
++insert into auth.users (id, aud, role, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data)
++values ('00000000-0000-4000-8000-000000000901', 'authenticated', 'authenticated', 'studio-publication@example.invalid', '', now(), '{}', '{}');
++
++set local role service_role;
++select set_config('request.jwt.claim.role', 'service_role', true);
++
++insert into public.publication_events (id, actor_id, action, category, content_ref, prior_version)
++values (
++  '00000000-0000-4000-8000-000000000902',
++  '00000000-0000-4000-8000-000000000901',
++  'save',
++  'anime',
++  'content/anime/studio-fixture.mdx',
++  'fixture-v1'
++);
++
++select throws_ok(
++  $$update public.publication_events set action = 'discard' where id = '00000000-0000-4000-8000-000000000902'$$,
++  null,
++  'service role cannot update publication history'
++);
++select throws_ok(
++  $$delete from public.publication_events where id = '00000000-0000-4000-8000-000000000902'$$,
++  null,
++  'service role cannot delete publication history'
++);
++select throws_ok(
++  $$truncate table public.publication_events$$,
++  null,
++  'service role cannot truncate publication history'
++);
++
++select * from finish();
++rollback;
+diff --git a/tests/database/studio-control-plane.test.ts b/tests/database/studio-control-plane.test.ts
+index 948d97b..d529c7a 100644
+--- a/tests/database/studio-control-plane.test.ts
++++ b/tests/database/studio-control-plane.test.ts
+@@ -42,13 +42,14 @@ describe("Studio control-plane migration", () => {
+     expect(sql).toContain("grant all on table app_private.provider_credentials to service_role");
+   });
+
+   test("bounds cached provider JSON and makes publication history append-only", () => {
+     const sql = migrationSql();
+
+     expect(sql).toMatch(/octet_length\(data::text\) <= 500000/);
+     expect(sql).toContain("create trigger publication_events_append_only");
+     expect(sql).toContain("before update or delete on public.publication_events");
+     expect(sql).toContain("raise exception 'publication_events_are_append_only'");
++    expect(sql).toContain("revoke all on table public.publication_events from service_role");
+     expect(sql).toContain("grant select, insert on table public.publication_events to service_role");
+   });
+ });

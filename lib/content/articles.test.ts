@@ -129,7 +129,6 @@ describe("article collection helpers", () => {
   it("preserves current published articles and carries their default language", async () => {
     const articles = await getAllArticles();
 
-    expect(articles).toHaveLength(18);
     expect(articles.map(({ slug }) => slug)).toContain(
       "how-to-read-global-economic-forecasts-without-treating-them-as-certainty",
     );

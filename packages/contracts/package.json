@@ -7,7 +7,7 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "test": "sh -c 'cd ../.. && vitest run --config vitest.config.ts packages/contracts/src/content.test.ts packages/contracts/src/operations.test.ts packages/contracts/src/profile.test.ts'",
+    "test": "sh -c 'cd ../.. && vitest run --config vitest.config.ts packages/contracts/src'",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

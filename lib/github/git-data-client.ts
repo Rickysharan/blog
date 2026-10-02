@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { FetchLike } from "@/lib/pipeline/types";
+import type { RecoveryCategory } from "@/lib/pipeline/local-run-types";
 
 export const GITHUB_API_VERSION = "2026-03-10";
 export const MAX_GITHUB_RESPONSE_BYTES = 8 * 1024 * 1024;
@@ -15,10 +16,23 @@ export class GitDataClientError extends Error {
   constructor(
     public readonly code: GitDataErrorCode,
     message: string,
+    options: {
+      category?: RecoveryCategory;
+      retryable?: boolean;
+    } = {},
   ) {
     super(message);
     this.name = "GitDataClientError";
+    this.category = options.category ?? (
+      code === "conflict" ? "content-conflict" :
+      code === "invalid_input" ? "configuration" :
+      "remote-service"
+    );
+    this.retryable = options.retryable ?? code === "storage_unavailable";
   }
+
+  readonly category: RecoveryCategory;
+  readonly retryable: boolean;
 }
 
 export interface GitHubTreeEntry {
@@ -237,18 +251,53 @@ export class GitDataClient {
         body: init.body === undefined ? undefined : JSON.stringify(init.body),
         signal: AbortSignal.timeout(15_000),
       });
-    } catch {
-      throw new GitDataClientError("storage_unavailable", "GitHub could not be reached");
+    } catch (error) {
+      if (error instanceof GitDataClientError) throw error;
+      throw new GitDataClientError("storage_unavailable", "GitHub could not be reached", {
+        category: "network",
+        retryable: true,
+      });
     }
 
     if (!response.ok) {
+      if (response.status === 401) {
+        throw new GitDataClientError("storage_unavailable", "GitHub authentication failed", {
+          category: "authentication",
+          retryable: false,
+        });
+      }
+      if (response.status === 429 ||
+          (response.status === 403 && response.headers.get("x-ratelimit-remaining") === "0")) {
+        throw new GitDataClientError("storage_unavailable", "GitHub rate limit was reached", {
+          category: "rate-limited",
+          retryable: true,
+        });
+      }
+      if (response.status === 403) {
+        throw new GitDataClientError("storage_unavailable", "GitHub permission was denied", {
+          category: "permission",
+          retryable: false,
+        });
+      }
+      if (response.status >= 500) {
+        throw new GitDataClientError("storage_unavailable", "GitHub service is temporarily unavailable", {
+          category: "remote-service",
+          retryable: true,
+        });
+      }
       if (response.status === 409 || response.status === 422) {
-        throw new GitDataClientError("conflict", "GitHub rejected the ref update");
+        throw new GitDataClientError("conflict", "GitHub rejected the ref update", {
+          category: "content-conflict",
+          retryable: false,
+        });
       }
       if (response.status === 404) {
         throw new GitDataClientError("not_found", "GitHub repository object was not found");
       }
-      throw new GitDataClientError("storage_unavailable", `GitHub request failed with HTTP ${response.status}`);
+      throw new GitDataClientError("storage_unavailable", `GitHub request failed with HTTP ${response.status}`, {
+        category: "remote-service",
+        retryable: false,
+      });
     }
 
     let text: string;

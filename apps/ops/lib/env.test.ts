@@ -6,7 +6,8 @@ const publicEnvironment = {
   NEXT_PUBLIC_SUPABASE_URL: "https://project.supabase.co",
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "sb_publishable_test",
   NEXT_PUBLIC_BLOG_URL: "https://omnilede.example",
-  NEXT_PUBLIC_CONTRIBUTOR_URL: "https://contributors.omnilede.example"
+  NEXT_PUBLIC_CONTRIBUTOR_URL: "https://contributors.omnilede.example",
+  NEXT_PUBLIC_STUDIO_URL: "https://studio.omnilede.example"
 };
 
 const serverEnvironment = {
@@ -18,7 +19,9 @@ const serverEnvironment = {
   NETLIFY_READ_TOKEN: "netlify_read_test",
   BLOG_NETLIFY_SITE_ID: "blog-site-id",
   CONTRIBUTOR_NETLIFY_SITE_ID: "contributor-site-id",
-  HEALTH_INGEST_HMAC_SECRET: "health_hmac_fixture_value_32_chars_long"
+  HEALTH_INGEST_HMAC_SECRET: "health_hmac_fixture_value_32_chars_long",
+  STUDIO_OPERATOR_EMAIL: "operator@example.com",
+  AUTH_ALLOWED_ORIGINS: "https://studio.omnilede.example"
 };
 
 describe("ops environment", () => {
@@ -28,6 +31,8 @@ describe("ops environment", () => {
     expect(parsed).toEqual(publicEnvironment);
     expect(parsed).not.toHaveProperty("GITHUB_READ_TOKEN");
     expect(parsed).not.toHaveProperty("NETLIFY_READ_TOKEN");
+    expect(parsed).not.toHaveProperty("STUDIO_OPERATOR_EMAIL");
+    expect(parsed).not.toHaveProperty("AUTH_ALLOWED_ORIGINS");
   });
 
   test.each([
@@ -38,7 +43,9 @@ describe("ops environment", () => {
     "NETLIFY_READ_TOKEN",
     "BLOG_NETLIFY_SITE_ID",
     "CONTRIBUTOR_NETLIFY_SITE_ID",
-    "HEALTH_INGEST_HMAC_SECRET"
+    "HEALTH_INGEST_HMAC_SECRET",
+    "STUDIO_OPERATOR_EMAIL",
+    "AUTH_ALLOWED_ORIGINS"
   ])("names a missing server variable without exposing its value: %s", (name) => {
     const environment = { ...serverEnvironment };
     delete environment[name as keyof typeof environment];
@@ -57,6 +64,18 @@ describe("ops environment", () => {
     const parsed = parseOpsServerEnv({ ...serverEnvironment, PATH: "/usr/bin", NODE_ENV: "production" });
     expect(parsed).not.toHaveProperty("PATH");
     expect(parsed).not.toHaveProperty("NODE_ENV");
+  });
+
+  test("requires HTTPS same-origin entries for Studio authentication", () => {
+    expect(() =>
+      parseOpsServerEnv({ ...serverEnvironment, AUTH_ALLOWED_ORIGINS: "https://studio.example,https://preview.example" })
+    ).not.toThrow();
+    expect(() =>
+      parseOpsServerEnv({ ...serverEnvironment, AUTH_ALLOWED_ORIGINS: "https://studio.example/path" })
+    ).toThrow("AUTH_ALLOWED_ORIGINS");
+    expect(() =>
+      parseOpsServerEnv({ ...serverEnvironment, AUTH_ALLOWED_ORIGINS: "http://studio.example" })
+    ).toThrow("AUTH_ALLOWED_ORIGINS");
   });
 
   test.each(["sb_publishable_test", "service_role"])("rejects an invalid server key: %s", (key) => {

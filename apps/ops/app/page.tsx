@@ -1,19 +1,15 @@
-export default function OperationsPage() {
-  return (
-    <>
-      <a className="skip-link" href="#main-content">
-        Skip to content
-      </a>
-      <header className="site-header">
-        <p>OmniLede</p>
-      </header>
-      <main id="main-content" className="antialiased" tabIndex={-1}>
-        <p className="eyebrow">Newsroom systems</p>
-        <h1>OmniLede Operations</h1>
-        <p>Coordinate the lightweight systems that keep the newsroom moving.</p>
-        <p className="launch-mode">$0 launch mode</p>
-      </main>
-      <footer className="site-footer">Built for the OmniLede newsroom.</footer>
-    </>
-  );
+import { redirect } from "next/navigation";
+
+import { requireStudioOperator } from "../lib/auth/operator";
+
+export const dynamic = "force-dynamic";
+
+export default async function HomePage() {
+  let destination = "/overview";
+  try {
+    await requireStudioOperator();
+  } catch {
+    destination = "/login";
+  }
+  redirect(destination);
 }
