@@ -22,11 +22,15 @@ Create `.env.local` with `OLLAMA_MODEL=qwen2.5:7b`. For the local review dashboa
 
 ## Launch as a local app
 
-I use **OmniLede.app** on my Desktop to write one article at a time. It shows the current step, a progress bar and an estimated wait, then opens my review dashboard after delivery. I select the draft, check it and click **Publish** myself. The writer runs in the background; I can minimise its window. No Terminal window is needed.
+I use **OmniLede.app** on my Desktop to plan and write one article at a time. It opens on the Today page without starting the writer. The top **Refresh** button updates tasks and counts only; opening or refreshing the app never starts Ollama, discovers stories, generates text, or delivers a draft. No Terminal window is needed.
+
+The app creates three stable category tasks for each local calendar date. Its smart rotation selects the categories that have waited longest for a published article, then uses the lower article count and category order to break ties. The plan is stored at `.audit/daily-plans/YYYY-MM-DD.json`; refreshing on the same day preserves it. **Replace** exchanges an unstarted task for the next eligible category.
+
+The Today page shows `N of 3 written`, total draft and published counts, and the task states **To do**, **Writing**, **Draft ready**, **Published**, and **Needs attention**. Select a To do task and click **Start writing**. A Needs attention task offers **Try again** for the same category. While writing, the app shows the current step, progress bar and estimated wait. After verified delivery it opens my review dashboard. I select the draft, check it, and click **Publish** myself.
 
 To build or reinstall the Mac app, run `python3 desktop/install-app.py` from this repository (Xcode command-line tools required). The app points to this project folder; reinstall it if the folder moves. The installer keeps the previous app under `~/Library/Application Support/OmniLede/`.
 
-The app uses `LOCAL_WRITER_REVIEW_URL` when `LOCAL_WRITER_SYNC=true`, or the local dashboard on port 3100 otherwise. The hosted dashboard may require its own sign-in. A hosted run does not start a redundant local web server. Ollama stays available in the background, with the model kept in memory for up to 30 minutes to reduce repeated loading. The local admin password remains in `.env.local`. The shell launcher still works for troubleshooting.
+The app uses `LOCAL_WRITER_REVIEW_URL` when `LOCAL_WRITER_SYNC=true`, or the local dashboard on port 3100 otherwise. With sync enabled, Today counts and task states come from the configured GitHub repository; a failed remote read is shown as an error instead of being replaced with local counts. In local-only mode, they come from validated files under `content/drafts` and `content/articles`. The hosted dashboard may require its own sign-in. A hosted run does not start a redundant local web server. Ollama stays available in the background, with the model kept in memory for up to 30 minutes to reduce repeated loading. The local admin password remains in `.env.local`. The shell launcher still works for troubleshooting.
 
 ## Write and review
 
@@ -73,7 +77,7 @@ The local writer is implemented and tested separately from the Contributor app's
 
 The app repairs predictable failures automatically. It can restart the local-only Ollama server, remove a lock whose recorded process has stopped, correct duplicate generated formatting, retry invalid local output from the original source, retry temporary GitHub failures, and reconcile a delivery whose response was lost. A recoverable stage gets its initial attempt plus at most two retries.
 
-Progress and sanitized repair details appear in the app. `.audit/current-run.json` records only non-secret stage data and is replaced atomically after verified boundaries. If the app or Mac stops mid-run, **Try again** resumes a valid saved draft instead of generating a duplicate. A malformed state file is moved to a timestamped diagnostic file; local drafts are not deleted. **Cancel** stops after the current atomic file operation and leaves completed work resumable.
+Progress and sanitized repair details appear in the app. `.audit/current-run.json` records only non-secret stage data and is replaced atomically after verified boundaries. If the app or Mac stops mid-run, **Try again** resumes a valid saved draft instead of generating a duplicate. A malformed state file is moved to a timestamped diagnostic file; local drafts are not deleted. A malformed daily plan is also preserved for diagnosis, leaves the app idle, and can be retried with **Refresh**. **Cancel** stops after the current atomic file operation and leaves completed work resumable.
 
 The app asks for one manual action when repair would require a model download, credentials, permission changes, choosing different pictures, or resolving an editor conflict. Install a missing model yourself with `ollama pull MODEL_NAME`, then use **Try again**. Never bypass content validation or delete `.audit/local-writer.lock` while a writer process is active.
 
