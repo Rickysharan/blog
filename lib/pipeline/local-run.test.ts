@@ -99,7 +99,10 @@ describe("resumable local writer controller", () => {
       sourceUrl: "https://example.com/politics-story",
       category: "politics",
     };
-    const generate = vi.fn(async (_story: QueueStory) => generated);
+    const generate = vi.fn(async (storyInput: QueueStory) => {
+      void storyInput;
+      return generated;
+    });
     const events: LocalWriterEvent[] = [];
     const result = await run(root, dependencies({
       discover: vi.fn(async () => ({
@@ -128,7 +131,10 @@ describe("resumable local writer controller", () => {
     const discover = vi.fn(async () => ({
       stories: [politicsStory], summaries: [], successCount: 1, failureCount: 0, skippedCount: 0,
     }));
-    const generate = vi.fn(async (_story: QueueStory) => generated);
+    const generate = vi.fn(async (storyInput: QueueStory) => {
+      void storyInput;
+      return generated;
+    });
 
     const result = await run(root, dependencies({ discover, generate }), [], undefined, "politics");
 
