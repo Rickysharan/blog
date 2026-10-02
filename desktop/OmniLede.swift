@@ -149,13 +149,17 @@ final class WriterApp: NSObject, NSApplicationDelegate {
         refreshPlan()
     }
 
-    private func localDate() -> String {
+    private func localDate(_ date: Date = Date()) -> String {
         let formatter = DateFormatter()
         formatter.calendar = Calendar(identifier: .gregorian)
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.timeZone = .current
         formatter.dateFormat = "yyyy-MM-dd"
-        return formatter.string(from: Date())
+        return formatter.string(from: date)
+    }
+
+    private func plannerDate(action: String, now: Date = Date()) -> String {
+        action == "plan-replace" ? planSnapshot?.date ?? localDate(now) : localDate(now)
     }
 
     private func friendlyDate(_ raw: String) -> String {
@@ -248,7 +252,7 @@ final class WriterApp: NSObject, NSApplicationDelegate {
 
     private func configureStart(for item: DailyPlanTask) {
         selectedCategory = item.category
-        startWriting.title = item.status == .needsAttention ? "Try again" : "Start writing"
+        startWriting.title = item.status.isRetry ? "Try again" : "Start writing"
         startWriting.isEnabled = item.status.isActionable
     }
 
@@ -273,7 +277,7 @@ final class WriterApp: NSObject, NSApplicationDelegate {
             button.state = index == sender.tag ? .on : .off
         }
         configureStart(for: item)
-        status.stringValue = item.status == .needsAttention
+        status.stringValue = item.status.isRetry
             ? "Resume the saved \(item.label) article."
             : "Ready to write the \(item.label) task."
     }
@@ -296,7 +300,7 @@ final class WriterApp: NSObject, NSApplicationDelegate {
         var env = ProcessInfo.processInfo.environment
         env["PATH"] = "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
         env["OMNILEDE_ACTION"] = action
-        env["OMNILEDE_PLAN_DATE"] = planSnapshot?.date ?? localDate()
+        env["OMNILEDE_PLAN_DATE"] = plannerDate(action: action)
         if let category { env["OMNILEDE_CATEGORY"] = category }
         process.environment = env
         return process
@@ -643,6 +647,9 @@ final class WriterApp: NSObject, NSApplicationDelegate {
         @omnilede-plan {"date":"2026-10-02","completedCount":1,"totalTasks":3,"draftCount":2,"publishedCount":24,"tasks":[{"category":"anime","label":"Anime","reason":"No published article yet","status":"todo"},{"category":"sports","label":"Sports","reason":"Draft waiting for review","status":"draft-ready","draftRef":{"category":"sports","filename":"sports-draft.mdx"}},{"category":"finance","label":"Finance","reason":"Last published 2026-09-20","status":"published","draftRef":{"category":"finance","filename":"finance-story.mdx"}}]}
         """ + "\n")
         precondition(planSnapshot?.tasks.count == 3)
+        let nextDay = ISO8601DateFormatter().date(from: "2026-10-03T12:00:00Z")!
+        precondition(plannerDate(action: "plan-snapshot", now: nextDay) == "2026-10-03")
+        precondition(plannerDate(action: "plan-replace", now: nextDay) == "2026-10-02")
         precondition(todayCount.stringValue == "1 of 3 written")
         precondition(counts.stringValue.contains("2 drafts"))
         precondition(taskButtons.count == 3 && replaceButtons.count == 3)
@@ -651,6 +658,13 @@ final class WriterApp: NSObject, NSApplicationDelegate {
         taskButtons[2].performClick(nil)
         precondition(selectedCategory == nil && !startWriting.isEnabled)
         precondition(replaceButtons[2].isHidden)
+
+        consumePlan("""
+        @omnilede-plan {"date":"2026-10-02","completedCount":0,"totalTasks":3,"draftCount":0,"publishedCount":24,"tasks":[{"category":"anime","label":"Anime","reason":"Saved article is still being written","status":"writing"},{"category":"sports","label":"Sports","reason":"Least recent coverage","status":"todo"},{"category":"finance","label":"Finance","reason":"Least recent coverage","status":"todo"}]}
+        """ + "\n")
+        taskButtons[0].performClick(nil)
+        precondition(selectedCategory == "anime" && startWriting.isEnabled)
+        precondition(startWriting.title == "Try again")
 
         consumePlan("@omnilede-plan-error {\"message\":\"Daily plan could not be refreshed. Your saved work is unchanged.\"}\n")
         precondition(task == nil && refresh.isEnabled)

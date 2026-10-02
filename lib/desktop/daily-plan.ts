@@ -13,6 +13,8 @@ import {
 } from "@/lib/desktop/content-inventory";
 import type { DraftRef } from "@/lib/drafts/types";
 import type { LocalRunResult } from "@/lib/pipeline/local-run-types";
+import type { LocalRunState } from "@/lib/pipeline/local-run-types";
+import { loadRunState } from "@/lib/pipeline/run-state";
 import type { FetchLike } from "@/lib/pipeline/types";
 
 export type DailyTaskStatus =
@@ -81,6 +83,11 @@ const dailyPlanSchema = z.object({
 
 type StoredTask = z.infer<typeof storedTaskSchema>;
 type DailyPlan = z.infer<typeof dailyPlanSchema>;
+
+interface ResumableRun {
+  category: CategorySlug;
+  state: LocalRunState;
+}
 
 function localDate(now: Date): string {
   const parts = new Intl.DateTimeFormat("en-CA", {
@@ -170,33 +177,76 @@ function createTask(
   inventory: EditorialInventory,
   category: CategorySlug,
   selectedAt: string,
+  resumable?: ResumableRun,
 ): StoredTask {
   const draft = newestDraft(inventory, category);
+  const savedDraft = resumable?.category === category
+    ? draftRefSchema.safeParse(resumable.state.draftRef)
+    : undefined;
+  const savedOutcome = resumable?.category === category
+    ? resumable.state.status === "running" ? "running" : "attention"
+    : "todo";
   return {
     category,
     selectedAt,
-    reason: selectionReason(inventory, category),
-    outcome: "todo",
-    ...(draft ? { draftRef: { category, filename: draft.filename } } : {}),
+    reason: resumable?.category === category
+      ? resumable.state.status === "running"
+        ? "Saved article is still being written"
+        : "Saved article needs attention"
+      : selectionReason(inventory, category),
+    outcome: savedOutcome,
+    ...(resumable?.category === category ? { runId: resumable.state.runId } : {}),
+    ...(savedDraft?.success
+      ? { draftRef: savedDraft.data }
+      : draft ? { draftRef: { category, filename: draft.filename } } : {}),
   };
+}
+
+async function loadResumableRun(auditRoot: string): Promise<ResumableRun | null> {
+  const state = await loadRunState(path.join(auditRoot, "current-run.json"));
+  if (!state || state.status === "completed") return null;
+  const candidate = state.requestedCategory ?? state.selectedStory?.category ?? state.draftRef?.category;
+  const category = categorySchema.safeParse(candidate);
+  if (!category.success) {
+    throw new Error("The saved writer run has no supported category; its state was preserved.");
+  }
+  return { category: category.data, state };
+}
+
+function reconcileResumableTask(plan: DailyPlan, resumable: ResumableRun | null): DailyPlan {
+  if (!resumable) return plan;
+  const task = plan.tasks.find((candidate) => candidate.category === resumable.category);
+  if (!task) return plan;
+  task.runId = resumable.state.runId;
+  task.outcome = resumable.state.status === "running" ? "running" : "attention";
+  task.reason = resumable.state.status === "running"
+    ? "Saved article is still being written"
+    : "Saved article needs attention";
+  const draftRef = draftRefSchema.safeParse(resumable.state.draftRef);
+  if (draftRef.success) task.draftRef = draftRef.data;
+  return plan;
 }
 
 async function loadOrCreatePlan(
   input: PlannerInput,
   inventory: EditorialInventory,
+  resumable: ResumableRun | null,
 ): Promise<DailyPlan> {
   const date = requestedDate(input);
   const pathname = planPath(input.auditRoot, date);
   const existing = await readPlan(pathname);
-  if (existing) return existing;
+  if (existing) return reconcileResumableTask(existing, resumable);
   const timestamp = (input.now ?? new Date()).toISOString();
-  const categories = rankedCategories(inventory).slice(0, 3);
+  const ranked = rankedCategories(inventory);
+  const categories = resumable
+    ? [resumable.category, ...ranked.filter((category) => category !== resumable.category)].slice(0, 3)
+    : ranked.slice(0, 3);
   const plan = dailyPlanSchema.parse({
     version: 1,
     date,
     createdAt: timestamp,
     updatedAt: timestamp,
-    tasks: categories.map((category) => createTask(inventory, category, timestamp)),
+    tasks: categories.map((category) => createTask(inventory, category, timestamp, resumable ?? undefined)),
   });
   await savePlan(pathname, plan);
   return plan;
@@ -213,9 +263,10 @@ function exactItem(
 
 function taskStatus(task: StoredTask, inventory: EditorialInventory): DailyTaskStatus {
   if (task.draftRef && exactItem(inventory, task.draftRef, "published")) return "published";
-  if (task.draftRef && exactItem(inventory, task.draftRef, "draft")) return "draft-ready";
   if (task.outcome === "running") return "writing";
-  if (["attention", "cancelled", "completed"].includes(task.outcome)) return "needs-attention";
+  if (["attention", "cancelled"].includes(task.outcome)) return "needs-attention";
+  if (task.draftRef && exactItem(inventory, task.draftRef, "draft")) return "draft-ready";
+  if (task.outcome === "completed") return "needs-attention";
   return "todo";
 }
 
@@ -250,14 +301,16 @@ async function inventoryFor(input: PlannerInput): Promise<EditorialInventory> {
 
 export async function getDailyPlanSnapshot(input: PlannerInput): Promise<DailyPlanSnapshot> {
   const inventory = await inventoryFor(input);
-  return snapshot(await loadOrCreatePlan(input, inventory), inventory);
+  const resumable = await loadResumableRun(input.auditRoot);
+  return snapshot(await loadOrCreatePlan(input, inventory, resumable), inventory);
 }
 
 export async function replaceDailyPlanTask(
   input: PlannerInput & { category: CategorySlug },
 ): Promise<DailyPlanSnapshot> {
   const inventory = await inventoryFor(input);
-  const plan = await loadOrCreatePlan(input, inventory);
+  const resumable = await loadResumableRun(input.auditRoot);
+  const plan = await loadOrCreatePlan(input, inventory, resumable);
   const index = plan.tasks.findIndex((task) => task.category === input.category);
   if (index < 0) throw new Error("That category is not in today's plan.");
   if (taskStatus(plan.tasks[index]!, inventory) !== "todo") {

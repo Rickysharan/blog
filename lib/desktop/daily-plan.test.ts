@@ -202,4 +202,66 @@ describe("desktop daily plan", () => {
     await expect(readFile(yesterdayPath, "utf8")).resolves.toBe(yesterdayBytes);
     await expect(readFile(path.join(root, ".audit", "daily-plans", "2026-10-03.json"), "utf8")).resolves.toContain("2026-10-03");
   });
+
+  it("keeps an unfinished saved category in the next day's plan and makes it retryable", async () => {
+    const root = await temporaryRoot();
+    const auditRoot = path.join(root, ".audit");
+    await mkdir(auditRoot, { recursive: true });
+    await writeFile(path.join(auditRoot, "current-run.json"), JSON.stringify({
+      version: 1,
+      runId: "saved-sports-run",
+      status: "human-required",
+      stage: "preflight",
+      attempt: 1,
+      percent: 5,
+      message: "Install the local model, then try again.",
+      imageCount: 0,
+      repairs: [],
+      errorCategory: "local-model-missing",
+      deliveryStatus: "not-delivered",
+      requestedCategory: "sports",
+      startedAt: "2026-10-02T20:00:00.000Z",
+      updatedAt: "2026-10-02T20:01:00.000Z",
+    }), "utf8");
+
+    const nextDay = await getDailyPlanSnapshot(input(root, new Date("2026-10-03T09:00:00+01:00")));
+
+    expect(nextDay.tasks.map((task) => task.category)).toEqual(["sports", "anime", "movies"]);
+    expect(nextDay.tasks[0]).toMatchObject({
+      category: "sports",
+      status: "needs-attention",
+    });
+    await expect(replaceDailyPlanTask({
+      ...input(root, new Date("2026-10-03T09:05:00+01:00")),
+      category: "sports",
+    })).rejects.toThrow(/cannot be replaced/i);
+  });
+
+  it("keeps a failed run in needs-attention even when its partial draft is valid", async () => {
+    const root = await temporaryRoot();
+    const planInput = input(root);
+    await getDailyPlanSnapshot(planInput);
+    const filename = await writeContent(planInput.contentRoot, "drafts", "anime", "partial-anime", "2026-10-02");
+
+    await recordDailyPlanRun({
+      auditRoot: planInput.auditRoot,
+      date: "2026-10-02",
+      category: "anime",
+      result: {
+        runId: "run-with-partial-draft",
+        status: "human-required",
+        stage: "image-selection",
+        draftRef: { category: "anime", filename },
+        imageCount: 1,
+        repairs: [],
+        message: "Choose another picture, then try again.",
+        deliveryStatus: "not-delivered",
+        errorCategory: "insufficient-images",
+        resumable: true,
+      },
+      now: planInput.now,
+    });
+
+    expect((await getDailyPlanSnapshot(planInput)).tasks[0]?.status).toBe("needs-attention");
+  });
 });

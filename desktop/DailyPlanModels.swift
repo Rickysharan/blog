@@ -18,7 +18,11 @@ enum DailyTaskStatus: String, Decodable {
     }
 
     var isActionable: Bool {
-        self == .todo || self == .needsAttention
+        self == .todo || self == .writing || self == .needsAttention
+    }
+
+    var isRetry: Bool {
+        self == .writing || self == .needsAttention
     }
 }
 
