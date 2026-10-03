@@ -1,13 +1,26 @@
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+const resolveLocalGitHubTarget = vi.hoisted(() => vi.fn());
+
+vi.mock("@/lib/pipeline/local-github", () => ({ resolveLocalGitHubTarget }));
+
 import { loadEditorialInventory } from "@/lib/desktop/content-inventory";
 
 const cleanups: Array<() => Promise<void>> = [];
 
 afterEach(async () => {
   await Promise.all(cleanups.splice(0).map((cleanup) => cleanup()));
+});
+
+beforeEach(() => {
+  resolveLocalGitHubTarget.mockImplementation(async (env: Record<string, string | undefined>) => ({
+    repository: env.GITHUB_REPOSITORY ?? "",
+    branch: env.GITHUB_BRANCH ?? "",
+    token: env.GITHUB_TOKEN ?? "test-token",
+  }));
 });
 
 async function temporaryContentRoot(): Promise<string> {
@@ -127,6 +140,34 @@ describe("desktop editorial content inventory", () => {
       { kind: "draft", category: "share-market", slug: "market-draft" },
     ]);
     expect(inventory.items.some((item) => item.slug === "local-only")).toBe(false);
+  });
+
+  it("uses CLI-resolved credentials for synced inventory when GITHUB_TOKEN is unset", async () => {
+    const contentRoot = await temporaryContentRoot();
+    const head = "5".repeat(40);
+    const tree = "6".repeat(40);
+    resolveLocalGitHubTarget.mockResolvedValue({
+      repository: "owner/repository",
+      branch: "main",
+      token: "cli-session-token",
+    });
+    const fetchImpl = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+      expect(new Headers(init?.headers).get("authorization")).toBe("Bearer cli-session-token");
+      const url = String(input);
+      if (url.endsWith("/git/ref/heads/main")) return Response.json({ object: { sha: head } });
+      if (url.endsWith(`/git/commits/${head}`)) return Response.json({ tree: { sha: tree } });
+      return Response.json({ truncated: false, tree: [] });
+    });
+
+    await expect(loadEditorialInventory({
+      contentRoot,
+      env: {
+        LOCAL_WRITER_SYNC: "true",
+        GITHUB_REPOSITORY: "owner/repository",
+        GITHUB_BRANCH: "main",
+      },
+      fetchImpl,
+    })).resolves.toEqual({ source: "github", version: head, items: [] });
   });
 
   it("rejects a failed synced inventory instead of reporting local counts", async () => {

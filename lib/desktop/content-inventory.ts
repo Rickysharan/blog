@@ -11,6 +11,7 @@ import {
   type EditorialInventoryItem,
   type EditorialInventoryKind,
 } from "@omnilede/editorial";
+import { resolveLocalGitHubTarget } from "@/lib/pipeline/local-github";
 import type { FetchLike } from "@/lib/pipeline/types";
 
 export type { EditorialInventory, EditorialInventoryItem, EditorialInventoryKind };
@@ -78,13 +79,10 @@ export async function loadEditorialInventory(
   input: LoadEditorialInventoryInput,
 ): Promise<EditorialInventory> {
   if (input.env.LOCAL_WRITER_SYNC === "true") {
-    const target = {
-      repository: input.env.GITHUB_REPOSITORY ?? "",
-      branch: input.env.GITHUB_BRANCH ?? "",
-      token: input.env.GITHUB_TOKEN ?? "",
+    return loadGitHubEditorialInventory({
+      ...await resolveLocalGitHubTarget(input.env),
       fetchImpl: input.fetchImpl,
-    };
-    return loadGitHubEditorialInventory(target);
+    });
   }
   return {
     source: "local",
