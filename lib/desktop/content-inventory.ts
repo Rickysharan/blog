@@ -2,28 +2,18 @@ import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import {
   CATEGORY_SLUGS,
-  isCategorySlug,
   type CategorySlug,
 } from "@/lib/config/categories";
 import { parseArticleFile } from "@/lib/content/schema";
-import { GitDataClient, type GitHubTreeEntry } from "@/lib/github/git-data-client";
-import { resolveLocalGitHubTarget } from "@/lib/pipeline/local-github";
+import {
+  loadGitHubEditorialInventory,
+  type EditorialInventory,
+  type EditorialInventoryItem,
+  type EditorialInventoryKind,
+} from "@omnilede/editorial";
 import type { FetchLike } from "@/lib/pipeline/types";
 
-export type EditorialInventoryKind = "draft" | "published";
-
-export interface EditorialInventoryItem {
-  kind: EditorialInventoryKind;
-  category: CategorySlug;
-  filename: string;
-  slug: string;
-  date: string;
-}
-
-export interface EditorialInventory {
-  source: "local" | "github";
-  items: EditorialInventoryItem[];
-}
+export type { EditorialInventory, EditorialInventoryItem, EditorialInventoryKind };
 
 export interface LoadEditorialInventoryInput {
   contentRoot: string;
@@ -84,54 +74,17 @@ async function localInventory(contentRoot: string): Promise<EditorialInventoryIt
   return sortItems(items);
 }
 
-function remoteRef(entry: GitHubTreeEntry): {
-  kind: EditorialInventoryKind;
-  category: CategorySlug;
-  filename: string;
-  sha: string;
-} | null {
-  if (entry.type !== "blob" || typeof entry.path !== "string" || typeof entry.sha !== "string") {
-    return null;
-  }
-  const parts = entry.path.split("/");
-  if (
-    parts.length !== 4 ||
-    parts[0] !== "content" ||
-    (parts[1] !== "drafts" && parts[1] !== "articles") ||
-    !isCategorySlug(parts[2]) ||
-    !parts[3]?.endsWith(".mdx")
-  ) {
-    return null;
-  }
-  return {
-    kind: parts[1] === "drafts" ? "draft" : "published",
-    category: parts[2],
-    filename: parts[3],
-    sha: entry.sha,
-  };
-}
-
-async function githubInventory(
-  env: Record<string, string | undefined>,
-  fetchImpl?: FetchLike,
-): Promise<EditorialInventoryItem[]> {
-  const target = await resolveLocalGitHubTarget(env);
-  const client = new GitDataClient({ ...target, fetchImpl });
-  const snapshot = await client.snapshot();
-  const refs = snapshot.entries.map(remoteRef).filter((ref): ref is NonNullable<typeof ref> => ref !== null);
-  const items = await Promise.all(refs.map(async (ref) =>
-    inventoryItem(ref.kind, ref.category, ref.filename, await client.readBlob(ref.sha))));
-  return sortItems(items.filter((item): item is EditorialInventoryItem => item !== null));
-}
-
 export async function loadEditorialInventory(
   input: LoadEditorialInventoryInput,
 ): Promise<EditorialInventory> {
   if (input.env.LOCAL_WRITER_SYNC === "true") {
-    return {
-      source: "github",
-      items: await githubInventory(input.env, input.fetchImpl),
+    const target = {
+      repository: input.env.GITHUB_REPOSITORY ?? "",
+      branch: input.env.GITHUB_BRANCH ?? "",
+      token: input.env.GITHUB_TOKEN ?? "",
+      fetchImpl: input.fetchImpl,
     };
+    return loadGitHubEditorialInventory(target);
   }
   return {
     source: "local",

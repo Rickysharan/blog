@@ -1,0 +1,30 @@
+{
+  "name": "@omnilede/editorial",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./categories": "./src/categories.ts",
+    "./content/schema": "./src/content/schema.ts",
+    "./drafts/types": "./src/drafts/types.ts",
+    "./drafts/validation": "./src/drafts/validation.ts",
+    "./drafts/github-repository": "./src/drafts/github-repository.ts",
+    "./github/git-data-client": "./src/github/git-data-client.ts",
+    "./inventory": "./src/inventory.ts"
+  },
+  "scripts": {
+    "test": "sh -c 'cd ../.. && vitest run --config vitest.config.ts packages/editorial/src'",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@omnilede/contracts": "0.1.0",
+    "gray-matter": "4.0.3",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "24.7.0",
+    "typescript": "5.9.3",
+    "vitest": "4.1.11"
+  }
+}

@@ -48,6 +48,12 @@ const opsServerEnvSchema = opsPublicEnvSchema
   })
   .strip();
 
+const studioContentEnvSchema = z.object({
+  GITHUB_REPOSITORY: z.string().regex(/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/),
+  GITHUB_CONTENT_BRANCH: z.string().trim().min(1),
+  GITHUB_CONTENT_TOKEN: z.string().trim().min(1)
+}).strip();
+
 type Environment = Record<string, string | undefined>;
 
 export type OpsPublicEnv = z.infer<typeof opsPublicEnvSchema>;
@@ -67,4 +73,8 @@ export function parseStudioOperatorEnv(environment: Environment) {
 
 export function parseStudioOriginEnv(environment: Environment) {
   return studioOriginEnvSchema.parse(environment);
+}
+
+export function parseStudioContentEnv(environment: Environment) {
+  return studioContentEnvSchema.parse(environment);
 }
