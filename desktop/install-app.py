@@ -38,7 +38,8 @@ def validate_studio_url(value: str) -> str:
         pass
     return value
 
-studio_url = validate_studio_url(env_value("OMNILEDE_STUDIO_URL") or env_value("NEXT_PUBLIC_STUDIO_URL") or "https://omnilede-news.netlify.app")
+studio_url_value = env_value("OMNILEDE_STUDIO_URL") or env_value("NEXT_PUBLIC_STUDIO_URL")
+studio_url = validate_studio_url(studio_url_value) if studio_url_value else None
 for required in (
     repo / "Start OmniLede.command",
     repo / "package.json",
@@ -82,7 +83,9 @@ with tempfile.TemporaryDirectory(prefix="omnilede-app-") as temp:
                 CFBundleDisplayName="OmniLede", CFBundleExecutable="OmniLede", CFBundlePackageType="APPL",
                 CFBundleIconFile="OmniLede", CFBundleShortVersionString="5.0", CFBundleVersion="5",
                 LSMinimumSystemVersion="12.0",
-                NSHighResolutionCapable=True, OmniLedeProjectPath=str(repo), OmniLedeStudioURL=studio_url)
+                NSHighResolutionCapable=True, OmniLedeProjectPath=str(repo))
+    if studio_url:
+        info["OmniLedeStudioURL"] = studio_url
     with (bundle / "Contents/Info.plist").open("wb") as file:
         plistlib.dump(info, file)
     subprocess.run(["/usr/bin/codesign", "--force", "--sign", "-", str(bundle)], check=True)

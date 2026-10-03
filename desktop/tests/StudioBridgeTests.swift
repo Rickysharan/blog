@@ -21,6 +21,10 @@ private func waitUntil(timeout: TimeInterval = 3, _ condition: () -> Bool) -> Bo
 @main
 struct StudioBridgeTests {
     static func main() throws {
+        do {
+            _ = try StudioConfiguration(studioURL: nil, projectPath: "/tmp/omnilede")
+            throw TestFailure.failed("accepted a missing Studio origin")
+        } catch StudioConfigurationError.missing("OmniLedeStudioURL") { }
         let configuration = try StudioConfiguration(
             studioURL: "https://studio.example.com/categories",
             projectPath: "/tmp/omnilede"
@@ -120,7 +124,7 @@ struct StudioBridgeTests {
         try expect(sanitized?["phase"] as? String == "generation", "keeps the phase")
         try expect(sanitized?["progress"] as? Int == 38, "keeps bounded progress")
         try expect(sanitized?["etaSeconds"] is NSNull, "does not promise an ETA after a terminal error")
-        try expect(sanitized?["delivery"] as? String == "pending", "keeps delivery state")
+        try expect(sanitized?["delivery"] as? String == "not-delivered", "marks a terminal error as not delivered")
         try expect(sanitized?["error"] as? String == "Writing needs attention. Try again.", "maps errors to safe copy")
         try expect(sanitized?["message"] == nil && sanitized?["token"] == nil && sanitized?["body"] == nil, "does not expose raw output, secrets, or article bytes")
         let retrying = sanitizer.status(from: [
@@ -134,6 +138,15 @@ struct StudioBridgeTests {
             "deliveryStatus": "delivered"
         ], elapsed: 45, estimatedDuration: 90)
         try expect(completed?["etaSeconds"] as? Int == 0, "reports zero ETA after delivery")
+        let localOnly = sanitizer.status(from: [
+            "status": "completed", "stage": "delivery-verification", "percent": 100,
+            "deliveryStatus": "not-delivered"
+        ], elapsed: 45, estimatedDuration: 90)
+        try expect(localOnly?["delivery"] as? String == "not-delivered" && localOnly?["error"] is String, "does not label a local-only completion as delivered")
+        let ambiguousCompletion = sanitizer.status(from: [
+            "status": "completed", "stage": "delivery-verification", "percent": 100
+        ], elapsed: 45, estimatedDuration: 90)
+        try expect(ambiguousCompletion?["delivery"] as? String == "not-delivered" && ambiguousCompletion?["error"] is String, "requires an explicit delivered terminal field")
 
         try expect(!configuration.allowsRedirect(from: URL(string: "https://studio.example.com/login")!, to: URL(string: "https://evil.example/callback")!), "blocks an origin-changing redirect")
         try expect(configuration.allowsRedirect(from: URL(string: "https://studio.example.com/login")!, to: URL(string: "https://studio.example.com/categories")!), "allows a same-origin redirect")
@@ -176,14 +189,12 @@ struct StudioBridgeTests {
         try expect(waitUntil { FileManager.default.fileExists(atPath: writerRoot.appendingPathComponent("started").path) }, "starts the explicit writer process")
         writer.perform(.write(category: "anime", requestId: "writer-two-12345"))
         try expect(writerStatuses.contains { $0["requestId"] as? String == "writer-two-12345" && $0["phase"] as? String == "already-running" }, "keeps one writer process at a time")
-        writer.perform(.refresh(requestId: "refresh-active-12345"))
-        try expect(writerStatuses.last?["requestId"] as? String == "writer-one-12345", "refresh retains the active writer instead of a rejected second request")
         writer.perform(.cancel(requestId: "wrong-request-12345"))
         _ = RunLoop.current.run(mode: .default, before: Date().addingTimeInterval(0.15))
         try expect(!FileManager.default.fileExists(atPath: writerRoot.appendingPathComponent("cancelled").path), "does not cancel for a stale request ID")
         writer.perform(.cancel(requestId: "writer-one-12345"))
         try expect(waitUntil { FileManager.default.fileExists(atPath: writerRoot.appendingPathComponent("cancelled").path) }, "cancels the owned writer process")
-        try expect(waitUntil { writerStatuses.contains { $0["requestId"] as? String == "writer-one-12345" && $0["phase"] as? String == "failed" } }, "reports safe terminal status and releases cancellation resources")
+        try expect(waitUntil { writerStatuses.contains { $0["requestId"] as? String == "writer-one-12345" && $0["phase"] as? String == "delivery-unverified" } }, "reports safe terminal status and releases cancellation resources")
 
         try? FileManager.default.removeItem(at: writerRoot.appendingPathComponent("started"))
         try? FileManager.default.removeItem(at: writerRoot.appendingPathComponent("cancelled"))
@@ -191,6 +202,62 @@ struct StudioBridgeTests {
         try expect(waitUntil { FileManager.default.fileExists(atPath: writerRoot.appendingPathComponent("started").path) }, "admits another writer after cleanup")
         writer.shutdown()
         try expect(waitUntil { FileManager.default.fileExists(atPath: writerRoot.appendingPathComponent("cancelled").path) }, "shutdown cancels the remaining writer")
+
+        let deliveredRoot = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("omnilede-delivered-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: deliveredRoot) }
+        try FileManager.default.createDirectory(at: deliveredRoot, withIntermediateDirectories: true)
+        try """
+        #!/bin/bash
+        printf '%s\n' '@omnilede {"status":"completed","stage":"delivery-verification","percent":100,"deliveryStatus":"delivered"}'
+        printf '%s' '@omnilede {"phase":"dashboard","url":"https://reader.example/admin"}'
+        """.write(to: deliveredRoot.appendingPathComponent("Start OmniLede.command"), atomically: true, encoding: .utf8)
+        let deliveredConfiguration = try StudioConfiguration(studioURL: "https://studio.example.com", projectPath: deliveredRoot.path)
+        var deliveredStatuses: [[String: Any]] = []
+        let deliveredWriter = LocalWriterController(configuration: deliveredConfiguration) { deliveredStatuses.append($0) }
+        deliveredWriter.perform(.write(category: "sports", requestId: "delivered-race-12345"))
+        try expect(waitUntil { deliveredStatuses.contains { $0["delivery"] as? String == "delivered" } }, "drains an explicit terminal delivery emitted immediately before exit")
+        _ = RunLoop.current.run(mode: .default, before: Date().addingTimeInterval(0.15))
+        try expect(deliveredStatuses.last?["delivery"] as? String == "delivered", "does not let a trailing dashboard event replace delivered state")
+
+        let ambiguousRoot = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("omnilede-ambiguous-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: ambiguousRoot) }
+        try FileManager.default.createDirectory(at: ambiguousRoot, withIntermediateDirectories: true)
+        try """
+        #!/bin/bash
+        printf '%s' '@omnilede {"status":"progress","stage":"delivery-verification","percent":100}'
+        exit 0
+        """.write(to: ambiguousRoot.appendingPathComponent("Start OmniLede.command"), atomically: true, encoding: .utf8)
+        let ambiguousConfiguration = try StudioConfiguration(studioURL: "https://studio.example.com", projectPath: ambiguousRoot.path)
+        var ambiguousStatuses: [[String: Any]] = []
+        let ambiguousWriter = LocalWriterController(configuration: ambiguousConfiguration) { ambiguousStatuses.append($0) }
+        ambiguousWriter.perform(.write(category: "finance", requestId: "ambiguous-zero-12345"))
+        try expect(waitUntil { ambiguousStatuses.last?["phase"] as? String == "delivery-unverified" }, "finishes a zero-exit run without a terminal event as unverified")
+        try expect(!ambiguousStatuses.contains { $0["delivery"] as? String == "delivered" }, "never invents verified delivery from exit code zero")
+
+        let plannerRoot = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("omnilede-planner-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: plannerRoot) }
+        try FileManager.default.createDirectory(at: plannerRoot, withIntermediateDirectories: true)
+        let preserved = Data([0, 255, 10, 65, 66, 67])
+        let preservedURL = plannerRoot.appendingPathComponent("daily-plan-v1.json")
+        try preserved.write(to: preservedURL)
+        try """
+        #!/bin/bash
+        if [ "$OMNILEDE_ACTION" != "plan-snapshot" ]; then touch "$PWD/writer-started"; exit 9; fi
+        printf '%s\n' '@omnilede-plan {"date":"2026-10-03","completedCount":1,"totalTasks":3,"draftCount":2,"publishedCount":24,"tasks":[{"category":"anime","label":"Anime","reason":"Least recent coverage","status":"todo"},{"category":"sports","label":"Sports","reason":"Draft waiting for review","status":"draft-ready","draftRef":{"category":"sports","filename":"sports-draft.mdx"}},{"category":"finance","label":"Finance","reason":"Saved work needs attention","status":"needs-attention"}]}'
+        """.write(to: plannerRoot.appendingPathComponent("Start OmniLede.command"), atomically: true, encoding: .utf8)
+        let plannerConfiguration = try StudioConfiguration(studioURL: "https://studio.example.com", projectPath: plannerRoot.path)
+        var plans: [[String: Any]] = []
+        let planner = LocalPlannerController(configuration: plannerConfiguration) { plans.append($0) }
+        _ = RunLoop.current.run(mode: .default, before: Date().addingTimeInterval(0.1))
+        try expect(plans.isEmpty && !FileManager.default.fileExists(atPath: plannerRoot.appendingPathComponent("writer-started").path), "does not refresh or write on construction")
+        planner.refresh(requestId: "refresh-plan-12345")
+        try expect(waitUntil { plans.last?["date"] as? String == "2026-10-03" }, "runs and parses the existing plan-snapshot protocol after an explicit refresh")
+        try expect(plans.last?["requestId"] as? String == "refresh-plan-12345", "correlates the sanitized planner snapshot")
+        try expect((plans.last?["tasks"] as? [[String: Any]])?.count == 3, "delivers exactly three validated local v1 tasks")
+        let preservedAfterRefresh = try Data(contentsOf: preservedURL)
+        try expect(preservedAfterRefresh == preserved, "reads the planner state without rewriting its bytes")
+        try expect(!FileManager.default.fileExists(atPath: plannerRoot.appendingPathComponent("writer-started").path), "planner refresh never starts the writer action")
+        planner.shutdown()
         print("Studio bridge security tests passed")
     }
 }

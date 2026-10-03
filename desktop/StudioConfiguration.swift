@@ -17,7 +17,10 @@ struct StudioConfiguration {
     let origin: URL
     let projectPath: String
 
-    init(studioURL rawURL: String, projectPath: String) throws {
+    init(studioURL rawURL: String?, projectPath: String) throws {
+        guard let rawURL, !rawURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw StudioConfigurationError.missing("OmniLedeStudioURL")
+        }
         guard
             let components = URLComponents(string: rawURL),
             components.scheme?.lowercased() == "https",
@@ -40,9 +43,7 @@ struct StudioConfiguration {
     }
 
     init(bundle: Bundle = .main) throws {
-        guard let studioURL = bundle.object(forInfoDictionaryKey: "OmniLedeStudioURL") as? String else {
-            throw StudioConfigurationError.missing("OmniLedeStudioURL")
-        }
+        let studioURL = bundle.object(forInfoDictionaryKey: "OmniLedeStudioURL") as? String
         guard let projectPath = bundle.object(forInfoDictionaryKey: "OmniLedeProjectPath") as? String else {
             throw StudioConfigurationError.missing("OmniLedeProjectPath")
         }

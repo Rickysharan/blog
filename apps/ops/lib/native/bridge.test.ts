@@ -2,9 +2,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   NATIVE_STATUS_EVENT,
+  NATIVE_PLAN_EVENT,
   hasNativeWriter,
   postNativeAction,
   readNativeStatus,
+  readNativePlanSnapshot,
 } from "./bridge";
 
 declare global {
@@ -53,5 +55,21 @@ describe("native writer bridge", () => {
       category: "anime", requestId: "request-12345678", phase: "failed", progress: 42,
       etaSeconds: null, delivery: "not-delivered", error: "x".repeat(201),
     } }))).toBeNull();
+  });
+
+  it("accepts only a bounded three-task native planner snapshot", () => {
+    const detail = {
+      requestId: "refresh-12345678", date: "2026-10-03", completedCount: 1, totalTasks: 3,
+      draftCount: 2, publishedCount: 24,
+      tasks: [
+        { category: "anime", label: "Anime", reason: "Least recent coverage", status: "todo" },
+        { category: "sports", label: "Sports", reason: "Draft waiting for review", status: "draft-ready" },
+        { category: "finance", label: "Finance", reason: "Saved work needs attention", status: "needs-attention" },
+      ],
+    };
+    expect(readNativePlanSnapshot(new CustomEvent(NATIVE_PLAN_EVENT, { detail }))).toEqual(detail);
+    expect(readNativePlanSnapshot(new CustomEvent(NATIVE_PLAN_EVENT, { detail: { ...detail, totalTasks: 4 } }))).toBeNull();
+    expect(readNativePlanSnapshot(new CustomEvent(NATIVE_PLAN_EVENT, { detail: { ...detail, tasks: [...detail.tasks, detail.tasks[0]] } }))).toBeNull();
+    expect(readNativePlanSnapshot(new CustomEvent(NATIVE_PLAN_EVENT, { detail: { ...detail, tasks: [{ ...detail.tasks[0], category: "technology" }, ...detail.tasks.slice(1)] } }))).toBeNull();
   });
 });

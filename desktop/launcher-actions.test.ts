@@ -25,8 +25,8 @@ async function fixtures() {
   return { planner, plannerArgs, writer, writerArgs };
 }
 
-async function launch(env: Record<string, string>): Promise<void> {
-  await execFileAsync("/bin/bash", ["Start OmniLede.command"], {
+async function launch(env: Record<string, string>) {
+  return execFileAsync("/bin/bash", ["Start OmniLede.command"], {
     cwd: process.cwd(),
     env: { ...process.env, ...env },
     timeout: 10_000,
@@ -81,7 +81,7 @@ describe("desktop launcher actions", () => {
   it("passes the selected task to the writer action", async () => {
     const fixture = await fixtures();
 
-    await launch({
+    const result = await launch({
       OMNILEDE_ACTION: "write",
       OMNILEDE_CATEGORY: "sports",
       OMNILEDE_PLAN_DATE: "2026-10-02",
@@ -95,5 +95,6 @@ describe("desktop launcher actions", () => {
     await expect(readFile(fixture.writerArgs, "utf8")).resolves.toBe(
       "--limit\n1\n--new\n--category\nsports\n--plan-date\n2026-10-02\n",
     );
+    expect(result.stdout).not.toContain("@omnilede {\"phase\":\"dashboard\"");
   });
 });

@@ -1,6 +1,6 @@
 import Foundation
 
-enum DailyTaskStatus: String, Decodable {
+enum DailyTaskStatus: String, Codable {
     case todo
     case writing
     case draftReady = "draft-ready"
@@ -26,12 +26,12 @@ enum DailyTaskStatus: String, Decodable {
     }
 }
 
-struct DailyDraftRef: Decodable {
+struct DailyDraftRef: Codable {
     let category: String
     let filename: String
 }
 
-struct DailyPlanTask: Decodable {
+struct DailyPlanTask: Codable {
     let category: String
     let label: String
     let reason: String
@@ -39,7 +39,7 @@ struct DailyPlanTask: Decodable {
     let draftRef: DailyDraftRef?
 }
 
-struct DailyPlanSnapshot: Decodable {
+struct DailyPlanSnapshot: Codable {
     let date: String
     let completedCount: Int
     let totalTasks: Int

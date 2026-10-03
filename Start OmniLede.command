@@ -78,7 +78,6 @@ set -e
 writer_pid=""
 if [ "$writer_status" -ne 0 ]; then exit "$writer_status"; fi
 echo "Writer finished in $((SECONDS - started)) seconds."
-echo "@omnilede $(node -e 'console.log(JSON.stringify({phase:"dashboard",url:process.argv[1]}))' "$review_url")"
 if [ "${OMNILEDE_DESKTOP:-}" != "true" ]; then open "$review_url"; fi
 echo "Review dashboard: $review_url"
 if [ -n "$web_pid" ]; then

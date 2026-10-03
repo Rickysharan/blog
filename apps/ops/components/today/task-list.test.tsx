@@ -1,9 +1,12 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
 
+import { NATIVE_PLAN_EVENT } from "../../lib/native/bridge";
+
 import { TaskList } from "./task-list";
 
 const fetcher = vi.fn();
+const postMessage = vi.fn();
 const task = {
   id: "00000000-0000-4000-8000-000000000001", evidenceKey: "draft:sports:story.mdx", kind: "review" as const,
   title: "Review Sports draft", detail: "Draft waiting for review.", category: "sports" as const, state: "open" as const,
@@ -11,7 +14,12 @@ const task = {
   createdAt: "2026-10-03T10:00:00.000Z", updatedAt: "2026-10-03T10:00:00.000Z"
 };
 
-beforeEach(() => { fetcher.mockReset(); });
+beforeEach(() => {
+  fetcher.mockReset();
+  postMessage.mockReset();
+  delete window.__OMNILEDE_NATIVE__;
+  delete window.webkit;
+});
 
 it("keeps Today actions separate, refreshes tasks, and exposes phone-safe review links", async () => {
   fetcher.mockResolvedValueOnce(Response.json({ tasks: [task] }));
@@ -21,6 +29,38 @@ it("keeps Today actions separate, refreshes tasks, and exposes phone-safe review
   fireEvent.click(screen.getByRole("button", { name: /refresh tasks/i }));
   await waitFor(() => expect(fetcher).toHaveBeenCalledWith("/api/tasks", expect.objectContaining({ method: "POST" })));
   expect(screen.queryByRole("button", { name: /start writing/i })).not.toBeInTheDocument();
+});
+
+it("refreshes and consumes the read-only Mac daily plan only after an explicit native click", async () => {
+  window.__OMNILEDE_NATIVE__ = { available: true };
+  window.webkit = { messageHandlers: { omnilede: { postMessage } } };
+  render(<TaskList initialTasks={[task]} fetcher={fetcher} nativeRequestId={() => "refresh-12345678"} />);
+  expect(postMessage).not.toHaveBeenCalled();
+  const refresh = screen.getByRole("button", { name: /refresh from this mac/i });
+  expect(refresh).toHaveAttribute("data-omnilede-native-action", "refresh");
+  fireEvent.click(refresh);
+  expect(postMessage).toHaveBeenCalledWith({ action: "refresh", requestId: "refresh-12345678" });
+  expect(fetcher).not.toHaveBeenCalled();
+  window.dispatchEvent(new CustomEvent(NATIVE_PLAN_EVENT, { detail: {
+    requestId: "refresh-12345678", date: "2026-10-03", completedCount: 1, totalTasks: 3,
+    draftCount: 2, publishedCount: 24,
+    tasks: [
+      { category: "anime", label: "Anime", reason: "Least recent coverage", status: "todo" },
+      { category: "sports", label: "Sports", reason: "Draft waiting for review", status: "draft-ready" },
+      { category: "finance", label: "Finance", reason: "Saved work needs attention", status: "needs-attention" },
+    ],
+  } }));
+  expect(await screen.findByRole("heading", { name: /mac daily plan/i })).toBeInTheDocument();
+  expect(screen.getByText(/1 of 3 written/i)).toBeInTheDocument();
+  expect(screen.getByText(/2 drafts · 24 published/i)).toBeInTheDocument();
+  expect(screen.getAllByRole("listitem", { name: /mac plan/i })).toHaveLength(3);
+  expect(screen.queryByRole("button", { name: /start writing/i })).not.toBeInTheDocument();
+});
+
+it("does not expose Mac planner refresh in an ordinary browser", () => {
+  render(<TaskList initialTasks={[task]} fetcher={fetcher} />);
+  expect(screen.queryByRole("button", { name: /refresh from this mac/i })).not.toBeInTheDocument();
+  expect(postMessage).not.toHaveBeenCalled();
 });
 
 it("completes a task only after the server accepts the action", async () => {
