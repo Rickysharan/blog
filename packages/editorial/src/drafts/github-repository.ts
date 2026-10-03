@@ -3,6 +3,7 @@ import path from "node:path";
 import {
   DraftRepositoryError,
   type DraftDocument,
+  type DraftMutationReceipt,
   type DraftRef,
   type DraftRepository,
   type DraftSummary,
@@ -243,16 +244,20 @@ export class GitHubDraftRepository implements DraftRepository {
     };
   }
 
-  async discard(refInput: DraftRef, expectedVersion?: string): Promise<void> {
+  async discard(refInput: DraftRef, expectedVersion?: string): Promise<DraftMutationReceipt> {
     const ref = validateDraftRef(refInput);
     const snapshot = await this.snapshot();
     this.assertExpectedVersion(snapshot, expectedVersion);
     this.findDraft(snapshot, ref);
-    await this.commitMutation(
+    const commit = await this.commitMutation(
       snapshot,
       [{ path: draftGitPath(ref), mode: "100644", type: "blob", sha: null }],
       `Discard draft: ${path.basename(ref.filename, ".mdx")}`,
     );
+    return {
+      version: commit.sha,
+      commitUrl: commit.htmlUrl ?? this.client.commitUrl(commit.sha),
+    };
   }
 }
 

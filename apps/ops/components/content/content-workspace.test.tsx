@@ -54,3 +54,26 @@ it("renders MDX expressions and HTML as inert preview text", async () => {
   const editor = await openEditor(); fireEvent.change(editor, { target: { value: '<script>window.hacked = true</script>\n\n{fetch("/api/content/drafts", {method: "POST"})}' } }); fireEvent.click(screen.getByRole("button", { name: "Preview" }));
   expect(screen.getByRole("region", { name: "Article preview" }).querySelector("script")).toBeNull(); expect(fetcher).toHaveBeenCalledTimes(1);
 });
+
+it("retains an actionable unrecorded discard receipt after a history failure and list refresh", async () => {
+  await openEditor();
+  const receipt = { actor_id: "operator", action: "discard", category: "anime", content_ref: "anime/story.mdx", prior_version: draft.version, resulting_version: "b".repeat(40), commit_url: `https://github.com/owner/repo/commit/${"b".repeat(40)}`, created_at: "2026-10-03T12:00:00Z" };
+  fetcher.mockResolvedValueOnce(Response.json({ result: { version: receipt.resulting_version, commitUrl: receipt.commit_url }, historyWarning: "The action succeeded, but history could not be recorded. Do not repeat the action.", reconciliation: receipt }));
+  fireEvent.click(screen.getByRole("button", { name: "Discard…" }));
+  fireEvent.click(screen.getByRole("button", { name: "Discard draft" }));
+  await screen.findByRole("alert");
+  expect(screen.queryByRole("button", { name: draft.title })).not.toBeInTheDocument();
+  expect(screen.queryByRole("textbox", { name: "MDX content" })).not.toBeInTheDocument();
+  const unrecorded = screen.getByRole("region", { name: "Action receipts awaiting history reconciliation" });
+  expect(unrecorded).toHaveTextContent("discard");
+  expect(unrecorded).toHaveTextContent("anime/story.mdx");
+  expect(unrecorded).toHaveTextContent(draft.version);
+  expect(unrecorded).toHaveTextContent(receipt.resulting_version);
+  expect(within(unrecorded).getByRole("link", { name: "View committed action" })).toHaveAttribute("href", receipt.commit_url);
+  expect(unrecorded).toHaveTextContent("not recorded in publication history");
+  fetcher.mockResolvedValueOnce(Response.json({ drafts: [second], history }));
+  fireEvent.click(screen.getByRole("button", { name: "Refresh list" }));
+  await waitFor(() => expect(screen.getByRole("button", { name: "Refresh list" })).not.toBeDisabled());
+  expect(screen.getByRole("region", { name: "Action receipts awaiting history reconciliation" })).toHaveTextContent(receipt.resulting_version);
+  expect(fetcher.mock.calls.filter(([, init]) => init?.method === "POST")).toHaveLength(1);
+});

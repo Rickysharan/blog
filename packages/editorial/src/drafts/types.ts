@@ -39,6 +39,12 @@ export interface PublishResult {
   commitUrl?: string;
 }
 
+/** Receipt for a completed mutation. Filesystem-only mutations have no Git version. */
+export interface DraftMutationReceipt {
+  version: string | null;
+  commitUrl?: string;
+}
+
 export interface DraftRepository {
   list(): Promise<DraftSummary[]>;
   read(ref: DraftRef): Promise<DraftDocument>;
@@ -49,5 +55,5 @@ export interface DraftRepository {
     mdx: string,
     expectedVersion?: string,
   ): Promise<PublishResult>;
-  discard(ref: DraftRef, expectedVersion?: string): Promise<void>;
+  discard(ref: DraftRef, expectedVersion?: string): Promise<DraftMutationReceipt>;
 }

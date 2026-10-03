@@ -70,7 +70,9 @@ describe("shared GitHub draft repository", () => {
 
   it("discards only the selected draft without creating a blob", async () => {
     const { repository, calls } = github();
-    await repository.discard(ref, A);
+    expect(await repository.discard(ref, A)).toEqual({
+      version: COMMIT, commitUrl: `https://github.com/owner/repo/commit/${COMMIT}`,
+    });
     expect(calls.filter(call => call.method !== "GET").map(call => call.body)).toEqual([
       { base_tree: TREE, tree: [{ path: draftPath, mode: "100644", type: "blob", sha: null }] },
       { message: "Discard draft: story", tree: NEW_TREE, parents: [A] },

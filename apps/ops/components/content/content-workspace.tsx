@@ -13,6 +13,7 @@ type Notice = { error: boolean; text: string };
 export function ContentWorkspace({ initialDrafts, initialHistory = [], publicSiteUrl }: { initialDrafts: DraftSummary[]; initialHistory?: PublicationEvent[]; publicSiteUrl?: string }) {
   const [drafts, setDrafts] = useState(initialDrafts);
   const [history, setHistory] = useState(initialHistory);
+  const [reconciliations, setReconciliations] = useState<PublicationEvent[]>([]);
   const [entries, setEntries] = useState<Record<string, Entry>>({});
   const [selectedKey, setSelectedKey] = useState("");
   const [category, setCategory] = useState("all");
@@ -75,7 +76,10 @@ export function ContentWorkspace({ initialDrafts, initialHistory = [], publicSit
         setNotice({ error: false, text: action === "publish" ? "Article published. The public site will update after deployment." : "Draft discarded." });
       }
       if (payload.event) setHistory(current => [payload.event, ...current]);
-      if (payload.historyWarning) setNotice({ error: true, text: payload.historyWarning });
+      if (payload.historyWarning) {
+        if (payload.reconciliation) setReconciliations(current => [payload.reconciliation, ...current]);
+        setNotice({ error: true, text: payload.historyWarning });
+      }
     } catch { setNotice({ error: true, text: "The response could not be verified. Your edits are still here. Refresh the list or check publication history before retrying." }); }
     finally { finish(); }
   }
@@ -98,6 +102,21 @@ export function ContentWorkspace({ initialDrafts, initialHistory = [], publicSit
     <div className="content-columns"><aside className="content-queue"><h2>Private drafts <small>{visibleDrafts.length}</small></h2>{!visibleDrafts.length && <p>No drafts match these filters.</p>}{visibleDrafts.map(draft => <div key={keyOf(draft.ref)}><button disabled={pending || !!confirmation || discardConfirm} aria-pressed={selectedKey === keyOf(draft.ref)} onClick={() => load(draft)}>{draft.title}</button><p>{draft.category} · {draft.date}</p></div>)}</aside>
     <section className="content-detail">{selected ? <><h2>{selected.draft.title}</h2><p>Save keeps this draft private. Only Publish makes it public.</p><p className="content-loaded-version">Loaded version: <code>{selected.draft.version}</code></p><DraftEditor value={selected.text} disabled={pending || !!confirmation || discardConfirm} onChange={text => { setEntries(current => ({ ...current, [selectedKey]: { ...current[selectedKey]!, text } })); setPublished(null); }} /><div className="content-actions"><button disabled={pending || !!confirmation || discardConfirm} onClick={() => mutate("save")}>Save private draft</button><button disabled={pending || !!confirmation || discardConfirm} onClick={() => setPreview(value => !value)}>Preview</button><button disabled={pending || !!confirmation || discardConfirm} onClick={() => setConfirmation({ ...selected })}>Publish…</button><button disabled={pending || !!confirmation || discardConfirm} onClick={() => setDiscardConfirm(true)}>Discard…</button></div>{preview && <ArticlePreview mdx={selected.text} />}{discardConfirm && <section role="dialog" aria-label="Confirm discard"><p>Discard this private draft and its unsaved editor contents?</p><button onClick={() => setDiscardConfirm(false)}>Cancel discard</button><button onClick={() => mutate("discard")}>Discard draft</button></section>}</> : <p>Select a draft to review its exact source before publishing.</p>}</section></div>
     {confirmation && <PublishConfirmation title={confirmation.draft.title} category={confirmation.draft.category} version={confirmation.draft.version} onCancel={() => setConfirmation(null)} onConfirm={(title, category) => mutate("publish", confirmation, title, category)} />}
+    {reconciliations.length > 0 && (
+      <section className="content-history" aria-label="Action receipts awaiting history reconciliation">
+        <h2>Actions awaiting history reconciliation</h2>
+        <p>These actions succeeded but were not recorded in publication history. Keep these receipts to reconcile history; do not repeat the actions.</p>
+        <ol>{reconciliations.map((receipt, index) => (
+          <li key={`${receipt.created_at}-${index}`}>
+            <strong>{receipt.action}</strong> <span>{receipt.content_ref}</span>
+            <p><time>{receipt.created_at}</time> · Actor: {receipt.actor_id}</p>
+            <p>Prior version: <code>{receipt.prior_version}</code></p>
+            <p>Resulting version: <code>{receipt.resulting_version ?? "No Git version available"}</code></p>
+            {receipt.commit_url && <a href={receipt.commit_url} target="_blank" rel="noreferrer">View committed action</a>}
+          </li>
+        ))}</ol>
+      </section>
+    )}
     <section className="content-history"><h2>Publication history</h2><p>Latest 100 actions. Metadata only; article contents stay in the content repository.</p>{visibleHistory.length ? <ol>{visibleHistory.map((event, index) => <li key={event.id ?? `${event.created_at}-${index}`}><strong>{event.action}</strong> <span>{event.content_ref}</span><p><time>{event.created_at}</time> · Actor: {event.actor_id}</p><p>Version <code>{event.prior_version}</code>{event.resulting_version && <> → <code>{event.resulting_version}</code></>}</p>{event.commit_url && <a target="_blank" rel="noreferrer" href={event.commit_url}>View commit</a>}</li>)}</ol> : <p>No recorded actions match these filters.</p>}</section>
   </div>;
 }

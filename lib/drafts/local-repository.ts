@@ -6,6 +6,7 @@ import { CATEGORY_SLUGS } from "@/lib/config/categories";
 import {
   DraftRepositoryError,
   type DraftDocument,
+  type DraftMutationReceipt,
   type DraftRef,
   type DraftRepository,
   type DraftSummary,
@@ -207,11 +208,12 @@ export class LocalDraftRepository implements DraftRepository {
     }
   }
 
-  async discard(refInput: DraftRef, expectedVersion?: string): Promise<void> {
+  async discard(refInput: DraftRef, expectedVersion?: string): Promise<DraftMutationReceipt> {
     const ref = validateDraftRef(refInput);
     await this.assertVersion(ref, expectedVersion);
     try {
       await fs.unlink(this.draftPath(ref));
+      return { version: null };
     } catch (error) {
       throw repositoryError(error, "Draft could not be discarded locally");
     }

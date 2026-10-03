@@ -69,7 +69,7 @@ describe("LocalDraftRepository", () => {
   it("discards only the expected draft version", async () => {
     const repository = new LocalDraftRepository({ contentRoot });
     const draft = await repository.read(ref);
-    await repository.discard(ref, draft.version);
+    expect(await repository.discard(ref, draft.version)).toEqual({ version: null });
 
     await expect(repository.read(ref)).rejects.toMatchObject({ code: "not_found" });
   });

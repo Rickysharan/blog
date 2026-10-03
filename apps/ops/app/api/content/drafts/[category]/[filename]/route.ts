@@ -38,16 +38,22 @@ export async function POST(request: Request, context: Context) {
     }
     const repository = createStudioContentRepository();
     const draft = action === "save" ? await repository.save(ref, mdx!, expectedVersion) : undefined;
-    const result = action === "publish" ? await repository.publish(ref, mdx!, expectedVersion) : undefined;
-    if (action === "discard") await repository.discard(ref, expectedVersion);
+    const published = action === "publish" ? await repository.publish(ref, mdx!, expectedVersion) : undefined;
+    const discarded = action === "discard" ? await repository.discard(ref, expectedVersion) : undefined;
+    const result = published ?? discarded;
     const event = {
       actor_id: actor.userId, action, category: ref.category, content_ref: `${ref.category}/${ref.filename}`,
-      prior_version: expectedVersion, resulting_version: draft?.version ?? result?.commitUrl?.split("/").at(-1) ?? null,
+      prior_version: expectedVersion, resulting_version: draft?.version ?? discarded?.version ?? published?.commitUrl?.split("/").at(-1) ?? null,
       commit_url: result?.commitUrl ?? null, created_at: new Date().toISOString()
     };
     let historyWarning: string | undefined;
     try { await appendPublicationEvent(event); }
-    catch { historyWarning = "The action succeeded, but publication history could not be recorded. Do not repeat the action; use the commit link to verify publication."; }
-    return privateJson({ draft, result, event: historyWarning ? undefined : event, historyWarning });
+    catch { historyWarning = "The action succeeded, but publication history could not be recorded. Do not repeat the action; use the action receipt to reconcile history."; }
+    return privateJson({
+      draft, result,
+      event: historyWarning ? undefined : event,
+      reconciliation: historyWarning ? event : undefined,
+      historyWarning
+    });
   } catch (error) { return contentError(error); }
 }

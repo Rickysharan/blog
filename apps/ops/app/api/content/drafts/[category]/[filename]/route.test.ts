@@ -18,6 +18,7 @@ beforeEach(() => {
   d.factory.mockReturnValue({ read: d.read, save: d.save, publish: d.publish, discard: d.discard });
   d.read.mockResolvedValue({ ref, version, mdx, article: validateDraftMdx(ref, mdx) });
   d.save.mockResolvedValue({ ref, version: "b".repeat(40), mdx });
+  d.discard.mockResolvedValue({ version: "b".repeat(40), commitUrl: `https://github.com/owner/repo/commit/${"b".repeat(40)}` });
   d.publish.mockResolvedValue({ articlePath: "content/articles/anime/story.mdx", commitUrl: `https://github.com/owner/repo/commit/${"b".repeat(40)}` });
 });
 describe("content mutations", () => {
@@ -66,4 +67,27 @@ describe("content mutations", () => {
     expect((await GET(new Request("https://studio.example.com"), context)).status).toBe(200); expect(d.publish).not.toHaveBeenCalled();
     d.auth.mockRejectedValue(new AuthorizationError()); expect((await GET(new Request("https://studio.example.com"), context)).status).toBe(403);
   });
+});
+
+it("returns and records the successful discard commit receipt", async () => {
+  const response = await POST(request(body("discard")), context);
+  expect(response.status).toBe(200);
+  const payload = await response.json();
+  expect(payload.result).toEqual({ version: "b".repeat(40), commitUrl: `https://github.com/owner/repo/commit/${"b".repeat(40)}` });
+  expect(payload.event).toMatchObject({ action: "discard", content_ref: "anime/story.mdx", prior_version: version, resulting_version: "b".repeat(40), commit_url: payload.result.commitUrl });
+  expect(d.append).toHaveBeenCalledWith(payload.event);
+  expect(payload.reconciliation).toBeUndefined();
+});
+it("preserves a separate metadata-only discard reconciliation receipt when history insertion fails", async () => {
+  d.append.mockRejectedValue(new Error("private provider secret"));
+  const response = await POST(request(body("discard")), context);
+  expect(response.status).toBe(200);
+  const payload = await response.json();
+  expect(payload.result).toEqual({ version: "b".repeat(40), commitUrl: `https://github.com/owner/repo/commit/${"b".repeat(40)}` });
+  expect(payload.historyWarning).toBeTruthy();
+  expect(payload.event).toBeUndefined();
+  expect(payload.reconciliation).toEqual({ actor_id: "operator", action: "discard", category: "anime", content_ref: "anime/story.mdx", prior_version: version, resulting_version: "b".repeat(40), commit_url: payload.result.commitUrl, created_at: expect.any(String) });
+  expect(JSON.stringify(payload)).not.toContain("reporting0");
+  expect(JSON.stringify(payload)).not.toContain("private provider secret");
+  expect(d.discard).toHaveBeenCalledOnce();
 });
