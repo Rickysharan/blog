@@ -72,4 +72,13 @@ describe("native writer bridge", () => {
     expect(readNativePlanSnapshot(new CustomEvent(NATIVE_PLAN_EVENT, { detail: { ...detail, tasks: [...detail.tasks, detail.tasks[0]] } }))).toBeNull();
     expect(readNativePlanSnapshot(new CustomEvent(NATIVE_PLAN_EVENT, { detail: { ...detail, tasks: [{ ...detail.tasks[0], category: "technology" }, ...detail.tasks.slice(1)] } }))).toBeNull();
   });
+
+  it("validates an optional exact plan date without requiring it for Categories writes", () => {
+    const postMessage = vi.fn();
+    window.__OMNILEDE_NATIVE__ = { available: true };
+    window.webkit = { messageHandlers: { omnilede: { postMessage } } };
+    expect(postNativeAction({ action: "write", category: "sports", requestId: "category-12345678" })).toBe(true);
+    expect(postNativeAction({ action: "write", category: "anime", planDate: "2026-10-03", requestId: "plan-write-12345" })).toBe(true);
+    expect(() => postNativeAction({ action: "write", category: "anime", planDate: "2026-02-30", requestId: "bad-date-123456" })).toThrow(/plan date/i);
+  });
 });

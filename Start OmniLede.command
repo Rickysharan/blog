@@ -15,11 +15,10 @@ if [ "$action" = "plan-snapshot" ] || [ "$action" = "plan-replace" ]; then
   fi
   if [ -n "${OMNILEDE_PLAN_DATE:-}" ]; then planner_args+=(--date "$OMNILEDE_PLAN_DATE"); fi
   if [ -n "${OMNILEDE_PLANNER_EXECUTABLE:-}" ]; then
-    "$OMNILEDE_PLANNER_EXECUTABLE" "${planner_args[@]}"
+    exec "$OMNILEDE_PLANNER_EXECUTABLE" "${planner_args[@]}"
   else
-    node --conditions=react-server --env-file-if-exists=.env.local --import tsx scripts/desktop-plan.ts "${planner_args[@]}"
+    exec node --conditions=react-server --env-file-if-exists=.env.local --import tsx scripts/desktop-plan.ts "${planner_args[@]}"
   fi
-  exit $?
 fi
 if [ "$action" != "write" ]; then
   echo "Unknown OmniLede action." >&2

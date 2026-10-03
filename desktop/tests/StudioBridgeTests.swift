@@ -108,6 +108,27 @@ struct StudioBridgeTests {
         try expect(bridge.handle(body: ["action": "cancel", "requestId": "cancel-12345678"], sourceURL: URL(string: "https://studio.example.com/categories")!, isMainFrame: true, hasUserActivation: true), "accepts activated cancellation")
         try expect(bridge.handle(body: ["action": "refresh", "requestId": "refresh-12345678"], sourceURL: URL(string: "https://studio.example.com/categories")!, isMainFrame: true, hasUserActivation: true), "accepts activated status refresh")
 
+        var plannedStarts: [StudioBridgeCommand] = []
+        let plannedBridge = StudioBridgePolicy(
+            configuration: configuration,
+            allowsPlannedWrite: { $0 == "anime" && $1 == "2026-10-03" },
+            start: { plannedStarts.append($0) },
+            reject: { rejections.append($0) }
+        )
+        try expect(plannedBridge.handle(
+            body: ["action": "write", "category": "anime", "planDate": "2026-10-03", "requestId": "planned-write-1234"],
+            sourceURL: URL(string: "https://studio.example.com/today")!, isMainFrame: true, hasUserActivation: true
+        ), "accepts a planned write bound to the latest validated snapshot")
+        try expect(plannedStarts == [.write(category: "anime", requestId: "planned-write-1234", planDate: "2026-10-03")], "carries the exact validated plan date into the writer command")
+        for rejected in [
+            ["action": "write", "category": "sports", "planDate": "2026-10-03", "requestId": "wrong-pair-12345"],
+            ["action": "write", "category": "anime", "planDate": "2026-10-04", "requestId": "stale-date-12345"],
+            ["action": "write", "category": "anime", "planDate": "2026-02-30", "requestId": "invalid-date-1234"],
+        ] {
+            try expect(!plannedBridge.handle(body: rejected, sourceURL: URL(string: "https://studio.example.com/today")!, isMainFrame: true, hasUserActivation: true), "rejects an unbound or invalid plan date/category pair")
+        }
+        try expect(plannedStarts.count == 1, "does not start a writer for injected planner ownership")
+
         let admission = StudioWriterAdmission()
         try expect(admission.begin(category: "sports", requestId: "request-12345678"), "admits the first writer")
         try expect(!admission.begin(category: "anime", requestId: "request-87654321"), "rejects a second writer while one is active")
@@ -254,10 +275,73 @@ struct StudioBridgeTests {
         try expect(waitUntil { plans.last?["date"] as? String == "2026-10-03" }, "runs and parses the existing plan-snapshot protocol after an explicit refresh")
         try expect(plans.last?["requestId"] as? String == "refresh-plan-12345", "correlates the sanitized planner snapshot")
         try expect((plans.last?["tasks"] as? [[String: Any]])?.count == 3, "delivers exactly three validated local v1 tasks")
+        try expect(planner.allowsPlannedWrite(category: "anime", planDate: "2026-10-03"), "binds an actionable category to the latest validated plan date")
+        try expect(!planner.allowsPlannedWrite(category: "sports", planDate: "2026-10-03"), "does not authorize writing an already delivered plan task")
+        try expect(!planner.allowsPlannedWrite(category: "anime", planDate: "2026-10-04"), "does not authorize a stale or injected plan date")
         let preservedAfterRefresh = try Data(contentsOf: preservedURL)
         try expect(preservedAfterRefresh == preserved, "reads the planner state without rewriting its bytes")
         try expect(!FileManager.default.fileExists(atPath: plannerRoot.appendingPathComponent("writer-started").path), "planner refresh never starts the writer action")
         planner.shutdown()
+
+        let plannedWriterRoot = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("omnilede-planned-writer-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: plannedWriterRoot) }
+        try FileManager.default.createDirectory(at: plannedWriterRoot, withIntermediateDirectories: true)
+        try """
+        #!/bin/bash
+        printf '%s' "$OMNILEDE_PLAN_DATE" > "$PWD/received-plan-date"
+        printf '%s\n' '@omnilede {"status":"completed","stage":"delivery-verification","percent":100,"deliveryStatus":"delivered"}'
+        """.write(to: plannedWriterRoot.appendingPathComponent("Start OmniLede.command"), atomically: true, encoding: .utf8)
+        let plannedWriterConfiguration = try StudioConfiguration(studioURL: "https://studio.example.com", projectPath: plannedWriterRoot.path)
+        let plannedWriter = LocalWriterController(configuration: plannedWriterConfiguration) { _ in }
+        plannedWriter.perform(.write(category: "anime", requestId: "planned-run-12345", planDate: "2026-10-03"))
+        let receivedPlanDate = plannedWriterRoot.appendingPathComponent("received-plan-date")
+        try expect(waitUntil { FileManager.default.fileExists(atPath: receivedPlanDate.path) }, "starts an explicitly bound daily-plan writer")
+        let receivedDate = try String(contentsOf: receivedPlanDate, encoding: .utf8)
+        try expect(receivedDate == "2026-10-03", "passes the exact daily-plan date to local-writer")
+
+        let categoryWriterRoot = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("omnilede-category-writer-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: categoryWriterRoot) }
+        try FileManager.default.createDirectory(at: categoryWriterRoot, withIntermediateDirectories: true)
+        try """
+        #!/bin/bash
+        printf '%s' "${OMNILEDE_PLAN_DATE-unset}" > "$PWD/category-plan-date"
+        printf '%s\n' '@omnilede {"status":"completed","stage":"delivery-verification","percent":100,"deliveryStatus":"delivered"}'
+        """.write(to: categoryWriterRoot.appendingPathComponent("Start OmniLede.command"), atomically: true, encoding: .utf8)
+        setenv("OMNILEDE_PLAN_DATE", "2026-10-03", 1)
+        let categoryWriterConfiguration = try StudioConfiguration(studioURL: "https://studio.example.com", projectPath: categoryWriterRoot.path)
+        let categoryWriter = LocalWriterController(configuration: categoryWriterConfiguration) { _ in }
+        categoryWriter.perform(.write(category: "sports", requestId: "category-run-1234"))
+        let categoryPlanDate = categoryWriterRoot.appendingPathComponent("category-plan-date")
+        try expect(waitUntil { FileManager.default.fileExists(atPath: categoryPlanDate.path) }, "starts a Categories writer without planner ownership")
+        let receivedCategoryDate = try String(contentsOf: categoryPlanDate, encoding: .utf8)
+        unsetenv("OMNILEDE_PLAN_DATE")
+        try expect(receivedCategoryDate == "unset", "an undated Categories write cannot inherit or mutate daily-plan state")
+
+        let cancelRoot = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("omnilede-planner-cancel-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: cancelRoot) }
+        try FileManager.default.createDirectory(at: cancelRoot.appendingPathComponent("node_modules"), withIntermediateDirectories: true)
+        try FileManager.default.copyItem(
+            at: URL(fileURLWithPath: FileManager.default.currentDirectoryPath).appendingPathComponent("Start OmniLede.command"),
+            to: cancelRoot.appendingPathComponent("Start OmniLede.command")
+        )
+        let slowPlanner = cancelRoot.appendingPathComponent("slow-planner.py")
+        try """
+        #!/usr/bin/python3
+        import pathlib, time
+        pathlib.Path("planner-started").touch()
+        time.sleep(1.0)
+        pathlib.Path("planner-wrote-after-shutdown").touch()
+        """.write(to: slowPlanner, atomically: true, encoding: .utf8)
+        try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: slowPlanner.path)
+        setenv("OMNILEDE_PLANNER_EXECUTABLE", slowPlanner.path, 1)
+        defer { unsetenv("OMNILEDE_PLANNER_EXECUTABLE") }
+        let cancelConfiguration = try StudioConfiguration(studioURL: "https://studio.example.com", projectPath: cancelRoot.path)
+        let cancelPlanner = LocalPlannerController(configuration: cancelConfiguration) { _ in }
+        cancelPlanner.refresh(requestId: "cancel-plan-12345")
+        try expect(waitUntil { FileManager.default.fileExists(atPath: cancelRoot.appendingPathComponent("planner-started").path) }, "starts the real planner child")
+        cancelPlanner.shutdown()
+        _ = RunLoop.current.run(mode: .default, before: Date().addingTimeInterval(1.3))
+        try expect(!FileManager.default.fileExists(atPath: cancelRoot.appendingPathComponent("planner-wrote-after-shutdown").path), "shutdown terminates the actual planner child before it can continue")
         print("Studio bridge security tests passed")
     }
 }

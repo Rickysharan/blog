@@ -8,7 +8,7 @@ enum StudioWriterCategory: String, CaseIterable {
 }
 
 enum StudioBridgeCommand: Equatable {
-    case write(category: String, requestId: String)
+    case write(category: String, requestId: String, planDate: String? = nil)
     case cancel(requestId: String)
     case refresh(requestId: String)
 }
@@ -16,11 +16,18 @@ enum StudioBridgeCommand: Equatable {
 final class StudioBridgePolicy {
     static let categories = Set(StudioWriterCategory.allCases.map(\.rawValue))
     private let configuration: StudioConfiguration
+    private let allowsPlannedWrite: (String, String) -> Bool
     private let start: (StudioBridgeCommand) -> Void
     private let reject: (String) -> Void
 
-    init(configuration: StudioConfiguration, start: @escaping (StudioBridgeCommand) -> Void, reject: @escaping (String) -> Void) {
+    init(
+        configuration: StudioConfiguration,
+        allowsPlannedWrite: @escaping (String, String) -> Bool = { _, _ in false },
+        start: @escaping (StudioBridgeCommand) -> Void,
+        reject: @escaping (String) -> Void
+    ) {
         self.configuration = configuration
+        self.allowsPlannedWrite = allowsPlannedWrite
         self.start = start
         self.reject = reject
     }
@@ -32,13 +39,20 @@ final class StudioBridgePolicy {
         guard hasUserActivation else { return denied("rejected-user-activation") }
         guard let body = body as? [String: Any], let action = body["action"] as? String else { return denied("rejected-message") }
         guard ["write", "cancel", "refresh"].contains(action) else { return denied("rejected-action") }
-        let allowedKeys: Set<String> = action == "write" ? ["action", "category", "requestId"] : ["action", "requestId"]
+        let hasPlanDate = body["planDate"] != nil
+        let allowedKeys: Set<String> = action == "write"
+            ? (hasPlanDate ? ["action", "category", "planDate", "requestId"] : ["action", "category", "requestId"])
+            : ["action", "requestId"]
         guard Set(body.keys) == allowedKeys else { return denied("rejected-message") }
         guard let requestId = body["requestId"] as? String, Self.validRequestId(requestId) else { return denied("rejected-request-id") }
         switch action {
         case "write":
             guard let category = body["category"] as? String, Self.categories.contains(category) else { return denied("rejected-category") }
-            start(.write(category: category, requestId: requestId))
+            let planDate = body["planDate"] as? String
+            if hasPlanDate {
+                guard let planDate, Self.validPlanDate(planDate), allowsPlannedWrite(category, planDate) else { return denied("rejected-plan-binding") }
+            }
+            start(.write(category: category, requestId: requestId, planDate: planDate))
         case "cancel": start(.cancel(requestId: requestId))
         default: start(.refresh(requestId: requestId))
         }
@@ -51,6 +65,18 @@ final class StudioBridgePolicy {
         guard (8...128).contains(value.count) else { return false }
         let allowed = Set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._:-".utf8)
         return value.utf8.allSatisfy(allowed.contains)
+    }
+
+    private static func validPlanDate(_ value: String) -> Bool {
+        guard value.range(of: "^\\d{4}-\\d{2}-\\d{2}$", options: .regularExpression) != nil else { return false }
+        let formatter = DateFormatter()
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        formatter.dateFormat = "yyyy-MM-dd"
+        formatter.isLenient = false
+        guard let date = formatter.date(from: value) else { return false }
+        return formatter.string(from: date) == value
     }
 }
 
@@ -161,7 +187,7 @@ final class LocalWriterController {
 
     func perform(_ command: StudioBridgeCommand) {
         switch command {
-        case let .write(category, requestId): start(category: category, requestId: requestId)
+        case let .write(category, requestId, planDate): start(category: category, requestId: requestId, planDate: planDate)
         case let .cancel(requestId): cancel(requestId: requestId)
         case .refresh: break
         }
@@ -171,7 +197,7 @@ final class LocalWriterController {
         if let requestId = admission.activeRequestId { cancel(requestId: requestId) }
     }
 
-    private func start(category: String, requestId: String) {
+    private func start(category: String, requestId: String, planDate: String?) {
         guard admission.begin(category: category, requestId: requestId) else {
             emit(
                 ["phase": "already-running", "progress": 0, "etaSeconds": NSNull(), "delivery": "not-delivered", "error": "One article is already being written."],
@@ -200,6 +226,8 @@ final class LocalWriterController {
         environment["OMNILEDE_CATEGORY"] = category
         environment["OMNILEDE_START_NEW"] = "true"
         environment["OMNILEDE_DESKTOP"] = "true"
+        environment.removeValue(forKey: "OMNILEDE_PLAN_DATE")
+        if let planDate { environment["OMNILEDE_PLAN_DATE"] = planDate }
         task.environment = environment
         task.standardOutput = output
         task.standardError = output
@@ -354,6 +382,7 @@ final class LocalPlannerController {
     private var process: Process?
     private var output = Data()
     private var overflowed = false
+    private var latestSnapshot: DailyPlanSnapshot?
 
     init(configuration: StudioConfiguration, sink: @escaping ([String: Any]) -> Void) {
         self.configuration = configuration
@@ -363,8 +392,11 @@ final class LocalPlannerController {
 
     func refresh(requestId: String) {
         guard process?.isRunning != true else { return }
+        lock.lock()
         output = Data()
         overflowed = false
+        latestSnapshot = nil
+        lock.unlock()
         let task = Process()
         let pipe = Pipe()
         task.executableURL = URL(fileURLWithPath: "/bin/bash")
@@ -387,6 +419,13 @@ final class LocalPlannerController {
     }
 
     func shutdown() { if process?.isRunning == true { process?.terminate() } }
+
+    func allowsPlannedWrite(category: String, planDate: String) -> Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        guard let snapshot = latestSnapshot, snapshot.date == planDate else { return false }
+        return snapshot.tasks.contains { $0.category == category && $0.status.isActionable }
+    }
 
     private static func localDate() -> String {
         let formatter = DateFormatter()
@@ -416,14 +455,21 @@ final class LocalPlannerController {
         let invalid = overflowed
         lock.unlock()
         var payload: [String: Any]?
+        var acceptedSnapshot: DailyPlanSnapshot?
         if !invalid {
             for line in String(decoding: bytes, as: UTF8.self).split(separator: "\n", omittingEmptySubsequences: true) {
                 guard line.hasPrefix("@omnilede-plan ") else { continue }
                 let raw = String(line.dropFirst("@omnilede-plan ".count))
                 guard let data = raw.data(using: .utf8), let snapshot = try? JSONDecoder().decode(DailyPlanSnapshot.self, from: data) else { continue }
-                payload = StudioPlanSanitizer().payload(snapshot: snapshot, requestId: requestId)
+                if let sanitized = StudioPlanSanitizer().payload(snapshot: snapshot, requestId: requestId) {
+                    payload = sanitized
+                    acceptedSnapshot = snapshot
+                }
             }
         }
+        lock.lock()
+        latestSnapshot = finished.terminationStatus == 0 ? acceptedSnapshot : nil
+        lock.unlock()
         DispatchQueue.main.async { [weak self] in
             guard let self, process === finished else { return }
             process = nil
@@ -459,7 +505,9 @@ final class StudioBridge: NSObject, WKScriptMessageHandler {
         }
         self.writer = controller
         self.planner = planner
-        self.policy = StudioBridgePolicy(configuration: configuration, start: { command in
+        self.policy = StudioBridgePolicy(configuration: configuration, allowsPlannedWrite: { category, planDate in
+            planner.allowsPlannedWrite(category: category, planDate: planDate)
+        }, start: { command in
             if case let .refresh(requestId) = command { planner.refresh(requestId: requestId) }
             else { controller.perform(command) }
         }) { reason in
@@ -480,7 +528,8 @@ final class StudioBridge: NSObject, WKScriptMessageHandler {
         guard let webView else { return }
         let action = (message.body as? [String: Any])?["action"] as? String ?? ""
         let category = (message.body as? [String: Any])?["category"] as? String ?? ""
-        guard let expectedData = try? JSONSerialization.data(withJSONObject: ["action": action, "category": category]),
+        let planDate = (message.body as? [String: Any])?["planDate"] as? String ?? ""
+        guard let expectedData = try? JSONSerialization.data(withJSONObject: ["action": action, "category": category, "planDate": planDate]),
               let expected = String(data: expectedData, encoding: .utf8) else { return }
         let activationCheck = """
         (() => {
@@ -493,6 +542,9 @@ final class StudioBridge: NSObject, WKScriptMessageHandler {
             && navigator.userActivation.isActive === true
             && button.dataset.omniledeNativeAction === expected.action
             && (expected.action !== 'write' || button.dataset.omniledeCategory === expected.category)
+            && (expected.action !== 'write' || (expected.planDate
+              ? button.dataset.omniledePlanDate === expected.planDate
+              : button.dataset.omniledePlanDate === undefined))
             && rect.width > 0 && rect.height > 0;
         })()
         """

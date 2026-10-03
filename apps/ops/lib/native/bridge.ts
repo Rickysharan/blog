@@ -11,7 +11,7 @@ declare global {
 }
 
 export type NativeAction =
-  | { action: "write"; category: CategorySlug; requestId: string }
+  | { action: "write"; category: CategorySlug; requestId: string; planDate?: string }
   | { action: "cancel" | "refresh"; requestId: string };
 
 export interface NativeWriterStatus {
@@ -42,6 +42,8 @@ export interface NativePlanSnapshot {
 
 const requestIdPattern = /^[A-Za-z0-9._:-]{8,128}$/;
 const phasePattern = /^[a-z][a-z0-9-]{0,63}$/;
+const validPlanDate = (value: string) => /^\d{4}-\d{2}-\d{2}$/.test(value)
+  && new Date(`${value}T00:00:00.000Z`).toISOString().slice(0, 10) === value;
 
 export function hasNativeWriter(): boolean {
   return typeof window !== "undefined"
@@ -52,6 +54,7 @@ export function hasNativeWriter(): boolean {
 export function postNativeAction(action: NativeAction): boolean {
   if (!requestIdPattern.test(action.requestId)) throw new Error("A valid native request ID is required.");
   if (action.action === "write" && !isCategorySlug(action.category)) throw new Error("A supported category is required.");
+  if (action.action === "write" && action.planDate !== undefined && !validPlanDate(action.planDate)) throw new Error("A valid plan date is required.");
   if (!hasNativeWriter()) return false;
   window.webkit!.messageHandlers!.omnilede!.postMessage(action);
   return true;
@@ -84,9 +87,7 @@ export function readNativePlanSnapshot(event: Event): NativePlanSnapshot | null 
   if (!(event instanceof CustomEvent) || !event.detail || typeof event.detail !== "object") return null;
   const value = event.detail as Record<string, unknown>;
   const tasks = value.tasks;
-  const validDate = typeof value.date === "string"
-    && /^\d{4}-\d{2}-\d{2}$/.test(value.date)
-    && new Date(`${value.date}T00:00:00.000Z`).toISOString().slice(0, 10) === value.date;
+  const validDate = typeof value.date === "string" && validPlanDate(value.date);
   const validCount = (candidate: unknown) => typeof candidate === "number" && Number.isInteger(candidate) && candidate >= 0;
   if (!requestIdPattern.test(String(value.requestId ?? "")) || !validDate
     || !validCount(value.completedCount) || value.totalTasks !== 3 || !validCount(value.draftCount) || !validCount(value.publishedCount)

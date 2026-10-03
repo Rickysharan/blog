@@ -54,12 +54,58 @@ it("refreshes and consumes the read-only Mac daily plan only after an explicit n
   expect(screen.getByText(/1 of 3 written/i)).toBeInTheDocument();
   expect(screen.getByText(/2 drafts · 24 published/i)).toBeInTheDocument();
   expect(screen.getAllByRole("listitem", { name: /mac plan/i })).toHaveLength(3);
-  expect(screen.queryByRole("button", { name: /start writing/i })).not.toBeInTheDocument();
+  const animeStart = screen.getByRole("button", { name: /start writing anime/i });
+  expect(animeStart).toHaveAttribute("data-omnilede-native-action", "write");
+  expect(animeStart).toHaveAttribute("data-omnilede-category", "anime");
+  expect(animeStart).toHaveAttribute("data-omnilede-plan-date", "2026-10-03");
+  fireEvent.click(animeStart);
+  expect(postMessage).toHaveBeenLastCalledWith({
+    action: "write", category: "anime", planDate: "2026-10-03", requestId: "refresh-12345678",
+  });
+  expect(screen.getByRole("button", { name: /try again finance/i })).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: /start writing sports/i })).not.toBeInTheDocument();
+});
+
+it("accepts only this mounted instance's latest requested plan and shows refreshed outcomes", async () => {
+  window.__OMNILEDE_NATIVE__ = { available: true };
+  window.webkit = { messageHandlers: { omnilede: { postMessage } } };
+  const first = render(<TaskList initialTasks={[task]} fetcher={fetcher} nativeRequestId={() => "first-refresh-1234"} />);
+  fireEvent.click(screen.getByRole("button", { name: /refresh from this mac/i }));
+  first.unmount();
+
+  const ids = ["second-refresh-123", "third-refresh-1234"];
+  render(<TaskList initialTasks={[task]} fetcher={fetcher} nativeRequestId={() => ids.shift()!} />);
+  const stalePlan = {
+    requestId: "first-refresh-1234", date: "2026-10-03", completedCount: 1, totalTasks: 3,
+    draftCount: 2, publishedCount: 24,
+    tasks: [
+      { category: "anime", label: "Anime", reason: "Least recent coverage", status: "todo" },
+      { category: "sports", label: "Sports", reason: "Draft waiting for review", status: "draft-ready" },
+      { category: "finance", label: "Finance", reason: "Saved work needs attention", status: "needs-attention" },
+    ],
+  };
+  window.dispatchEvent(new CustomEvent(NATIVE_PLAN_EVENT, { detail: stalePlan }));
+  expect(screen.queryByRole("heading", { name: /mac daily plan/i })).not.toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole("button", { name: /refresh from this mac/i }));
+  window.dispatchEvent(new CustomEvent(NATIVE_PLAN_EVENT, { detail: stalePlan }));
+  expect(screen.queryByRole("heading", { name: /mac daily plan/i })).not.toBeInTheDocument();
+  window.dispatchEvent(new CustomEvent(NATIVE_PLAN_EVENT, { detail: { ...stalePlan, requestId: "second-refresh-123" } }));
+  expect(await screen.findByText(/1 of 3 written/i)).toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole("button", { name: /refresh from this mac/i }));
+  window.dispatchEvent(new CustomEvent(NATIVE_PLAN_EVENT, { detail: {
+    ...stalePlan, requestId: "third-refresh-1234", completedCount: 2,
+    tasks: stalePlan.tasks.map((item) => item.category === "anime" ? { ...item, status: "draft-ready" } : item),
+  } }));
+  expect(await screen.findByText(/2 of 3 written/i)).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: /start writing anime/i })).not.toBeInTheDocument();
 });
 
 it("does not expose Mac planner refresh in an ordinary browser", () => {
   render(<TaskList initialTasks={[task]} fetcher={fetcher} />);
   expect(screen.queryByRole("button", { name: /refresh from this mac/i })).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: /start writing|try again/i })).not.toBeInTheDocument();
   expect(postMessage).not.toHaveBeenCalled();
 });
 
