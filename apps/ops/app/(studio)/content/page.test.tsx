@@ -1,0 +1,12 @@
+import { render, screen } from "@testing-library/react";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
+const d = vi.hoisted(() => ({ auth: vi.fn(), list: vi.fn(), history: vi.fn(), workspace: vi.fn() }));
+vi.mock("../../../lib/auth/operator", () => ({ requireStudioOperator: d.auth }));
+vi.mock("../../../lib/editorial/repository", () => ({ createStudioContentRepository: () => ({ list: d.list }) }));
+vi.mock("../../../lib/publication/history", () => ({ listPublicationHistory: d.history }));
+vi.mock("../../../components/content/content-workspace", () => ({ ContentWorkspace: (props: unknown) => { d.workspace(props); return null; } }));
+import Page from "./page";
+beforeEach(() => { vi.resetAllMocks(); d.auth.mockResolvedValue({}); d.list.mockResolvedValue([]); d.history.mockResolvedValue([]); });
+afterEach(() => vi.unstubAllEnvs());
+it("provides the configured public blog origin for publication links", async () => { vi.stubEnv("NEXT_PUBLIC_BLOG_URL", "https://blog.example"); render(await Page()); expect(d.workspace).toHaveBeenCalledWith(expect.objectContaining({ publicSiteUrl: "https://blog.example" })); });
+it("reports unavailable content without exposing provider details", async () => { d.list.mockRejectedValue(new Error("token")); render(await Page()); expect(screen.getByRole("alert")).toHaveTextContent("Content is temporarily unavailable."); expect(screen.queryByText("token")).not.toBeInTheDocument(); });
