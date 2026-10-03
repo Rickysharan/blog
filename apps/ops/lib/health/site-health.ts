@@ -1,3 +1,5 @@
+import { isIP } from "node:net";
+
 import type { ProviderState } from "@omnilede/contracts";
 
 import { listProviderConnections } from "../tasks/repository";
@@ -64,11 +66,16 @@ export function assessSiteHealth(input: SiteHealthInput): SiteHealthFinding[] {
 
   if (input.providers?.length) {
     for (const provider of input.providers) {
-      const healthy = provider.state === "connected";
+      const checkedTime = provider.lastCheckedAt ? Date.parse(provider.lastCheckedAt) : Number.NaN;
+      const age = Date.parse(input.checkedAt) - checkedTime;
+      const missingTime = !Number.isFinite(checkedTime);
+      const staleConnected = provider.state === "connected" && !missingTime && age > 24 * 60 * 60 * 1_000;
+      const healthy = provider.state === "connected" && !missingTime && !staleConnected;
+      const unavailableConnection = provider.state === "disconnected" || missingTime;
       findings.push({
-        check: `provider:${provider.provider}`, title: `${provider.provider} connection`, state: healthy ? "healthy" : provider.state === "disconnected" ? "unavailable" : "warning",
-        evidence: healthy ? `Connected; last checked ${provider.lastCheckedAt ?? "at an unavailable time"}.` : `Connection state is ${provider.state}; last checked ${provider.lastCheckedAt ?? "never"}.`,
-        affectedUrl: provider.url, checkedAt: input.checkedAt, severity: healthy ? "ok" : provider.state === "disconnected" ? "info" : "warning",
+        check: `provider:${provider.provider}`, title: `${provider.provider} connection`, state: healthy ? "healthy" : unavailableConnection ? "unavailable" : "warning",
+        evidence: healthy ? `Connected; last checked ${provider.lastCheckedAt}.` : staleConnected ? `Connected evidence is stale; last checked ${provider.lastCheckedAt}.` : `Connection state is ${provider.state}; last checked ${provider.lastCheckedAt ?? "never"}.`,
+        affectedUrl: provider.url, checkedAt: input.checkedAt, severity: healthy ? "ok" : unavailableConnection ? "info" : "warning",
         recoveryAction: healthy ? "No action is required; continue scheduled refreshes." : "Reconnect the provider or inspect its last refresh error."
       });
     }
@@ -87,12 +94,77 @@ export function assessSiteHealth(input: SiteHealthInput): SiteHealthFinding[] {
 
 type FetchLike = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
 
+const MAX_HEALTH_RESPONSE_BYTES = 512 * 1024;
+const MAX_REDIRECTS = 3;
+
+function isPrivateHostname(hostname: string): boolean {
+  const host = hostname.toLowerCase().replace(/^\[|\]$/g, "");
+  if (host === "localhost" || host.endsWith(".localhost") || host.endsWith(".local") || host.endsWith(".internal")) return true;
+  if (isIP(host) === 4) {
+    const [a, b] = host.split(".").map(Number);
+    return a === 10 || a === 127 || a === 0 || a >= 224 ||
+      (a === 100 && b >= 64 && b <= 127) || (a === 169 && b === 254) ||
+      (a === 172 && b >= 16 && b <= 31) || (a === 192 && [0, 2, 168].includes(b)) ||
+      (a === 198 && [18, 19, 51].includes(b)) || (a === 203 && b === 0);
+  }
+  if (isIP(host) === 6) return host === "::1" || host === "::" || host.startsWith("::ffff:") || /^f[cd]/.test(host) || /^fe[89ab]/.test(host) || host.startsWith("2001:db8:");
+  return false;
+}
+
+function publicHttpsOrigin(value: string): string {
+  const url = new URL(value);
+  if (url.protocol !== "https:" || url.username || url.password || url.pathname !== "/" || url.search || url.hash || isPrivateHostname(url.hostname)) {
+    throw new Error("Health checks require a public HTTPS origin without a path.");
+  }
+  return url.origin;
+}
+
+async function boundedText(response: Response): Promise<string> {
+  const declared = Number(response.headers.get("content-length"));
+  if (Number.isFinite(declared) && declared > MAX_HEALTH_RESPONSE_BYTES) throw new Error("Response exceeded the safe size limit.");
+  if (!response.body) return "";
+  const reader = response.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let length = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      length += value.byteLength;
+      if (length > MAX_HEALTH_RESPONSE_BYTES) { await reader.cancel(); throw new Error("Response exceeded the safe size limit."); }
+      chunks.push(value);
+    }
+  } finally { reader.releaseLock(); }
+  const bytes = new Uint8Array(length);
+  let offset = 0;
+  for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
+  return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+}
+
+async function fetchApproved(url: string, approvedOrigin: string, fetchImpl: FetchLike, headers?: HeadersInit) {
+  let current = new URL(url);
+  const signal = AbortSignal.timeout(8_000);
+  for (let redirects = 0; redirects <= MAX_REDIRECTS; redirects += 1) {
+    if (current.protocol !== "https:" || current.origin !== approvedOrigin || isPrivateHostname(current.hostname)) throw new Error("Blocked an unsafe health-check redirect.");
+    const response = await fetchImpl(current.toString(), { method: "GET", cache: "no-store", redirect: "manual", headers, signal });
+    if (response.status >= 300 && response.status < 400) {
+      const location = response.headers.get("location");
+      if (!location || redirects === MAX_REDIRECTS) throw new Error("Blocked an invalid health-check redirect chain.");
+      current = new URL(location, current);
+      continue;
+    }
+    return { response, text: await boundedText(response), finalUrl: current.toString() };
+  }
+  throw new Error("Blocked an invalid health-check redirect chain.");
+}
+
 async function probe(url: string, fetchImpl: FetchLike): Promise<HttpEvidence> {
   try {
-    const response = await fetchImpl(url, { method: "GET", cache: "no-store", redirect: "follow", signal: AbortSignal.timeout(8_000) });
+    const { response } = await fetchApproved(url, new URL(url).origin, fetchImpl);
     return { state: response.ok ? "reachable" : "failed", url, status: response.status };
-  } catch {
-    return { state: "failed", url, detail: `The request to ${url} could not be completed.` };
+  } catch (error) {
+    const reason = error instanceof Error && /(redirect|size limit)/i.test(error.message) ? ` ${error.message}` : "";
+    return { state: "failed", url, detail: `The request to ${url} could not be completed.${reason}` };
   }
 }
 
@@ -104,14 +176,9 @@ async function latestNetlifyDeployment(
   if (!config) return undefined;
   try {
     const endpoint = `https://api.netlify.com/api/v1/sites/${encodeURIComponent(config.siteId)}/deploys?per_page=1`;
-    const response = await fetchImpl(endpoint, {
-      method: "GET",
-      cache: "no-store",
-      headers: { authorization: `Bearer ${config.token}`, accept: "application/json" },
-      signal: AbortSignal.timeout(8_000),
-    });
+    const { response, text } = await fetchApproved(endpoint, "https://api.netlify.com", fetchImpl, { authorization: `Bearer ${config.token}`, accept: "application/json" });
     if (!response.ok) return { state: "unavailable", url: publicUrl, detail: `Netlify returned HTTP ${response.status} for the latest deploy check.` };
-    const payload: unknown = await response.json();
+    const payload: unknown = JSON.parse(text);
     if (!Array.isArray(payload) || payload.length === 0 || !payload[0] || typeof payload[0] !== "object") {
       return { state: "unavailable", url: publicUrl, detail: "Netlify did not return a latest deployment." };
     }
@@ -126,8 +193,9 @@ async function latestNetlifyDeployment(
           ? "building"
           : "unavailable";
     return { state, url: publicUrl, deployId: id, detail: `Latest Netlify deploy state is ${rawState}.` };
-  } catch {
-    return { state: "unavailable", url: publicUrl, detail: "The latest Netlify deployment check could not be completed." };
+  } catch (error) {
+    const reason = error instanceof Error && /(redirect|size limit|large)/i.test(error.message) ? ` ${error.message}` : "";
+    return { state: "unavailable", url: publicUrl, detail: `The latest Netlify deployment check could not be completed.${reason}` };
   }
 }
 
@@ -139,8 +207,8 @@ export async function collectSiteHealth(options: {
   netlify?: { siteId: string; token: string };
 } = {}): Promise<SiteHealthFinding[]> {
   const fetchImpl = options.fetchImpl ?? fetch;
-  const publicUrl = new URL(options.publicUrl ?? process.env.NEXT_PUBLIC_BLOG_URL ?? "https://omnilede-news.netlify.app").origin;
-  const studioUrl = new URL(options.studioUrl ?? process.env.NEXT_PUBLIC_STUDIO_URL ?? publicUrl).origin;
+  const publicUrl = publicHttpsOrigin(options.publicUrl ?? process.env.NEXT_PUBLIC_BLOG_URL ?? "https://omnilede-news.netlify.app");
+  const studioUrl = publicHttpsOrigin(options.studioUrl ?? process.env.NEXT_PUBLIC_STUDIO_URL ?? publicUrl);
   const configuredNetlify = options.netlify ?? (
     process.env.BLOG_NETLIFY_SITE_ID && process.env.NETLIFY_READ_TOKEN
       ? { siteId: process.env.BLOG_NETLIFY_SITE_ID, token: process.env.NETLIFY_READ_TOKEN }

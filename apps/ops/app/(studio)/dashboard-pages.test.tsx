@@ -37,10 +37,14 @@ it("renders Today separately from category inventory", async () => {
 });
 
 it("renders every category even when only Sports has content", async () => {
+  d.tasks.mockResolvedValueOnce([{ id: "00000000-0000-4000-8000-000000000001", evidenceKey: "coverage:anime:none", kind: "writing", title: "Write Anime", detail: "No coverage", category: "anime", state: "open", priority: 70, source: "editorial", postponedUntil: null, completedAt: null, createdAt: "2026-10-03T10:00:00.000Z", updatedAt: "2026-10-03T10:00:00.000Z" }]);
   render(await CategoriesPage());
   expect(screen.getAllByRole("row")).toHaveLength(7);
   expect(screen.getByRole("row", { name: /anime 0 0/i })).toBeInTheDocument();
   expect(screen.getByRole("row", { name: /sports 1 1/i })).toBeInTheDocument();
+  expect(screen.getByRole("row", { name: /anime 0 0/i })).toHaveTextContent("open");
+  expect(screen.getAllByText(/Google Analytics · unavailable · Never refreshed/)).toHaveLength(6);
+  expect(screen.getAllByText("None")).toHaveLength(6);
 });
 
 it("renders the evidence-backed Site health view", async () => {

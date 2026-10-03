@@ -54,9 +54,48 @@ describe("assessSiteHealth", () => {
       }
     });
 
-    expect(calls.map(({ url: requested }) => requested)).toEqual(expect.arrayContaining([url, `${url}/sitemap.xml`, `${url}/robots.txt`, "https://api.netlify.com/api/v1/sites/site-1/deploys?per_page=1"]));
+    expect(calls.map(({ url: requested }) => requested)).toEqual(expect.arrayContaining([`${url}/`, `${url}/sitemap.xml`, `${url}/robots.txt`, "https://api.netlify.com/api/v1/sites/site-1/deploys?per_page=1"]));
     expect(calls.find(({ url: requested }) => requested.includes("api.netlify.com"))?.authorization).toBe("Bearer test-only-token");
     expect(findings.find(({ check }) => check === "deployment")).toMatchObject({ state: "healthy", affectedUrl: url, evidence: expect.stringContaining("ready") });
     expect(JSON.stringify(findings)).not.toContain("test-only-token");
+  });
+
+  it("treats connected provider evidence as unavailable, stale, or healthy by freshness", () => {
+    const findings = assessSiteHealth({ checkedAt, publicUrl: url, providers: [
+      { provider: "missing-time", state: "connected", url: "https://studio.example/growth", lastCheckedAt: null },
+      { provider: "old", state: "connected", url: "https://studio.example/search", lastCheckedAt: "2026-10-01T11:59:59.000Z" },
+      { provider: "fresh", state: "connected", url: "https://studio.example/revenue", lastCheckedAt: "2026-10-03T11:30:00.000Z" }
+    ] });
+    expect(findings.find(({ check }) => check === "provider:missing-time")).toMatchObject({ state: "unavailable", severity: "info", evidence: expect.stringMatching(/never|unavailable/i) });
+    expect(findings.find(({ check }) => check === "provider:old")).toMatchObject({ state: "warning", severity: "warning", evidence: expect.stringMatching(/stale/i) });
+    expect(findings.find(({ check }) => check === "provider:fresh")).toMatchObject({ state: "healthy", severity: "ok" });
+  });
+
+  it("blocks cross-origin redirect chains and never requests the redirected destination", async () => {
+    const calls: string[] = [];
+    const findings = await collectSiteHealth({ publicUrl: url, studioUrl: "https://studio.example", now: new Date(checkedAt), fetchImpl: async (input) => {
+      const requested = String(input); calls.push(requested);
+      if (requested === `${url}/`) return new Response(null, { status: 302, headers: { location: "/redirect-hop" } });
+      if (requested === `${url}/redirect-hop`) return new Response(null, { status: 302, headers: { location: "https://127.0.0.1/private" } });
+      return new Response("ok", { status: 200 });
+    } });
+    expect(calls).not.toContain("https://127.0.0.1/private");
+    expect(calls).toContain(`${url}/redirect-hop`);
+    expect(findings.find(({ check }) => check === "public-origin")).toMatchObject({ state: "critical", evidence: expect.stringMatching(/redirect/i) });
+  });
+
+  it("bounds public and Netlify response bodies before parsing", async () => {
+    const oversized = "x".repeat(600_000);
+    const findings = await collectSiteHealth({ publicUrl: url, studioUrl: "https://studio.example", now: new Date(checkedAt), netlify: { siteId: "site-1", token: "test-token" }, fetchImpl: async (input) => {
+      const requested = String(input);
+      if (requested.endsWith("/sitemap.xml") || requested.includes("api.netlify.com")) return new Response(oversized, { status: 200 });
+      return new Response("ok", { status: 200 });
+    } });
+    expect(findings.find(({ check }) => check === "sitemap")).toMatchObject({ state: "critical", evidence: expect.stringMatching(/limit|large/i) });
+    expect(findings.find(({ check }) => check === "deployment")).toMatchObject({ state: "unavailable", evidence: expect.stringMatching(/limit|large/i) });
+  });
+
+  it("rejects private or non-HTTPS configured public probe origins", async () => {
+    await expect(collectSiteHealth({ publicUrl: "http://127.0.0.1:3000" })).rejects.toThrow(/public https origin/i);
   });
 });

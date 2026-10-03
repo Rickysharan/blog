@@ -33,8 +33,14 @@ function unavailable(): Error {
   return new Error("Today tasks are temporarily unavailable.");
 }
 
-export async function listTodayTasks(): Promise<StudioTask[]> {
-  const { data, error } = await createServiceSupabaseClient()
+export async function listTodayTasks(now = new Date()): Promise<StudioTask[]> {
+  const client = createServiceSupabaseClient();
+  const { error: reopenError } = await client.from("studio_tasks")
+    .update({ state: "open", postponed_until: null, completed_at: null })
+    .eq("state", "postponed")
+    .lte("postponed_until", now.toISOString());
+  if (reopenError) throw unavailable();
+  const { data, error } = await client
     .from("studio_tasks").select(columns).order("priority", { ascending: false });
   if (error) throw unavailable();
   return (data ?? []).map((row: DbTask) => fromDb(row));

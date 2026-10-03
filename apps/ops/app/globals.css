@@ -377,6 +377,9 @@ textarea {
 .category-table th, .category-table td { padding: 0.9rem; text-align: left; border-bottom: 1px solid #e3ddcf; }
 .category-table thead th { color: #52665f; font-size: 0.75rem; text-transform: uppercase; }
 .category-table tbody th { color: #173f35; font-family: Georgia, serif; }
+.category-metric { display: grid; gap: 0.3rem; min-width: 12rem; }
+.category-metric small { color: #607169; line-height: 1.4; }
+.category-table ul { margin: 0; padding-left: 1rem; }
 .health-card { border-left: 4px solid #9aa69f; }
 .health-warning { border-left-color: #d19b36; }
 .health-critical { border-left-color: #b74c39; }
