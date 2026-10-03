@@ -1,6 +1,9 @@
 import Link from "next/link";
 
+import { CATEGORIES } from "@omnilede/editorial";
+
 import type { CategorySummary } from "../../lib/editorial/category-summary";
+import { NativeWriterControls } from "../native/writer-controls";
 
 export function CategoryTable({ summaries }: { summaries: CategorySummary[] }) {
   const metric = (item: CategorySummary["views"]) => (
@@ -11,7 +14,6 @@ export function CategoryTable({ summaries }: { summaries: CategorySummary[] }) {
   );
   return (
     <section aria-label="Category coverage">
-      <p className="native-note">Start writing is available in the OmniLede Mac app. Phone users can review and publish delivered drafts.</p>
       <div className="category-table-wrap">
         <table className="category-table">
           <thead><tr><th>Category</th><th>Published</th><th>Drafts</th><th>Latest</th><th>Coverage age</th><th>Task</th><th>Views</th><th>Search clicks</th><th>Warnings</th><th>Action</th></tr></thead>
@@ -28,6 +30,7 @@ export function CategoryTable({ summaries }: { summaries: CategorySummary[] }) {
           ))}</tbody>
         </table>
       </div>
+      <NativeWriterControls categories={CATEGORIES} />
     </section>
   );
 }

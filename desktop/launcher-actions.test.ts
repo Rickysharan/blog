@@ -34,6 +34,19 @@ async function launch(env: Record<string, string>): Promise<void> {
 }
 
 describe("desktop launcher actions", () => {
+  it("rejects an unsupported category before starting the writer", async () => {
+    const fixture = await fixtures();
+    await expect(launch({
+      OMNILEDE_ACTION: "write",
+      OMNILEDE_CATEGORY: "technology",
+      OMNILEDE_DESKTOP: "true",
+      OMNILEDE_WRITER_EXECUTABLE: fixture.writer,
+      LOCAL_WRITER_SYNC: "true",
+      LOCAL_WRITER_REVIEW_URL: "https://example.com/admin/review",
+    })).rejects.toMatchObject({ code: 64 });
+    await expect(readFile(fixture.writerArgs, "utf8")).rejects.toMatchObject({ code: "ENOENT" });
+  });
+
   it("runs only the planner for a snapshot action", async () => {
     const fixture = await fixtures();
 

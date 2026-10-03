@@ -2,6 +2,7 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+umask 077
 if [ ! -d node_modules ]; then npm ci; fi
 mkdir -p .audit
 action="${OMNILEDE_ACTION:-write}"
@@ -23,6 +24,12 @@ fi
 if [ "$action" != "write" ]; then
   echo "Unknown OmniLede action." >&2
   exit 1
+fi
+if [ -n "${OMNILEDE_CATEGORY:-}" ]; then
+  case "$OMNILEDE_CATEGORY" in
+    anime|movies|politics|sports|finance|share-market) ;;
+    *) echo "Unsupported OmniLede category." >&2; exit 64 ;;
+  esac
 fi
 web_pid=""
 writer_pid=""

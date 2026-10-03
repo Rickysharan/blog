@@ -9,6 +9,12 @@
   font-synthesis: none;
 }
 
+.native-writer-controls { margin-top: 1.5rem; padding: 1rem; border: 1px solid var(--line, #d7d9df); border-radius: .75rem; }
+.native-writer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: .75rem; margin-top: 1rem; }
+.native-writer-card { display: flex; flex-direction: column; gap: .5rem; padding: .85rem; background: var(--surface, #fff); border: 1px solid var(--line, #d7d9df); border-radius: .6rem; }
+.native-writer-card progress { width: 100%; }
+.native-writer-actions { display: flex; gap: .5rem; margin-top: auto; }
+
 * {
   box-sizing: border-box;
 }
