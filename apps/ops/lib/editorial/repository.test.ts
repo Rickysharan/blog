@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { createStudioContentRepository } from "./repository";
+import { makeValidMdx } from "../../../../packages/editorial/src/test-fixtures";
+import { createStudioContentRepository, loadStudioEditorialInventory } from "./repository";
 import { parseOpsPublicEnv, parseStudioContentEnv } from "../env";
 
 const environment = {
@@ -48,6 +49,24 @@ describe("Studio content repository", () => {
   it("does not turn a GitHub failure into an empty/local repository", async () => {
     const repository = createStudioContentRepository(environment, async () => new Response(null, { status: 503 }));
     await expect(repository.list()).rejects.toMatchObject({ code: "storage_unavailable" });
+  });
+
+  it("loads the versioned inventory through the same exact repository configuration", async () => {
+    const calls: string[] = [];
+    const head = "a".repeat(40);
+    const tree = "b".repeat(40);
+    const source = makeValidMdx({ category: "sports", slug: "sports-title" });
+    const responses = [
+      Response.json({ object: { sha: head } }), Response.json({ tree: { sha: tree } }),
+      Response.json({ truncated: false, tree: [{ path: "content/articles/sports/sports-title.mdx", mode: "100644", type: "blob", sha: "c".repeat(40) }] }),
+      Response.json({ encoding: "base64", content: Buffer.from(source).toString("base64") })
+    ];
+    const inventory = await loadStudioEditorialInventory(environment, async (input) => {
+      calls.push(String(input));
+      return responses.shift()!;
+    });
+    expect(inventory).toMatchObject({ source: "github", version: head, items: [expect.objectContaining({ category: "sports", kind: "published" })] });
+    expect(calls).toHaveLength(4);
   });
 
   it("strips unrelated private content configuration from public parsing", () => {

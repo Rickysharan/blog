@@ -4,6 +4,7 @@ import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import {
   getDailyPlanSnapshot,
+  readDailyPlanV1,
   recordDailyPlanRun,
   replaceDailyPlanTask,
 } from "@/lib/desktop/daily-plan";
@@ -78,6 +79,30 @@ function completedResult(category: string, filename: string): LocalRunResult {
 }
 
 describe("desktop daily plan", () => {
+  it("reads an existing v1 plan for Studio import without rewriting a byte", async () => {
+    const root = await temporaryRoot();
+    const pathname = path.join(root, ".audit", "daily-plans", "2026-10-02.json");
+    const bytes = JSON.stringify({
+      version: 1,
+      date: "2026-10-02",
+      createdAt: "2026-10-02T08:00:00.000Z",
+      updatedAt: "2026-10-02T08:00:00.000Z",
+      tasks: ["anime", "movies", "sports"].map((category, index) => ({
+        category,
+        selectedAt: `2026-10-02T08:0${index}:00.000Z`,
+        reason: `Task ${index + 1}`,
+        outcome: "todo"
+      }))
+    }, null, 4) + "\n\n";
+    await mkdir(path.dirname(pathname), { recursive: true });
+    await writeFile(pathname, bytes, "utf8");
+
+    const imported = await readDailyPlanV1({ auditRoot: path.join(root, ".audit"), date: "2026-10-02" });
+
+    expect(imported?.tasks).toHaveLength(3);
+    await expect(readFile(pathname, "utf8")).resolves.toBe(bytes);
+  });
+
   it("ranks oldest coverage, then lower count, and keeps the same three tasks all day", async () => {
     const root = await temporaryRoot();
     const contentRoot = path.join(root, "content");

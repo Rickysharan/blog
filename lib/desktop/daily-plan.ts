@@ -84,6 +84,8 @@ const dailyPlanSchema = z.object({
 type StoredTask = z.infer<typeof storedTaskSchema>;
 type DailyPlan = z.infer<typeof dailyPlanSchema>;
 
+export type DailyPlanV1 = Readonly<DailyPlan>;
+
 interface ResumableRun {
   category: CategorySlug;
   state: LocalRunState;
@@ -121,6 +123,12 @@ async function readPlan(pathname: string): Promise<DailyPlan | null> {
   } catch {
     throw new Error("Daily plan is malformed; its saved file was preserved.");
   }
+}
+
+/** Reads the existing local writer plan without reconciling or rewriting its file. */
+export async function readDailyPlanV1(input: { auditRoot: string; date: string }): Promise<DailyPlanV1 | null> {
+  const date = dateSchema.parse(input.date);
+  return readPlan(planPath(input.auditRoot, date));
 }
 
 async function savePlan(pathname: string, plan: DailyPlan): Promise<void> {

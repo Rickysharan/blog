@@ -2,7 +2,9 @@ import "server-only";
 
 import {
   createGitHubDraftRepository,
+  loadGitHubEditorialInventory,
   type DraftRepository,
+  type EditorialInventory,
   type FetchLike,
 } from "@omnilede/editorial";
 
@@ -22,4 +24,13 @@ export function createStudioContentRepository(
   const { GITHUB_REPOSITORY: repository, GITHUB_CONTENT_BRANCH: branch, GITHUB_CONTENT_TOKEN: token } =
     parseStudioContentEnv(environment);
   return createGitHubDraftRepository({ repository, branch, token, fetchImpl });
+}
+
+export function loadStudioEditorialInventory(
+  environment: Environment = process.env,
+  fetchImpl?: FetchLike,
+): Promise<EditorialInventory> {
+  const { GITHUB_REPOSITORY: repository, GITHUB_CONTENT_BRANCH: branch, GITHUB_CONTENT_TOKEN: token } =
+    parseStudioContentEnv(environment);
+  return loadGitHubEditorialInventory({ repository, branch, token, fetchImpl });
 }
