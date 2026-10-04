@@ -14,7 +14,9 @@ const SITE_STATES = ["REQUIRES_REVIEW", "GETTING_READY", "READY", "NEEDS_ATTENTI
 const ALERT_SEVERITIES = ["INFO", "WARNING", "SEVERE"] as const;
 const POLICY_ACTIONS = ["WARNED", "AD_SERVING_RESTRICTED", "AD_SERVING_DISABLED", "AD_SERVED_WITH_CLICK_CONFIRMATION", "AD_PERSONALIZATION_RESTRICTED"] as const;
 const METRICS = ["ESTIMATED_EARNINGS", "IMPRESSIONS", "CLICKS", "PAGE_VIEWS_RPM"] as const;
+const METRIC_TYPES = ["METRIC_CURRENCY", "METRIC_TALLY", "METRIC_TALLY", "METRIC_CURRENCY"] as const;
 const SELLER_RECORD_SUFFIX = ", DIRECT, f08c47fec0942fa0";
+const MAX_ADS_TXT_BYTES = 65_536;
 
 type AccountStatus = (typeof ACCOUNT_STATES)[number];
 type SiteStatus = (typeof SITE_STATES)[number];
@@ -65,21 +67,93 @@ function parseMetrics(value: unknown): AdsenseReport["metrics"] {
   if (!Array.isArray(report.headers) || report.headers.length !== METRICS.length) throw new Error("Invalid AdSense report headers");
   const headers = report.headers.map((header, index) => {
     const row = record(header, "report header");
-    if (row.name !== METRICS[index]) throw new Error("Invalid AdSense report headers");
+    if (row.name !== METRICS[index] || row.type !== METRIC_TYPES[index]) throw new Error("Invalid AdSense report headers");
+    if (METRIC_TYPES[index] === "METRIC_TALLY" && row.currencyCode !== undefined) throw new Error("Invalid AdSense report headers");
     return row;
   });
-  const total = report.totals === undefined ? null : record(report.totals, "report totals");
-  const cells = total?.cells;
-  if (cells !== undefined && (!Array.isArray(cells) || cells.length !== METRICS.length)) throw new Error("Invalid AdSense report totals");
-  const values = (cells ?? Array.from({ length: METRICS.length }, () => ({}))).map((cell) => record(cell, "report cell").value);
-  const currencies = [headers[0]!.currencyCode, headers[3]!.currencyCode].filter((item): item is string => typeof item === "string");
-  if (currencies.some((currency) => !/^[A-Z]{3}$/.test(currency)) || new Set(currencies).size > 1) throw new Error("Invalid AdSense report currency");
+
+  const parseRow = (value: unknown, label: string): Array<number | null> => {
+    const cells = record(value, label).cells;
+    if (!Array.isArray(cells) || cells.length !== METRICS.length) throw new Error(`Invalid AdSense ${label}`);
+    return cells.map((cell, index) => parseMetric(record(cell, `${label} cell`).value, index === 1 || index === 2));
+  };
+  if (report.rows !== undefined) {
+    if (!Array.isArray(report.rows) || report.rows.length > 1) throw new Error("Invalid AdSense report rows");
+    report.rows.forEach((row) => parseRow(row, "report row"));
+  }
+  const values = report.totals === undefined
+    ? [null, null, null, null]
+    : parseRow(report.totals, "report totals");
+
+  const parseCurrency = (value: unknown, required: boolean): string | null => {
+    if (value === undefined && !required) return null;
+    if (typeof value !== "string" || !/^[A-Z]{3}$/.test(value)) throw new Error("Invalid AdSense report currency");
+    return value;
+  };
+  const earningsCurrency = parseCurrency(headers[0]!.currencyCode, values[0] !== null);
+  const rpmCurrency = parseCurrency(headers[3]!.currencyCode, values[3] !== null);
+  if (earningsCurrency && rpmCurrency && earningsCurrency !== rpmCurrency) throw new Error("Invalid AdSense report currency");
   return {
-    estimatedEarnings: parseMetric(values[0], false),
-    impressions: parseMetric(values[1], true),
-    clicks: parseMetric(values[2], true),
-    pageRpm: parseMetric(values[3], false),
-    currency: currencies[0] ?? null
+    estimatedEarnings: values[0]!,
+    impressions: values[1]!,
+    clicks: values[2]!,
+    pageRpm: values[3]!,
+    currency: earningsCurrency ?? rpmCurrency
+  };
+}
+
+async function readBoundedAdsTxt(response: Response): Promise<string> {
+  const contentLength = response.headers.get("content-length");
+  if (contentLength !== null && (!/^\d+$/.test(contentLength) || Number(contentLength) > MAX_ADS_TXT_BYTES)) {
+    throw new Error("Invalid ads.txt response size");
+  }
+  if (!response.body) throw new Error("Invalid ads.txt response body");
+  const reader = response.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let length = 0;
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      length += value.byteLength;
+      if (length > MAX_ADS_TXT_BYTES) {
+        await reader.cancel();
+        throw new Error("Invalid ads.txt response size");
+      }
+      chunks.push(value);
+    }
+  } catch {
+    throw new Error("Invalid ads.txt response stream");
+  } finally {
+    reader.releaseLock();
+  }
+  const bytes = new Uint8Array(length);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  try {
+    return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+  } catch {
+    throw new Error("Invalid ads.txt response encoding");
+  }
+}
+
+type AdsTxtFetch = (input: string | URL | Request, init?: RequestInit) => Promise<Response>;
+
+export function createAdsTxtFetcher(blogOrigin: string, fetcher: AdsTxtFetch = fetch, timeoutMs = 5_000) {
+  const origin = new URL(blogOrigin);
+  if (origin.protocol !== "https:" || origin.origin !== blogOrigin || origin.username || origin.password) throw new Error("Invalid ads.txt origin");
+  const boundedTimeout = Math.min(Math.max(timeoutMs, 1), 10_000);
+  return async (): Promise<AdsenseRawResponses["adsTxt"]> => {
+    const response = await fetcher(`${blogOrigin}/ads.txt`, {
+      cache: "no-store",
+      headers: { accept: "text/plain" },
+      signal: AbortSignal.timeout(boundedTimeout)
+    });
+    const text = response.status === 200 ? await readBoundedAdsTxt(response) : "";
+    return { status: response.status, contentType: response.headers.get("content-type"), text };
   };
 }
 
@@ -200,10 +274,7 @@ export async function fetchAdsenseReport(preset: ReportPreset): Promise<ReportEn
     publisherId: config.publisherId,
     blogOrigin: config.blogOrigin,
     request,
-    fetchAdsTxt: async () => {
-      const response = await fetch(`${config.blogOrigin}/ads.txt`, { cache: "no-store", headers: { accept: "text/plain" } });
-      return { status: response.status, contentType: response.headers.get("content-type"), text: await response.text() };
-    },
+    fetchAdsTxt: createAdsTxtFetcher(config.blogOrigin),
     cache: { read: readReport, success: writeSuccessfulReport, failure: markReportFailure }
   })(preset);
 }

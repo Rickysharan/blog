@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { ReportEnvelope } from "@omnilede/contracts";
 
-import { createAdsenseProvider, transformAdsenseResponses } from "./adsense";
+import { createAdsenseProvider, createAdsTxtFetcher, transformAdsenseResponses } from "./adsense";
 
 const responses = () => ({
   accounts: { accounts: [{ name: "accounts/pub-1234567890123456", displayName: "OmniLede", state: "READY", pendingTasks: [] }] },
@@ -42,6 +42,30 @@ describe("AdSense transforms", () => {
       publisherId: "pub-1234567890123456",
       blogOrigin: "https://omnilede.example"
     }).metrics).toEqual({ estimatedEarnings: 0, impressions: null, clicks: 0, pageRpm: null, currency: "GBP" });
+  });
+
+  it("requires exact official metric header types and valid consistent currency for money values", () => {
+    const wrongType = responses();
+    wrongType.report.headers[1]!.type = "METRIC_DECIMAL";
+    expect(() => transformAdsenseResponses(wrongType, { publisherId: "pub-1234567890123456", blogOrigin: "https://omnilede.example" })).toThrow(/header/i);
+
+    const missingCurrency = responses();
+    delete (missingCurrency.report.headers[0] as { currencyCode?: string }).currencyCode;
+    expect(() => transformAdsenseResponses(missingCurrency, { publisherId: "pub-1234567890123456", blogOrigin: "https://omnilede.example" })).toThrow(/currency/i);
+
+    const mismatchedCurrency = responses();
+    mismatchedCurrency.report.headers[3]!.currencyCode = "USD";
+    expect(() => transformAdsenseResponses(mismatchedCurrency, { publisherId: "pub-1234567890123456", blogOrigin: "https://omnilede.example" })).toThrow(/currency/i);
+
+    const invalidCurrency = responses();
+    invalidCurrency.report.headers[0]!.currencyCode = "gbp";
+    expect(() => transformAdsenseResponses(invalidCurrency, { publisherId: "pub-1234567890123456", blogOrigin: "https://omnilede.example" })).toThrow(/currency/i);
+  });
+
+  it("rejects malformed report rows before the response can enter cache", () => {
+    const malformed = responses();
+    Object.assign(malformed.report, { rows: [{ cells: [{ value: "12.34" }] }] });
+    expect(() => transformAdsenseResponses(malformed, { publisherId: "pub-1234567890123456", blogOrigin: "https://omnilede.example" })).toThrow(/row/i);
   });
 
   it("rejects foreign accounts, domains, unknown states, malformed metrics and oversized provider lists", () => {
@@ -99,5 +123,49 @@ describe("AdSense provider", () => {
     expect(urls.every((url) => url.startsWith("https://adsense.googleapis.com/v2/"))).toBe(true);
     expect(urls.find((url) => url.includes("reports:generate"))).toContain("limit=1");
     expect(urls.find((url) => url.includes("policyIssues"))).toContain("pageSize=100");
+  });
+
+  it("marks a report failure and preserves stale data when the ads.txt probe fails", async () => {
+    const fixture = responses();
+    const queue: unknown[] = [fixture.accounts, fixture.sites, fixture.policyIssues, fixture.alerts, fixture.report];
+    const prior = { source: "Google AdSense Management API", range: { start: "2026-09-28", end: "2026-10-04" }, fetchedAt: "2026-10-04T10:00:00.000Z", state: "stale" as const, data: { old: true } };
+    let failures = 0;
+    const provider = createAdsenseProvider({
+      publisherId: "pub-1234567890123456", blogOrigin: "https://omnilede.example",
+      request: async () => queue.shift(),
+      fetchAdsTxt: async () => { throw new Error("ads.txt probe failed"); },
+      cache: { read: async <T,>() => prior as unknown as ReportEnvelope<T>, success: async () => undefined, failure: async () => { failures += 1; } }
+    });
+    expect(await provider("7d")).toBe(prior);
+    expect(failures).toBe(1);
+  });
+});
+
+describe("ads.txt probe", () => {
+  it("uses a deadline and reads a valid response through the bounded stream", async () => {
+    const request = async (_url: string | URL | Request, init?: RequestInit) => {
+      expect(init?.signal).toBeInstanceOf(AbortSignal);
+      return new Response("seller-record\n", { status: 200, headers: { "content-type": "text/plain", "content-length": "14" } });
+    };
+    await expect(createAdsTxtFetcher("https://omnilede.example", request, 250)()).resolves.toEqual({ status: 200, contentType: "text/plain", text: "seller-record\n" });
+  });
+
+  it("rejects declared and streamed oversized responses before decoding", async () => {
+    const declared = createAdsTxtFetcher("https://omnilede.example", async () => new Response("small", { status: 200, headers: { "content-type": "text/plain", "content-length": "65537" } }));
+    await expect(declared()).rejects.toThrow(/ads\.txt/i);
+
+    const streamed = createAdsTxtFetcher("https://omnilede.example", async () => new Response(new Uint8Array(65_537), { status: 200, headers: { "content-type": "text/plain" } }));
+    await expect(streamed()).rejects.toThrow(/ads\.txt/i);
+  });
+
+  it("rejects timed out, failed, and invalid UTF-8 streams", async () => {
+    const timedOut = createAdsTxtFetcher("https://omnilede.example", async (_url, init) => await new Promise<Response>((_resolve, reject) => init?.signal?.addEventListener("abort", () => reject(new Error("aborted")), { once: true })), 10);
+    await expect(timedOut()).rejects.toThrow();
+
+    const failed = createAdsTxtFetcher("https://omnilede.example", async () => new Response(new ReadableStream({ start(controller) { controller.error(new Error("stream failed")); } }), { status: 200, headers: { "content-type": "text/plain" } }));
+    await expect(failed()).rejects.toThrow(/ads\.txt/i);
+
+    const invalidUtf8 = createAdsTxtFetcher("https://omnilede.example", async () => new Response(new Uint8Array([0xff]), { status: 200, headers: { "content-type": "text/plain" } }));
+    await expect(invalidUtf8()).rejects.toThrow(/ads\.txt/i);
   });
 });

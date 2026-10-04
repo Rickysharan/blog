@@ -10,6 +10,8 @@ export type AdsenseReadinessInput = {
   providerState: "connected" | "stale" | "unavailable" | "disconnected";
   accountStatus: "READY" | "NEEDS_ATTENTION" | "CLOSED" | null;
   siteStatus: "REQUIRES_REVIEW" | "GETTING_READY" | "READY" | "NEEDS_ATTENTION" | null;
+  configuredSiteStatus: string | null;
+  pendingTasks: string[] | null;
   ownershipVerified: boolean | null;
   adsTxtStatus: "valid" | "missing" | "invalid" | "unavailable";
   consentConfigured: boolean;
@@ -26,11 +28,26 @@ function finding(id: string, label: string, pass: boolean, good: string, bad: st
 }
 
 export function evaluateAdsenseReadiness(input: AdsenseReadinessInput): ReadinessFinding[] {
+  const pendingTaskFindings = input.pendingTasks === null
+    ? [finding("pending-tasks", "Account tasks", false, "", "Current pending-task evidence is unavailable.", "Refresh or reconnect the AdSense provider.")]
+    : input.pendingTasks.length === 0
+      ? [finding("pending-tasks", "Account tasks", true, "Google returned no pending account tasks.", "", "")]
+      : input.pendingTasks.map((task, index) => finding(
+      `pending-task:${index}`,
+      "Pending account task",
+      false,
+      "",
+      `Google requires: ${task}.`,
+      "Complete this task in the operator-owned AdSense account."
+      ));
+
   return [
     finding("connection", "Google connection", input.providerState === "connected", "AdSense reporting is connected.", `AdSense is ${input.providerState}.`, "Connect or refresh the read-only Google provider."),
     finding("account", "AdSense account", input.accountStatus === "READY", "The account is Ready.", input.accountStatus ? `Account status is ${input.accountStatus}.` : "Account status is unavailable.", "Resolve account tasks in AdSense."),
+    ...pendingTaskFindings,
     finding("ownership", "Site ownership", input.ownershipVerified === true, "Google has verified the site through its Ready result.", "Verified ownership is unavailable.", "Complete an ownership method in AdSense and wait for Google to report Ready."),
     finding("site-review", "Site review", input.siteStatus === "READY", "Google reports the site as Ready.", input.siteStatus ? `Google reports ${input.siteStatus}.` : "Site review status is unavailable.", "Submit or resolve the review in AdSense, then wait for an exact Ready status."),
+    finding("configured-site-status", "Public blog site gate", input.configuredSiteStatus === "READY", "The public blog is configured with the exact Ready status.", input.configuredSiteStatus ? `The public blog gate is ${input.configuredSiteStatus}.` : "The public blog site-status gate is missing.", "Copy the exact current provider status; only uppercase READY can pass this gate."),
     finding("ads-txt", "ads.txt", input.adsTxtStatus === "valid", "The live seller record matches the configured publisher.", `ads.txt is ${input.adsTxtStatus}.`, "Publish the exact seller record at /ads.txt and wait for Google to recheck it."),
     finding("policy", "Policy", input.providerState === "connected" && input.policyIssueCount === 0, "No current policy issues were returned.", input.providerState === "connected" ? `${input.policyIssueCount} policy issue${input.policyIssueCount === 1 ? "" : "s"} returned.` : "Current policy evidence is unavailable.", "Resolve the provider-reported policy issues after a successful refresh."),
     finding("configuration", "Provider alerts", input.providerState === "connected" && input.configurationIssueCount === 0, "No current configuration alerts were returned.", input.providerState === "connected" ? `${input.configurationIssueCount} configuration alert${input.configurationIssueCount === 1 ? "" : "s"} returned.` : "Current provider alerts are unavailable.", "Review provider messages after a successful refresh."),

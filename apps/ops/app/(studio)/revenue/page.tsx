@@ -29,6 +29,8 @@ export default async function RevenuePage({ searchParams }: { searchParams: Prom
     providerState: report.state === "delayed" ? "stale" : report.state,
     accountStatus: data?.account.status ?? null,
     siteStatus: data?.site.status ?? null,
+    configuredSiteStatus: process.env.ADSENSE_SITE_STATUS ?? null,
+    pendingTasks: data?.account.pendingTasks ?? null,
     ownershipVerified: data?.site.ownershipVerified ?? null,
     adsTxtStatus: data?.adsTxt.status ?? "unavailable",
     consentConfigured: true,
