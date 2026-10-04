@@ -97,4 +97,23 @@ describe("desktop launcher actions", () => {
     );
     expect(result.stdout).not.toContain("@omnilede {\"phase\":\"dashboard\"");
   });
+
+  it("resumes the selected task when native authorization omits start-new", async () => {
+    const fixture = await fixtures();
+
+    await launch({
+      OMNILEDE_ACTION: "write",
+      OMNILEDE_CATEGORY: "finance",
+      OMNILEDE_PLAN_DATE: "2026-10-02",
+      OMNILEDE_START_NEW: "",
+      OMNILEDE_DESKTOP: "true",
+      OMNILEDE_WRITER_EXECUTABLE: fixture.writer,
+      LOCAL_WRITER_SYNC: "true",
+      LOCAL_WRITER_REVIEW_URL: "https://example.com/admin/review",
+    });
+
+    await expect(readFile(fixture.writerArgs, "utf8")).resolves.toBe(
+      "--limit\n1\n--category\nfinance\n--plan-date\n2026-10-02\n",
+    );
+  });
 });

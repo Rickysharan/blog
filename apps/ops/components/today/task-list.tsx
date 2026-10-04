@@ -23,23 +23,28 @@ export function TaskList({ initialTasks, fetcher = fetch, nativeRequestId = defa
   const [tasks, setTasks] = useState(initialTasks);
   const [nativePlan, setNativePlan] = useState<NativePlanSnapshot>();
   const [planWriterStatuses, setPlanWriterStatuses] = useState<Partial<Record<NativePlanSnapshot["tasks"][number]["category"], NativeWriterStatus>>>({});
+  const [nativePlanPending, setNativePlanPending] = useState(false);
   const [notice, setNotice] = useState<string>();
   const [busy, setBusy] = useState<string>();
   const open = tasks.filter(({ state }) => state === "open");
   const nativeAvailable = useSyncExternalStore(subscribeToStaticNativeCapability, hasNativeWriter, () => false);
   const pendingPlanRequest = useRef<string | null>(null);
+  const planWriterRequests = useRef<Partial<Record<NativePlanSnapshot["tasks"][number]["category"], string>>>({});
 
   useEffect(() => {
     const listener = (event: Event) => {
       const snapshot = readNativePlanSnapshot(event);
       if (!snapshot || snapshot.requestId !== pendingPlanRequest.current) return;
       pendingPlanRequest.current = null;
+      setNativePlanPending(false);
+      planWriterRequests.current = {};
       setPlanWriterStatuses({});
       setNativePlan(snapshot);
     };
     window.addEventListener(NATIVE_PLAN_EVENT, listener);
     return () => {
       pendingPlanRequest.current = null;
+      planWriterRequests.current = {};
       window.removeEventListener(NATIVE_PLAN_EVENT, listener);
     };
   }, []);
@@ -47,28 +52,51 @@ export function TaskList({ initialTasks, fetcher = fetch, nativeRequestId = defa
   useEffect(() => {
     const listener = (event: Event) => {
       const status = readNativeStatus(event);
-      if (!status) return;
-      setPlanWriterStatuses((current) => current[status.category]?.requestId === status.requestId
-        ? { ...current, [status.category]: status }
-        : current);
+      if (!status || planWriterRequests.current[status.category] !== status.requestId) return;
+      setPlanWriterStatuses((current) => ({ ...current, [status.category]: status }));
+      if (status.delivery === "delivered") {
+        delete planWriterRequests.current[status.category];
+        setNativePlan((current) => {
+          if (!current) return current;
+          const task = current.tasks.find((item) => item.category === status.category);
+          if (!task || !["todo", "writing", "needs-attention"].includes(task.status)) return current;
+          return {
+            ...current,
+            completedCount: Math.min(current.totalTasks, current.completedCount + 1),
+            draftCount: current.draftCount + 1,
+            tasks: current.tasks.map((item) => item.category === status.category ? { ...item, status: "draft-ready" as const } : item),
+          };
+        });
+      } else if (status.error) {
+        delete planWriterRequests.current[status.category];
+      }
     };
     window.addEventListener(NATIVE_STATUS_EVENT, listener);
     return () => window.removeEventListener(NATIVE_STATUS_EVENT, listener);
   }, []);
 
   function refreshNativePlan() {
+    if (pendingPlanRequest.current) return;
     const requestId = nativeRequestId();
     pendingPlanRequest.current = requestId;
-    if (!postNativeAction({ action: "refresh", requestId })) pendingPlanRequest.current = null;
+    setNativePlanPending(true);
+    if (!postNativeAction({ action: "refresh", requestId })) {
+      pendingPlanRequest.current = null;
+      setNativePlanPending(false);
+    }
   }
 
   function startPlanTask(category: NativePlanSnapshot["tasks"][number]["category"], planDate: string) {
+    if (planWriterRequests.current[category]) return;
     const requestId = nativeRequestId();
+    planWriterRequests.current[category] = requestId;
     if (postNativeAction({ action: "write", category, planDate, requestId })) {
       setPlanWriterStatuses((current) => ({
         ...current,
         [category]: { category, requestId, phase: "starting", progress: 0, etaSeconds: null, delivery: "pending", error: null },
       }));
+    } else {
+      delete planWriterRequests.current[category];
     }
   }
 
@@ -101,8 +129,9 @@ export function TaskList({ initialTasks, fetcher = fetch, nativeRequestId = defa
           type="button"
           className="secondary-action"
           data-omnilede-native-action="refresh"
+          disabled={nativePlanPending || Object.values(planWriterStatuses).some((status) => status?.delivery === "pending" && !status.error)}
           onClick={refreshNativePlan}
-        >Refresh from this Mac</button> : null}
+        >{nativePlanPending ? "Refreshing from this Mac…" : "Refresh from this Mac"}</button> : null}
         <p>Writing starts from the OmniLede Mac app. On phone, review and publish drafts from Content.</p>
       </div>
       {notice ? <p className="task-notice" role="status">{notice}</p> : null}
@@ -112,7 +141,8 @@ export function TaskList({ initialTasks, fetcher = fetch, nativeRequestId = defa
         <ul>{nativePlan.tasks.map((item) => {
           const writerStatus = planWriterStatuses[item.category];
           const active = writerStatus?.delivery === "pending" && !writerStatus.error;
-          const actionable = item.status === "todo" || item.status === "writing" || item.status === "needs-attention";
+          const actionable = (item.status === "todo" || item.status === "writing" || item.status === "needs-attention")
+            && writerStatus?.phase !== "plan-unavailable";
           const actionLabel = item.status === "todo" && !writerStatus?.error ? "Start writing" : "Try again";
           return <li aria-label={`Mac plan ${item.label}`} key={item.category}>
             <strong>{item.label}</strong> · {item.status.replaceAll("-", " ")} · {item.reason}

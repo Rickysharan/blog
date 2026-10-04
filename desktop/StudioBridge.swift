@@ -7,33 +7,40 @@ enum StudioWriterCategory: String, CaseIterable {
     case shareMarket = "share-market"
 }
 
+enum StudioWriteMode: Equatable {
+    case startNew
+    case resume
+}
+
 enum StudioBridgeCommand: Equatable {
-    case write(category: String, requestId: String, planDate: String? = nil)
+    case write(category: String, requestId: String, planDate: String? = nil, mode: StudioWriteMode = .startNew)
     case cancel(requestId: String)
     case refresh(requestId: String)
 }
 
 final class StudioBridgePolicy {
     static let categories = Set(StudioWriterCategory.allCases.map(\.rawValue))
+    private(set) var rejectionReason: String?
     private let configuration: StudioConfiguration
-    private let allowsPlannedWrite: (String, String) -> Bool
+    private let plannedWriteMode: (String, String) -> StudioWriteMode?
     private let start: (StudioBridgeCommand) -> Void
     private let reject: (String) -> Void
 
     init(
         configuration: StudioConfiguration,
-        allowsPlannedWrite: @escaping (String, String) -> Bool = { _, _ in false },
+        plannedWriteMode: @escaping (String, String) -> StudioWriteMode? = { _, _ in nil },
         start: @escaping (StudioBridgeCommand) -> Void,
         reject: @escaping (String) -> Void
     ) {
         self.configuration = configuration
-        self.allowsPlannedWrite = allowsPlannedWrite
+        self.plannedWriteMode = plannedWriteMode
         self.start = start
         self.reject = reject
     }
 
     @discardableResult
     func handle(body: Any, sourceURL: URL?, isMainFrame: Bool, hasUserActivation: Bool) -> Bool {
+        rejectionReason = nil
         guard let sourceURL, configuration.allows(url: sourceURL) else { return denied("rejected-origin") }
         guard isMainFrame else { return denied("rejected-frame") }
         guard hasUserActivation else { return denied("rejected-user-activation") }
@@ -49,19 +56,21 @@ final class StudioBridgePolicy {
         case "write":
             guard let category = body["category"] as? String, Self.categories.contains(category) else { return denied("rejected-category") }
             let planDate = body["planDate"] as? String
+            var mode = StudioWriteMode.startNew
             if hasPlanDate {
-                guard let planDate, Self.validPlanDate(planDate), allowsPlannedWrite(category, planDate) else { return denied("rejected-plan-binding") }
+                guard let planDate, Self.validPlanDate(planDate), let authorizedMode = plannedWriteMode(category, planDate) else { return denied("rejected-plan-binding") }
+                mode = authorizedMode
             }
-            start(.write(category: category, requestId: requestId, planDate: planDate))
+            start(.write(category: category, requestId: requestId, planDate: planDate, mode: mode))
         case "cancel": start(.cancel(requestId: requestId))
         default: start(.refresh(requestId: requestId))
         }
         return true
     }
 
-    private func denied(_ reason: String) -> Bool { reject(reason); return false }
+    private func denied(_ reason: String) -> Bool { rejectionReason = reason; reject(reason); return false }
 
-    private static func validRequestId(_ value: String) -> Bool {
+    static func validRequestId(_ value: String) -> Bool {
         guard (8...128).contains(value.count) else { return false }
         let allowed = Set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._:-".utf8)
         return value.utf8.allSatisfy(allowed.contains)
@@ -166,6 +175,7 @@ final class StudioWriterAdmission {
 final class LocalWriterController {
     private let configuration: StudioConfiguration
     private let statusSink: ([String: Any]) -> Void
+    private let completionSink: (String, String, String?, Bool) -> Void
     private let sanitizer = StudioStatusSanitizer()
     private let admission = StudioWriterAdmission()
     private let auditLog: StudioAuditLog
@@ -178,18 +188,26 @@ final class LocalWriterController {
     private var requestId: String?
     private var startedAt = Date()
     private var receivedTerminalEvent = false
+    private var receivedVerifiedDelivery = false
+    private var terminalStatus: [String: Any]?
 
-    init(configuration: StudioConfiguration, statusSink: @escaping ([String: Any]) -> Void) {
+    init(
+        configuration: StudioConfiguration,
+        completionSink: @escaping (String, String, String?, Bool) -> Void = { _, _, _, _ in },
+        statusSink: @escaping ([String: Any]) -> Void
+    ) {
         self.configuration = configuration
+        self.completionSink = completionSink
         self.statusSink = statusSink
         self.auditLog = StudioAuditLog(projectPath: configuration.projectPath)
     }
 
-    func perform(_ command: StudioBridgeCommand) {
+    @discardableResult
+    func perform(_ command: StudioBridgeCommand) -> Bool {
         switch command {
-        case let .write(category, requestId, planDate): start(category: category, requestId: requestId, planDate: planDate)
-        case let .cancel(requestId): cancel(requestId: requestId)
-        case .refresh: break
+        case let .write(category, requestId, planDate, mode): return start(category: category, requestId: requestId, planDate: planDate, mode: mode)
+        case let .cancel(requestId): cancel(requestId: requestId); return true
+        case .refresh: return false
         }
     }
 
@@ -197,20 +215,22 @@ final class LocalWriterController {
         if let requestId = admission.activeRequestId { cancel(requestId: requestId) }
     }
 
-    private func start(category: String, requestId: String, planDate: String?) {
+    private func start(category: String, requestId: String, planDate: String?, mode: StudioWriteMode) -> Bool {
         guard admission.begin(category: category, requestId: requestId) else {
             emit(
                 ["phase": "already-running", "progress": 0, "etaSeconds": NSNull(), "delivery": "not-delivered", "error": "One article is already being written."],
                 category: category,
                 requestId: requestId
             )
-            return
+            return false
         }
         self.category = category
         self.requestId = requestId
         startedAt = Date()
         outputLock.lock()
         receivedTerminalEvent = false
+        receivedVerifiedDelivery = false
+        terminalStatus = nil
         outputFinished = false
         outputBuffer = Data()
         outputLock.unlock()
@@ -224,7 +244,8 @@ final class LocalWriterController {
         var environment = ProcessInfo.processInfo.environment
         environment["OMNILEDE_ACTION"] = "write"
         environment["OMNILEDE_CATEGORY"] = category
-        environment["OMNILEDE_START_NEW"] = "true"
+        environment.removeValue(forKey: "OMNILEDE_START_NEW")
+        if mode == .startNew { environment["OMNILEDE_START_NEW"] = "true" }
         environment["OMNILEDE_DESKTOP"] = "true"
         environment.removeValue(forKey: "OMNILEDE_PLAN_DATE")
         if let planDate { environment["OMNILEDE_PLAN_DATE"] = planDate }
@@ -235,19 +256,22 @@ final class LocalWriterController {
             self?.readAvailableOutput(handle, category: category, requestId: requestId)
         }
         task.terminationHandler = { [weak self] finished in
-            self?.drainAndFinish(process: finished, output: output, category: category, requestId: requestId)
+            self?.drainAndFinish(process: finished, output: output, category: category, requestId: requestId, planDate: planDate)
         }
         process = task
         pipe = output
         do {
             try task.run()
             emit(["phase": "starting", "progress": 0, "etaSeconds": 90, "delivery": "pending", "error": NSNull()])
+            return true
         } catch {
             appendAudit("launcher-error \(String(describing: error))\n")
             process = nil
             pipe = nil
             _ = admission.finish(requestId: requestId)
+            completionSink(category, requestId, planDate, false)
             emit(["phase": "failed", "progress": 0, "etaSeconds": NSNull(), "delivery": "not-delivered", "error": "The local writer could not start. Try again."])
+            return true
         }
     }
 
@@ -286,7 +310,12 @@ final class LocalWriterController {
                   let event = try? JSONSerialization.jsonObject(with: eventData) as? [String: Any],
                   let safe = sanitizer.status(from: event, elapsed: Int(Date().timeIntervalSince(startedAt)), estimatedDuration: 90)
             else { continue }
-            if sanitizer.isTerminal(event) { receivedTerminalEvent = true }
+            if sanitizer.isTerminal(event) {
+                receivedTerminalEvent = true
+                receivedVerifiedDelivery = safe["delivery"] as? String == "delivered"
+                terminalStatus = safe
+                continue
+            }
             DispatchQueue.main.async { [weak self] in
                 guard let self, admission.activeRequestId == requestId, admission.activeCategory == category else { return }
                 emit(safe, category: category, requestId: requestId)
@@ -294,7 +323,7 @@ final class LocalWriterController {
         }
     }
 
-    private func drainAndFinish(process finishedProcess: Process, output: Pipe, category: String, requestId: String) {
+    private func drainAndFinish(process finishedProcess: Process, output: Pipe, category: String, requestId: String, planDate: String?) {
         output.fileHandleForReading.readabilityHandler = nil
         outputLock.lock()
         if !outputFinished {
@@ -303,19 +332,24 @@ final class LocalWriterController {
             outputFinished = true
         }
         let hadTerminalEvent = receivedTerminalEvent
+        let verifiedDelivery = receivedVerifiedDelivery
+        let finalStatus = terminalStatus
         outputLock.unlock()
         DispatchQueue.main.async { [weak self] in
-            self?.finished(process: finishedProcess, category: category, requestId: requestId, hadTerminalEvent: hadTerminalEvent)
+            self?.finished(process: finishedProcess, category: category, requestId: requestId, planDate: planDate, hadTerminalEvent: hadTerminalEvent, verifiedDelivery: verifiedDelivery, terminalStatus: finalStatus)
         }
     }
 
-    private func finished(process finishedProcess: Process, category: String, requestId: String, hadTerminalEvent: Bool) {
+    private func finished(process finishedProcess: Process, category: String, requestId: String, planDate: String?, hadTerminalEvent: Bool, verifiedDelivery: Bool, terminalStatus: [String: Any]?) {
         guard let activeProcess = process, activeProcess === finishedProcess else { return }
         pipe?.fileHandleForReading.readabilityHandler = nil
         process = nil
         pipe = nil
         _ = admission.finish(requestId: requestId)
-        if !hadTerminalEvent {
+        completionSink(category, requestId, planDate, verifiedDelivery)
+        if hadTerminalEvent, let terminalStatus {
+            emit(terminalStatus, category: category, requestId: requestId)
+        } else {
             emit(
                 ["phase": "delivery-unverified", "progress": 100, "etaSeconds": NSNull(), "delivery": "not-delivered", "error": "Writing finished, but delivery was not verified. Try again."],
                 category: category,
@@ -374,6 +408,11 @@ struct StudioPlanSanitizer {
     }
 }
 
+private struct PlannedTaskKey: Hashable {
+    let category: String
+    let date: String
+}
+
 final class LocalPlannerController {
     private let configuration: StudioConfiguration
     private let sink: ([String: Any]) -> Void
@@ -383,6 +422,8 @@ final class LocalPlannerController {
     private var output = Data()
     private var overflowed = false
     private var latestSnapshot: DailyPlanSnapshot?
+    private var activeWrites = Set<PlannedTaskKey>()
+    private var deliveredWrites = Set<PlannedTaskKey>()
 
     init(configuration: StudioConfiguration, sink: @escaping ([String: Any]) -> Void) {
         self.configuration = configuration
@@ -423,8 +464,39 @@ final class LocalPlannerController {
     func allowsPlannedWrite(category: String, planDate: String) -> Bool {
         lock.lock()
         defer { lock.unlock() }
-        guard let snapshot = latestSnapshot, snapshot.date == planDate else { return false }
-        return snapshot.tasks.contains { $0.category == category && $0.status.isActionable }
+        let key = PlannedTaskKey(category: category, date: planDate)
+        return writeMode(category: category, planDate: planDate) != nil
+            && !activeWrites.contains(key) && !deliveredWrites.contains(key)
+    }
+
+    func beginPlannedWrite(category: String, planDate: String) -> StudioWriteMode? {
+        lock.lock()
+        defer { lock.unlock() }
+        let key = PlannedTaskKey(category: category, date: planDate)
+        guard !activeWrites.contains(key), !deliveredWrites.contains(key),
+              let mode = writeMode(category: category, planDate: planDate)
+        else { return nil }
+        activeWrites.insert(key)
+        return mode
+    }
+
+    func finishPlannedWrite(category: String, planDate: String, delivered: Bool) {
+        lock.lock()
+        defer { lock.unlock() }
+        let key = PlannedTaskKey(category: category, date: planDate)
+        guard activeWrites.remove(key) != nil else { return }
+        if delivered { deliveredWrites.insert(key) }
+    }
+
+    private func writeMode(category: String, planDate: String) -> StudioWriteMode? {
+        guard let snapshot = latestSnapshot, snapshot.date == planDate,
+              let task = snapshot.tasks.first(where: { $0.category == category })
+        else { return nil }
+        switch task.status {
+        case .todo: return .startNew
+        case .writing, .needsAttention: return .resume
+        case .draftReady, .published: return nil
+        }
     }
 
     private static func localDate() -> String {
@@ -469,6 +541,7 @@ final class LocalPlannerController {
         }
         lock.lock()
         latestSnapshot = finished.terminationStatus == 0 ? acceptedSnapshot : nil
+        if latestSnapshot != nil { deliveredWrites.removeAll() }
         lock.unlock()
         DispatchQueue.main.async { [weak self] in
             guard let self, process === finished else { return }
@@ -486,15 +559,6 @@ final class StudioBridge: NSObject, WKScriptMessageHandler {
 
     init(configuration: StudioConfiguration) {
         let auditLog = StudioAuditLog(projectPath: configuration.projectPath)
-        let controller = LocalWriterController(configuration: configuration) { payload in
-            guard JSONSerialization.isValidJSONObject(payload),
-                  let data = try? JSONSerialization.data(withJSONObject: payload),
-                  let json = String(data: data, encoding: .utf8)
-            else { return }
-            DispatchQueue.main.async {
-                NotificationCenter.default.post(name: .omniledeNativeStatus, object: json)
-            }
-        }
         let planner = LocalPlannerController(configuration: configuration) { payload in
             guard JSONSerialization.isValidJSONObject(payload),
                   let data = try? JSONSerialization.data(withJSONObject: payload),
@@ -503,13 +567,28 @@ final class StudioBridge: NSObject, WKScriptMessageHandler {
                 NotificationCenter.default.post(name: .omniledeNativePlan, object: json)
             }
         }
+        let controller = LocalWriterController(configuration: configuration, completionSink: { category, _, planDate, delivered in
+            guard let planDate else { return }
+            planner.finishPlannedWrite(category: category, planDate: planDate, delivered: delivered)
+        }) { payload in
+            guard JSONSerialization.isValidJSONObject(payload),
+                  let data = try? JSONSerialization.data(withJSONObject: payload),
+                  let json = String(data: data, encoding: .utf8)
+            else { return }
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(name: .omniledeNativeStatus, object: json)
+            }
+        }
         self.writer = controller
         self.planner = planner
-        self.policy = StudioBridgePolicy(configuration: configuration, allowsPlannedWrite: { category, planDate in
-            planner.allowsPlannedWrite(category: category, planDate: planDate)
+        self.policy = StudioBridgePolicy(configuration: configuration, plannedWriteMode: { category, planDate in
+            planner.beginPlannedWrite(category: category, planDate: planDate)
         }, start: { command in
             if case let .refresh(requestId) = command { planner.refresh(requestId: requestId) }
-            else { controller.perform(command) }
+            else if !controller.perform(command),
+                    case let .write(category, _, planDate?, _) = command {
+                planner.finishPlannedWrite(category: category, planDate: planDate, delivered: false)
+            }
         }) { reason in
             auditLog.append("bridge-rejection \(reason)\n")
         }
@@ -550,8 +629,24 @@ final class StudioBridge: NSObject, WKScriptMessageHandler {
         """
         webView.evaluateJavaScript(activationCheck) { [weak self] result, _ in
             guard let self else { return }
-            _ = policy.handle(body: message.body, sourceURL: message.frameInfo.request.url, isMainFrame: message.frameInfo.isMainFrame, hasUserActivation: result as? Bool == true)
+            let accepted = policy.handle(body: message.body, sourceURL: message.frameInfo.request.url, isMainFrame: message.frameInfo.isMainFrame, hasUserActivation: result as? Bool == true)
+            if !accepted, policy.rejectionReason == "rejected-plan-binding" { sendPlanUnavailable(for: message.body) }
         }
+    }
+
+    private func sendPlanUnavailable(for body: Any) {
+        guard let body = body as? [String: Any], body["action"] as? String == "write",
+              let category = body["category"] as? String, StudioBridgePolicy.categories.contains(category),
+              let requestId = body["requestId"] as? String, StudioBridgePolicy.validRequestId(requestId)
+        else { return }
+        let payload: [String: Any] = [
+            "category": category, "requestId": requestId, "phase": "plan-unavailable", "progress": 0,
+            "etaSeconds": NSNull(), "delivery": "not-delivered",
+            "error": "This plan changed. Refresh from this Mac before trying again.",
+        ]
+        guard let data = try? JSONSerialization.data(withJSONObject: payload),
+              let json = String(data: data, encoding: .utf8) else { return }
+        webView?.evaluateJavaScript("window.dispatchEvent(new CustomEvent('omnilede:native-status',{detail:\(json)}));")
     }
 
     @objc private func statusNotification(_ notification: Notification) {

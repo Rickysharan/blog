@@ -111,7 +111,7 @@ struct StudioBridgeTests {
         var plannedStarts: [StudioBridgeCommand] = []
         let plannedBridge = StudioBridgePolicy(
             configuration: configuration,
-            allowsPlannedWrite: { $0 == "anime" && $1 == "2026-10-03" },
+            plannedWriteMode: { $0 == "anime" && $1 == "2026-10-03" ? .resume : nil },
             start: { plannedStarts.append($0) },
             reject: { rejections.append($0) }
         )
@@ -119,7 +119,7 @@ struct StudioBridgeTests {
             body: ["action": "write", "category": "anime", "planDate": "2026-10-03", "requestId": "planned-write-1234"],
             sourceURL: URL(string: "https://studio.example.com/today")!, isMainFrame: true, hasUserActivation: true
         ), "accepts a planned write bound to the latest validated snapshot")
-        try expect(plannedStarts == [.write(category: "anime", requestId: "planned-write-1234", planDate: "2026-10-03")], "carries the exact validated plan date into the writer command")
+        try expect(plannedStarts == [.write(category: "anime", requestId: "planned-write-1234", planDate: "2026-10-03", mode: .resume)], "carries the exact validated plan date and Swift-derived resume mode into the writer command")
         for rejected in [
             ["action": "write", "category": "sports", "planDate": "2026-10-03", "requestId": "wrong-pair-12345"],
             ["action": "write", "category": "anime", "planDate": "2026-10-04", "requestId": "stale-date-12345"],
@@ -281,6 +281,57 @@ struct StudioBridgeTests {
         let preservedAfterRefresh = try Data(contentsOf: preservedURL)
         try expect(preservedAfterRefresh == preserved, "reads the planner state without rewriting its bytes")
         try expect(!FileManager.default.fileExists(atPath: plannerRoot.appendingPathComponent("writer-started").path), "planner refresh never starts the writer action")
+
+        try expect(planner.beginPlannedWrite(category: "anime", planDate: "2026-10-03") == .startNew, "derives a new run only from a validated todo task")
+        try expect(planner.beginPlannedWrite(category: "anime", planDate: "2026-10-03") == nil, "consumes planner authorization while the write is in flight")
+        planner.finishPlannedWrite(category: "anime", planDate: "2026-10-03", delivered: true)
+        try expect(planner.beginPlannedWrite(category: "anime", planDate: "2026-10-03") == nil, "keeps delivered planner authorization consumed until a new snapshot")
+
+        try expect(planner.beginPlannedWrite(category: "finance", planDate: "2026-10-03") == .resume, "derives resume from validated needs-attention state")
+        try expect(planner.beginPlannedWrite(category: "finance", planDate: "2026-10-03") == nil, "suspends retry authorization while saved work is running")
+        planner.finishPlannedWrite(category: "finance", planDate: "2026-10-03", delivered: false)
+        try expect(planner.beginPlannedWrite(category: "finance", planDate: "2026-10-03") == .resume, "restores the correctly derived retry only after explicit error cleanup")
+        planner.finishPlannedWrite(category: "finance", planDate: "2026-10-03", delivered: false)
+
+        planner.refresh(requestId: "refresh-plan-again-123")
+        try expect(waitUntil { plans.last?["requestId"] as? String == "refresh-plan-again-123" }, "accepts a new validated snapshot after delivery")
+        try expect(planner.beginPlannedWrite(category: "anime", planDate: "2026-10-03") == .startNew, "only a new validated actionable snapshot restores delivered authorization")
+        planner.finishPlannedWrite(category: "anime", planDate: "2026-10-03", delivered: false)
+
+        try """
+        #!/bin/bash
+        if [ "${OMNILEDE_START_NEW:-}" = "true" ]; then
+          printf '%s\n' '@omnilede {"status":"failed","stage":"content-conflict","percent":10,"deliveryStatus":"not-delivered"}'
+          exit 17
+        fi
+        touch "$PWD/resumed-saved-work"
+        printf '%s\n' '@omnilede {"status":"completed","stage":"delivery-verification","percent":100,"deliveryStatus":"delivered"}'
+        """.write(to: plannerRoot.appendingPathComponent("Start OmniLede.command"), atomically: true, encoding: .utf8)
+        var resumedStatuses: [[String: Any]] = []
+        let resumeWriter = LocalWriterController(configuration: plannerConfiguration, completionSink: { category, _, planDate, delivered in
+            if let planDate { planner.finishPlannedWrite(category: category, planDate: planDate, delivered: delivered) }
+        }) { resumedStatuses.append($0) }
+        let resumePolicy = StudioBridgePolicy(
+            configuration: plannerConfiguration,
+            plannedWriteMode: { planner.beginPlannedWrite(category: $0, planDate: $1) },
+            start: { command in
+                if !resumeWriter.perform(command), case let .write(category, _, planDate?, _) = command {
+                    planner.finishPlannedWrite(category: category, planDate: planDate, delivered: false)
+                }
+            },
+            reject: { _ in }
+        )
+        try expect(resumePolicy.handle(
+            body: ["action": "write", "category": "finance", "planDate": "2026-10-03", "requestId": "resume-saved-12345"],
+            sourceURL: URL(string: "https://studio.example.com/today")!, isMainFrame: true, hasUserActivation: true
+        ), "accepts a retry derived from the latest bound plan task")
+        try expect(waitUntil { resumedStatuses.contains { $0["delivery"] as? String == "delivered" } }, "resumable saved work reaches verified delivery instead of content conflict")
+        try expect(FileManager.default.fileExists(atPath: plannerRoot.appendingPathComponent("resumed-saved-work").path), "omits start-new for a validated resumable plan task")
+        try expect(!resumePolicy.handle(
+            body: ["action": "write", "category": "finance", "planDate": "2026-10-03", "requestId": "duplicate-save-1234"],
+            sourceURL: URL(string: "https://studio.example.com/today")!, isMainFrame: true, hasUserActivation: true
+        ), "rejects a second click after verified delivery until another validated snapshot")
+        try expect(resumePolicy.rejectionReason == "rejected-plan-binding", "exposes only the fixed rejection reason needed for a truthful unavailable response")
         planner.shutdown()
 
         let plannedWriterRoot = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("omnilede-planned-writer-\(UUID().uuidString)")
@@ -289,15 +340,18 @@ struct StudioBridgeTests {
         try """
         #!/bin/bash
         printf '%s' "$OMNILEDE_PLAN_DATE" > "$PWD/received-plan-date"
+        printf '%s' "${OMNILEDE_START_NEW-unset}" > "$PWD/received-write-mode"
         printf '%s\n' '@omnilede {"status":"completed","stage":"delivery-verification","percent":100,"deliveryStatus":"delivered"}'
         """.write(to: plannedWriterRoot.appendingPathComponent("Start OmniLede.command"), atomically: true, encoding: .utf8)
         let plannedWriterConfiguration = try StudioConfiguration(studioURL: "https://studio.example.com", projectPath: plannedWriterRoot.path)
         let plannedWriter = LocalWriterController(configuration: plannedWriterConfiguration) { _ in }
-        plannedWriter.perform(.write(category: "anime", requestId: "planned-run-12345", planDate: "2026-10-03"))
+        plannedWriter.perform(.write(category: "anime", requestId: "planned-run-12345", planDate: "2026-10-03", mode: .resume))
         let receivedPlanDate = plannedWriterRoot.appendingPathComponent("received-plan-date")
         try expect(waitUntil { FileManager.default.fileExists(atPath: receivedPlanDate.path) }, "starts an explicitly bound daily-plan writer")
         let receivedDate = try String(contentsOf: receivedPlanDate, encoding: .utf8)
         try expect(receivedDate == "2026-10-03", "passes the exact daily-plan date to local-writer")
+        let receivedMode = try String(contentsOf: plannedWriterRoot.appendingPathComponent("received-write-mode"), encoding: .utf8)
+        try expect(receivedMode == "unset", "a validated retry resumes saved work without forcing a conflicting new article")
 
         let categoryWriterRoot = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("omnilede-category-writer-\(UUID().uuidString)")
         defer { try? FileManager.default.removeItem(at: categoryWriterRoot) }

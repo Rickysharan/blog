@@ -102,6 +102,90 @@ it("accepts only this mounted instance's latest requested plan and shows refresh
   expect(screen.queryByRole("button", { name: /start writing anime/i })).not.toBeInTheDocument();
 });
 
+it("keeps the first Mac refresh pending and accepts its response after a double click", async () => {
+  window.__OMNILEDE_NATIVE__ = { available: true };
+  window.webkit = { messageHandlers: { omnilede: { postMessage } } };
+  const ids = ["first-refresh-1234", "replaced-refresh-1234"];
+  render(<TaskList initialTasks={[task]} fetcher={fetcher} nativeRequestId={() => ids.shift()!} />);
+  const refresh = screen.getByRole("button", { name: /refresh from this mac/i });
+  fireEvent.click(refresh);
+  fireEvent.click(refresh);
+  expect(refresh).toBeDisabled();
+  expect(postMessage).toHaveBeenCalledTimes(1);
+  expect(postMessage).toHaveBeenCalledWith({ action: "refresh", requestId: "first-refresh-1234" });
+
+  window.dispatchEvent(new CustomEvent(NATIVE_PLAN_EVENT, { detail: {
+    requestId: "first-refresh-1234", date: "2026-10-03", completedCount: 1, totalTasks: 3,
+    draftCount: 2, publishedCount: 24,
+    tasks: [
+      { category: "anime", label: "Anime", reason: "Least recent coverage", status: "todo" },
+      { category: "sports", label: "Sports", reason: "Draft waiting for review", status: "draft-ready" },
+      { category: "finance", label: "Finance", reason: "Saved work needs attention", status: "needs-attention" },
+    ],
+  } }));
+  expect(await screen.findByText(/1 of 3 written/i)).toBeInTheDocument();
+  expect(refresh).not.toBeDisabled();
+});
+
+it("completes delivered Mac work immediately, blocks duplicates, and leaves explicit errors retryable", async () => {
+  window.__OMNILEDE_NATIVE__ = { available: true };
+  window.webkit = { messageHandlers: { omnilede: { postMessage } } };
+  const ids = ["plan-refresh-1234", "anime-write-12345", "finance-write-123"];
+  render(<TaskList initialTasks={[task]} fetcher={fetcher} nativeRequestId={() => ids.shift()!} />);
+  fireEvent.click(screen.getByRole("button", { name: /refresh from this mac/i }));
+  window.dispatchEvent(new CustomEvent(NATIVE_PLAN_EVENT, { detail: {
+    requestId: "plan-refresh-1234", date: "2026-10-03", completedCount: 1, totalTasks: 3,
+    draftCount: 2, publishedCount: 24,
+    tasks: [
+      { category: "anime", label: "Anime", reason: "Least recent coverage", status: "todo" },
+      { category: "sports", label: "Sports", reason: "Draft waiting for review", status: "draft-ready" },
+      { category: "finance", label: "Finance", reason: "Saved work needs attention", status: "needs-attention" },
+    ],
+  } }));
+
+  fireEvent.click(await screen.findByRole("button", { name: /start writing anime/i }));
+  window.dispatchEvent(new CustomEvent("omnilede:native-status", { detail: {
+    category: "anime", requestId: "anime-write-12345", phase: "delivery-verification", progress: 100,
+    etaSeconds: 0, delivery: "delivered", error: null,
+  } }));
+  expect(await screen.findByText(/2 of 3 written/i)).toBeInTheDocument();
+  expect(screen.getByRole("listitem", { name: /mac plan anime/i })).toHaveTextContent(/draft ready/i);
+  expect(screen.queryByRole("button", { name: /start writing anime|try again anime/i })).not.toBeInTheDocument();
+  expect(postMessage.mock.calls.filter(([message]) => message.action === "write" && message.category === "anime")).toHaveLength(1);
+
+  fireEvent.click(screen.getByRole("button", { name: /try again finance/i }));
+  window.dispatchEvent(new CustomEvent("omnilede:native-status", { detail: {
+    category: "finance", requestId: "finance-write-123", phase: "failed", progress: 20,
+    etaSeconds: null, delivery: "not-delivered", error: "Writing needs attention. Try again.",
+  } }));
+  expect(await screen.findByRole("button", { name: /try again finance/i })).toBeEnabled();
+});
+
+it("requires a refresh when native plan authorization is no longer available", async () => {
+  window.__OMNILEDE_NATIVE__ = { available: true };
+  window.webkit = { messageHandlers: { omnilede: { postMessage } } };
+  const ids = ["plan-refresh-1234", "stale-write-12345"];
+  render(<TaskList initialTasks={[task]} fetcher={fetcher} nativeRequestId={() => ids.shift()!} />);
+  fireEvent.click(screen.getByRole("button", { name: /refresh from this mac/i }));
+  window.dispatchEvent(new CustomEvent(NATIVE_PLAN_EVENT, { detail: {
+    requestId: "plan-refresh-1234", date: "2026-10-03", completedCount: 1, totalTasks: 3,
+    draftCount: 2, publishedCount: 24,
+    tasks: [
+      { category: "anime", label: "Anime", reason: "Least recent coverage", status: "todo" },
+      { category: "sports", label: "Sports", reason: "Draft waiting for review", status: "draft-ready" },
+      { category: "finance", label: "Finance", reason: "Saved work needs attention", status: "needs-attention" },
+    ],
+  } }));
+  fireEvent.click(await screen.findByRole("button", { name: /start writing anime/i }));
+  window.dispatchEvent(new CustomEvent("omnilede:native-status", { detail: {
+    category: "anime", requestId: "stale-write-12345", phase: "plan-unavailable", progress: 0,
+    etaSeconds: null, delivery: "not-delivered", error: "This plan changed. Refresh from this Mac before trying again.",
+  } }));
+  expect(await screen.findByRole("alert")).toHaveTextContent(/refresh from this mac/i);
+  expect(screen.queryByRole("button", { name: /start writing anime|try again anime/i })).not.toBeInTheDocument();
+  expect(screen.getByRole("button", { name: /refresh from this mac/i })).toBeEnabled();
+});
+
 it("does not expose Mac planner refresh in an ordinary browser", () => {
   render(<TaskList initialTasks={[task]} fetcher={fetcher} />);
   expect(screen.queryByRole("button", { name: /refresh from this mac/i })).not.toBeInTheDocument();
