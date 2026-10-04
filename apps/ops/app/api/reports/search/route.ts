@@ -23,6 +23,7 @@ export async function POST(request: Request) {
     const parsed = copySchema.safeParse(await readBoundedJson(request));
     if (!parsed.success) throw new ContentRequestError(400, "invalid_input", "A valid search opportunity is required.");
     const report = await fetchSearchReport(parsed.data.range);
+    if (report.state !== "connected") throw new ContentRequestError(409, "conflict", "Refresh Search successfully before copying current evidence into Today.");
     const opportunity = report.data && deriveSearchOpportunities(report.data).find(({ evidenceKey }) => evidenceKey === parsed.data.evidenceKey);
     if (!opportunity) throw new ContentRequestError(409, "conflict", "That search evidence is no longer available. Refresh Search and try again.");
     const tasks = await refreshTodayTasks([opportunityToTask(opportunity)]);

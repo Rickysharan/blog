@@ -388,6 +388,7 @@ textarea {
 .report-ranges a { padding: .55rem .75rem; border: 1px solid #b9c1b6; border-radius: 999px; background: #fffdf7; text-decoration: none; font-weight: 700; }
 .report-ranges a[aria-current="page"] { color: #fffdf7; background: #173f35; }
 .report-state { justify-self: start; padding: .2rem .45rem; border-radius: .4rem; background: #efe4c8; color: #76511d; font-size: .7rem; font-weight: 800; text-transform: uppercase; }
+.report-provenance { margin: 0 0 .8rem; color: #607169; font-size: .78rem; }
 .report-panel, .report-table-wrap { margin-top: 1.5rem; padding: 1.25rem; overflow-x: auto; border: 1px solid #ded8c9; border-radius: 1rem; background: rgb(255 253 247 / 78%); }
 .report-panel h2 { font-family: Georgia, serif; font-weight: 500; }
 .trend-chart { width: 100%; height: 14rem; color: #c86535; }

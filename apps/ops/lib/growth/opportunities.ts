@@ -39,7 +39,7 @@ export function deriveSearchOpportunities(report: SearchReport): SearchOpportuni
     evidence: `${sitemap.path} reports ${sitemap.errors} errors, ${sitemap.warnings} warnings, pending ${sitemap.pending ? "yes" : "no"}.`,
     proposedAction: "Inspect the sitemap response and Search Console details, then correct only verified faults.", priority: sitemap.errors ? 95 : 75, url: sitemap.path, query: null
   });
-  for (const item of report.inspections) if (item.verdict !== "PASS") result.push({
+  for (const item of report.inspections) if (["PARTIAL", "FAIL", "NEUTRAL"].includes(item.verdict)) result.push({
     evidenceKey: id("index", item.url), title: "Review an unindexed canonical page",
     evidence: `${item.url} has verdict ${item.verdict}${item.coverageState ? ` (${item.coverageState})` : ""}.`,
     proposedAction: "Review the URL inspection evidence, canonical, crawl access, and page quality before requesting indexing.", priority: 90, url: item.url, query: null

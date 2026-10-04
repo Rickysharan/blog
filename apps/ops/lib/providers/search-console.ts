@@ -12,7 +12,7 @@ export type SearchMetric = { clicks: number; impressions: number; ctr: number; p
 export type SearchRow = SearchMetric & { key: string };
 export type SearchPageRow = SearchRow & { previousClicks: number | null };
 export type SearchSitemap = { path: string; lastSubmitted: string | null; pending: boolean; warnings: number; errors: number };
-export type SearchInspection = { url: string; verdict: string; coverageState: string | null; userCanonical: string | null; googleCanonical: string | null; lastCrawlTime: string | null };
+export type SearchInspection = { url: string; verdict: "PASS" | "PARTIAL" | "FAIL" | "NEUTRAL" | "VERDICT_UNSPECIFIED"; coverageState: string | null; robotsTxtState: string | null; indexingState: string | null; pageFetchState: string | null; userCanonical: string | null; googleCanonical: string | null; lastCrawlTime: string | null };
 export type SearchReport = {
   summary: SearchMetric | null;
   trend: SearchRow[];
@@ -76,15 +76,24 @@ function parseInspection(value: unknown, requestedUrl: string, blogOrigin: strin
   if (!result || typeof result.inspectionUrl !== "string" || !status || typeof status !== "object" || Array.isArray(status)) throw new Error("Invalid URL inspection response");
   if (exactOrigin(result.inspectionUrl, blogOrigin) !== exactOrigin(requestedUrl, blogOrigin)) throw new Error("URL inspection did not match request");
   const row = status as Record<string, unknown>;
-  if (typeof row.verdict !== "string") throw new Error("Missing inspection verdict");
+  const verdicts = ["PASS", "PARTIAL", "FAIL", "NEUTRAL", "VERDICT_UNSPECIFIED"] as const;
+  if (typeof row.verdict !== "string" || !verdicts.includes(row.verdict as typeof verdicts[number])) throw new Error("Invalid inspection verdict");
   const canonical = (field: "userCanonical" | "googleCanonical") => {
     const item = row[field];
     return item === undefined ? null : typeof item === "string" ? exactOrigin(item, blogOrigin) : (() => { throw new Error("Invalid canonical"); })();
   };
   const text = (field: string) => row[field] === undefined ? null : typeof row[field] === "string" ? row[field] as string : (() => { throw new Error("Invalid inspection field"); })();
+  const known = (field: string, allowed: readonly string[]) => {
+    const item = text(field);
+    if (item !== null && !allowed.includes(item)) throw new Error(`Invalid inspection ${field}`);
+    return item;
+  };
   const lastCrawlTime = text("lastCrawlTime");
   if (lastCrawlTime && !Number.isFinite(Date.parse(lastCrawlTime))) throw new Error("Invalid crawl time");
-  return { url: exactOrigin(requestedUrl, blogOrigin), verdict: row.verdict, coverageState: text("coverageState"), userCanonical: canonical("userCanonical"), googleCanonical: canonical("googleCanonical"), lastCrawlTime };
+  const robotsTxtState = known("robotsTxtState", ["ROBOTS_TXT_STATE_UNSPECIFIED", "ALLOWED", "DISALLOWED"]);
+  const indexingState = known("indexingState", ["INDEXING_STATE_UNSPECIFIED", "INDEXING_ALLOWED", "BLOCKED_BY_META_TAG", "BLOCKED_BY_HTTP_HEADER", "BLOCKED_BY_ROBOTS_TXT"]);
+  const pageFetchState = known("pageFetchState", ["PAGE_FETCH_STATE_UNSPECIFIED", "SUCCESSFUL", "SOFT_404", "BLOCKED_ROBOTS_TXT", "NOT_FOUND", "ACCESS_DENIED", "SERVER_ERROR", "REDIRECT_ERROR", "ACCESS_FORBIDDEN", "BLOCKED_4XX", "INTERNAL_CRAWL_ERROR", "INVALID_URL"]);
+  return { url: exactOrigin(requestedUrl, blogOrigin), verdict: row.verdict as SearchInspection["verdict"], coverageState: text("coverageState"), robotsTxtState, indexingState, pageFetchState, userCanonical: canonical("userCanonical"), googleCanonical: canonical("googleCanonical"), lastCrawlTime };
 }
 
 export function transformSearchReports(input: {
@@ -96,9 +105,18 @@ export function transformSearchReports(input: {
   const keyed = (value: unknown, validate?: (key: string) => string) => parseRows(value, 1).map(({ keys, metric }) => ({ key: validate?.(keys[0]!) ?? keys[0]!, ...metric }));
   const prior = new Map(keyed(input.previousPages, (key) => exactOrigin(key, blogOrigin)).map((row) => [row.key, row.clicks]));
   const pages = keyed(input.pages, (key) => exactOrigin(key, blogOrigin)).map((row) => ({ ...row, previousClicks: prior.get(row.key) ?? null }));
+  const trend = keyed(input.trend);
+  const seenTrendDates = new Set<string>();
+  for (const row of trend) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(row.key)) throw new Error("Invalid Search Console trend date");
+    const parsed = new Date(`${row.key}T00:00:00.000Z`);
+    if (!Number.isFinite(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== row.key) throw new Error("Invalid Search Console trend date");
+    if (seenTrendDates.has(row.key)) throw new Error("Duplicate Search Console trend date"); seenTrendDates.add(row.key);
+  }
+  trend.sort((a, b) => a.key.localeCompare(b.key));
   return {
     summary: summaryRows[0]?.metric ?? null,
-    trend: keyed(input.trend), queries: keyed(input.queries), pages,
+    trend, queries: keyed(input.queries), pages,
     countries: keyed(input.countries), devices: keyed(input.devices),
     sitemaps: parseSitemaps(input.sitemaps, blogOrigin),
     inspections: input.inspections.map(({ url, response }) => parseInspection(response, url, blogOrigin))

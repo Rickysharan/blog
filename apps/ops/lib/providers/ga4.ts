@@ -49,7 +49,11 @@ function parseReport(value: unknown, dimensions: string[], metrics: string[]) {
       if (typeof item !== "string" || item.length > 2048) throw new Error("Invalid GA4 dimension");
       return item;
     });
-    return { dimensionValues, metricValues: row.metricValues.map(({ value: item }, index) => finite(item, metrics[index]!)) };
+    return { dimensionValues, metricValues: row.metricValues.map(({ value: item }, index) => {
+      const metric = metrics[index]!; const parsed = finite(item, metric);
+      if (metric === "engagementRate" && parsed > 1) throw new Error("Invalid GA4 engagementRate");
+      return parsed;
+    }) };
   });
 }
 
@@ -65,11 +69,16 @@ export function transformGa4Reports(input: {
 }): Ga4Report {
   const summaryRows = parseReport(input.summary, [], summaryMetrics);
   if (summaryRows.length !== 1) throw new Error("GA4 summary is missing");
+  const seenDates = new Set<string>();
   const trend = parseReport(input.trend, ["date"], summaryMetrics).map(({ dimensionValues, metricValues }) => {
     const raw = dimensionValues[0]!;
     if (!/^\d{8}$/.test(raw)) throw new Error("Invalid GA4 date");
-    return { date: `${raw.slice(0, 4)}-${raw.slice(4, 6)}-${raw.slice(6)}`, ...summaryFrom(metricValues) };
-  });
+    const date = `${raw.slice(0, 4)}-${raw.slice(4, 6)}-${raw.slice(6)}`;
+    const parsed = new Date(`${date}T00:00:00.000Z`);
+    if (!Number.isFinite(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== date) throw new Error("Invalid GA4 date");
+    if (seenDates.has(date)) throw new Error("Duplicate GA4 date"); seenDates.add(date);
+    return { date, ...summaryFrom(metricValues) };
+  }).sort((a, b) => a.date.localeCompare(b.date));
   const list = (value: unknown, dimension: string) => parseReport(value, [dimension], listMetrics).map(({ dimensionValues, metricValues }) => ({
     name: dimensionValues[0]!, views: metricValues[0]!, sessions: metricValues[1]!
   }));
