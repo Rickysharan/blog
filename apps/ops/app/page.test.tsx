@@ -24,7 +24,8 @@ const destinations = [
   ["Growth", "/growth"],
   ["Google Search", "/search"],
   ["Revenue", "/revenue"],
-  ["Site health", "/health"]
+  ["Site health", "/health"],
+  ["Connections", "/settings/connections"]
 ] as const;
 
 const identity = {

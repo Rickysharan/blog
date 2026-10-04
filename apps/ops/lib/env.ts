@@ -54,6 +54,33 @@ const studioContentEnvSchema = z.object({
   GITHUB_CONTENT_TOKEN: z.string().trim().min(1)
 }).strip();
 
+const encryptionKeySchema = z.string().superRefine((value, context) => {
+  const decoded = Buffer.from(value, "base64");
+  if (decoded.byteLength !== 32 || decoded.toString("base64") !== value) {
+    context.addIssue({ code: "custom", message: "GOOGLE_TOKEN_ENCRYPTION_KEY must be a base64-encoded 32-byte key" });
+  }
+});
+
+const googleOAuthEnvSchema = z.object({
+  GOOGLE_OAUTH_CLIENT_ID: z.string().trim().min(1),
+  GOOGLE_OAUTH_CLIENT_SECRET: z.string().min(1),
+  GOOGLE_TOKEN_ENCRYPTION_KEY: encryptionKeySchema,
+  GOOGLE_OAUTH_REDIRECT_URI: z.string().url(),
+  NEXT_PUBLIC_STUDIO_URL: studioOriginEnvSchema.shape.NEXT_PUBLIC_STUDIO_URL,
+  STUDIO_OPERATOR_EMAIL: studioOperatorEnvSchema.shape.STUDIO_OPERATOR_EMAIL
+}).superRefine((value, context) => {
+  const expected = `${value.NEXT_PUBLIC_STUDIO_URL}/api/connections/google/callback`;
+  if (value.GOOGLE_OAUTH_REDIRECT_URI !== expected) {
+    context.addIssue({ code: "custom", path: ["GOOGLE_OAUTH_REDIRECT_URI"], message: "Google redirect URI must exactly match the Studio callback" });
+  }
+}).transform((value) => ({
+  clientId: value.GOOGLE_OAUTH_CLIENT_ID,
+  clientSecret: value.GOOGLE_OAUTH_CLIENT_SECRET,
+  encryptionKey: value.GOOGLE_TOKEN_ENCRYPTION_KEY,
+  redirectUri: value.GOOGLE_OAUTH_REDIRECT_URI,
+  operatorEmail: value.STUDIO_OPERATOR_EMAIL
+}));
+
 type Environment = Record<string, string | undefined>;
 
 export type OpsPublicEnv = z.infer<typeof opsPublicEnvSchema>;
@@ -77,4 +104,8 @@ export function parseStudioOriginEnv(environment: Environment) {
 
 export function parseStudioContentEnv(environment: Environment) {
   return studioContentEnvSchema.parse(environment);
+}
+
+export function parseGoogleOAuthEnv(environment: Environment = process.env) {
+  return googleOAuthEnvSchema.parse(environment);
 }

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import { parseOpsPublicEnv, parseOpsServerEnv } from "./env";
+import { parseGoogleOAuthEnv, parseOpsPublicEnv, parseOpsServerEnv } from "./env";
 
 const publicEnvironment = {
   NEXT_PUBLIC_SUPABASE_URL: "https://project.supabase.co",
@@ -82,5 +82,20 @@ describe("ops environment", () => {
     expect(() => parseOpsServerEnv({ ...serverEnvironment, SUPABASE_SECRET_KEY: key })).toThrow(
       "SUPABASE_SECRET_KEY"
     );
+  });
+
+  test("keeps Google OAuth secrets server-only and requires an exact callback and 256-bit key", () => {
+    const google = {
+      ...publicEnvironment,
+      STUDIO_OPERATOR_EMAIL: "Operator@Example.com",
+      GOOGLE_OAUTH_CLIENT_ID: "client.apps.googleusercontent.com",
+      GOOGLE_OAUTH_CLIENT_SECRET: "client-secret-fixture",
+      GOOGLE_TOKEN_ENCRYPTION_KEY: Buffer.alloc(32, 4).toString("base64"),
+      GOOGLE_OAUTH_REDIRECT_URI: "https://studio.omnilede.example/api/connections/google/callback"
+    };
+    expect(parseGoogleOAuthEnv(google)).toMatchObject({ operatorEmail: "operator@example.com", redirectUri: google.GOOGLE_OAUTH_REDIRECT_URI });
+    expect(parseOpsPublicEnv(google)).not.toHaveProperty("GOOGLE_OAUTH_CLIENT_SECRET");
+    expect(() => parseGoogleOAuthEnv({ ...google, GOOGLE_TOKEN_ENCRYPTION_KEY: Buffer.alloc(31).toString("base64") })).toThrow("32-byte");
+    expect(() => parseGoogleOAuthEnv({ ...google, GOOGLE_OAUTH_REDIRECT_URI: "https://studio.omnilede.example/other" })).toThrow("exactly match");
   });
 });

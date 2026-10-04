@@ -8,7 +8,8 @@ export const STUDIO_DESTINATIONS = [
   { label: "Growth", shortLabel: "Growth", href: "/growth", mark: "G" },
   { label: "Google Search", shortLabel: "Search", href: "/search", mark: "S" },
   { label: "Revenue", shortLabel: "Revenue", href: "/revenue", mark: "R" },
-  { label: "Site health", shortLabel: "Health", href: "/health", mark: "H" }
+  { label: "Site health", shortLabel: "Health", href: "/health", mark: "H" },
+  { label: "Connections", shortLabel: "Connect", href: "/settings/connections", mark: "K" }
 ] as const;
 
 function NavigationLinks({ compact = false }: { compact?: boolean }) {
