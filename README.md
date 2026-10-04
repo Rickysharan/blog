@@ -47,7 +47,9 @@ Copy `.env.example` to `.env.local` and replace only values you own. Never expos
 | `GITHUB_REPOSITORY` | production moderation | `owner/repository` for Git-backed draft writes. |
 | `GITHUB_BRANCH` | production moderation | Protected branch used by the GitHub adapter, normally `main`. |
 | `GITHUB_TOKEN` | production moderation | Fine-grained token with Contents read/write on this repository only. |
-| `DRAFT_GENERATION_ENABLED` | optional | Exactly `true` enables Claude drafting; the default is `false`. |
+| `DRAFT_GENERATION_ENABLED` | optional | Enables the selected provider for the legacy generation command; default `false`. |
+| `DRAFT_GENERATION_PROVIDER` | optional | `ollama` for local inference; `anthropic` for the legacy paid integration. |
+| `OLLAMA_MODEL` | local writer | Installed local model name, such as `qwen2.5:7b`. |
 | `ANTHROPIC_API_KEY` | optional | Claude credential; Anthropic API usage may cost money. |
 | `ANTHROPIC_MODEL` | optional | Explicit Claude model name used by the drafting script. |
 | `STOCK_API_KEY` | optional | Financial Modeling Prep key for delayed market quotes. |
@@ -94,6 +96,10 @@ npm run validate:content
 
 In development, sign in at `/admin/login` with `ADMIN_PASSWORD`, open `/admin/review`, edit and Save to preserve a draft, then explicitly confirm Publish or Discard. In production, the admin uses the GitHub adapter and each mutation is a conditional Git commit. A stale editor receives a conflict instead of overwriting newer work.
 
+## Free local article writing
+
+Run `npm run content:local -- --limit 1` to discover recent RSS stories and generate private drafts with a downloaded Ollama model on your Mac. No paid AI API is used by this command. Optional `--sync` delivers drafts to the GitHub-backed review dashboard; publishing remains a separate editor action. See [local writer setup and recovery](docs/runbooks/local-writer.md).
+
 ## RSS discovery and optional drafting
 
 The daily discovery script uses public RSS/Atom feeds only. It normalizes URLs, sanitizes snippets, removes recent near-duplicates, skips unavailable publishers with an explanation, and writes `content/queue/trending.json` atomically.
@@ -103,7 +109,7 @@ npm run content:fetch
 npm run content:generate
 ```
 
-`content:generate` exits successfully without a network call while `DRAFT_GENERATION_ENABLED` is not exactly `true`. When enabled, it sends only queue facts to `api.anthropic.com/v1/messages`, requires `ANTHROPIC_API_KEY` and `ANTHROPIC_MODEL`, validates 700–1,000 original words plus `Why it matters`, and writes drafts only. The Vercel route caps a run at three drafts. No automation publishes an article.
+`content:generate` exits successfully without a network call while `DRAFT_GENERATION_ENABLED` is not exactly `true`. With `DRAFT_GENERATION_PROVIDER=ollama`, it uses the local model named by `OLLAMA_MODEL` and accepts 80–1,000-word briefs without padding thin source material. The legacy `anthropic` provider requires `ANTHROPIC_API_KEY` and `ANTHROPIC_MODEL`, uses the paid Anthropic endpoint, and retains its 700–1,000-word format. Both paths require `Why it matters`, validate content, and write drafts only. The `content:local` command always selects Ollama, regardless of the legacy provider setting. The Vercel route caps a run at three drafts. No automation publishes an article.
 
 ## Scheduling (choose one)
 

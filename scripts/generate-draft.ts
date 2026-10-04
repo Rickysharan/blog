@@ -4,7 +4,7 @@ try {
   const result = await generateDrafts();
   if (result.status === "disabled") {
     console.log(
-      "Draft generation is disabled. Set DRAFT_GENERATION_ENABLED=true and configure Anthropic credentials to enable it.",
+      "Draft generation is disabled. Set DRAFT_GENERATION_ENABLED=true and configure the chosen drafting provider to enable it.",
     );
   } else {
     console.log(

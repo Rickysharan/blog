@@ -54,7 +54,7 @@ export class GitHubDraftRepository implements DraftRepository {
   private asDraftError(error: unknown): DraftRepositoryError {
     if (error instanceof DraftRepositoryError) return error;
     if (error instanceof GitDataClientError) {
-      return new DraftRepositoryError(error.code, error.message);
+      return new DraftRepositoryError(error.code, error.message, { cause: error });
     }
     return new DraftRepositoryError("storage_unavailable", "GitHub draft operation failed");
   }
