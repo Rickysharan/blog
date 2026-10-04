@@ -23,8 +23,9 @@ it("authenticates before changing a task", async () => {
 it("completes and postpones a valid task through same-origin requests", async () => {
   expect((await PATCH(request({ action: "complete" }), context)).status).toBe(200);
   expect(d.complete).toHaveBeenCalledWith(id);
-  const until = "2026-10-04T12:00:00.000Z";
-  expect((await PATCH(request({ action: "postpone", postponedUntil: until }), context)).status).toBe(200);
+  const until = new Date(Date.now() + 7 * 86_400_000).toISOString();
+  const postponeResponse = await PATCH(request({ action: "postpone", postponedUntil: until }), context);
+  expect(postponeResponse.status).toBe(200);
   expect(d.postpone).toHaveBeenCalledWith(id, until);
 });
 

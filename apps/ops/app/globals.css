@@ -384,6 +384,18 @@ textarea {
 .source-card { display: grid; gap: 0.6rem; padding: 1.25rem; border: 1px solid #ded8c9; border-radius: 1rem; background: rgb(255 253 247 / 78%); }
 .source-card p, .source-card small { margin: 0; color: #607169; }
 .source-card strong { color: #173f35; font-family: Georgia, serif; font-size: 1.8rem; font-weight: 500; }
+.report-ranges { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1.5rem; }
+.report-ranges a { padding: .55rem .75rem; border: 1px solid #b9c1b6; border-radius: 999px; background: #fffdf7; text-decoration: none; font-weight: 700; }
+.report-ranges a[aria-current="page"] { color: #fffdf7; background: #173f35; }
+.report-state { justify-self: start; padding: .2rem .45rem; border-radius: .4rem; background: #efe4c8; color: #76511d; font-size: .7rem; font-weight: 800; text-transform: uppercase; }
+.report-panel, .report-table-wrap { margin-top: 1.5rem; padding: 1.25rem; overflow-x: auto; border: 1px solid #ded8c9; border-radius: 1rem; background: rgb(255 253 247 / 78%); }
+.report-panel h2 { font-family: Georgia, serif; font-weight: 500; }
+.trend-chart { width: 100%; height: 14rem; color: #c86535; }
+.report-table, .sr-report-table { width: 100%; min-width: 32rem; border-collapse: collapse; }
+.report-table caption, .sr-report-table caption { margin-bottom: 1rem; text-align: left; color: #173f35; font-family: Georgia, serif; font-size: 1.35rem; }
+.report-table th, .report-table td, .sr-report-table th, .sr-report-table td { padding: .65rem; border-bottom: 1px solid #ded8c9; text-align: left; }
+.sr-report-table { margin-top: 1rem; }
+.report-notice p { font-family: inherit; font-size: 1rem; }
 .overview-links, .task-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1.25rem; }
 .overview-links a, .task-actions a, .task-actions button, .secondary-action { padding: 0.7rem 0.9rem; border: 1px solid #b9c1b6; border-radius: 0.65rem; background: #fffdf7; color: #173f35; cursor: pointer; font-weight: 750; text-decoration: none; }
 .task-workspace, .category-table-wrap, .health-list { margin-top: 2rem; }

@@ -1,0 +1,18 @@
+import { describe, expect, it } from "vitest";
+import { createGa4Provider, transformGa4Reports } from "./ga4";
+
+const report = (dimensions: string[], metrics: string[], values: string[][]) => ({
+  dimensionHeaders: dimensions.map((name) => ({ name })), metricHeaders: metrics.map((name) => ({ name, type: "TYPE_INTEGER" })),
+  rows: values.map((row) => ({ dimensionValues: row.slice(0, dimensions.length).map((value) => ({ value })), metricValues: row.slice(dimensions.length).map((value) => ({ value })) }))
+});
+const summaryMetrics = ["activeUsers", "sessions", "screenPageViews", "engagementRate"];
+const listMetrics = ["screenPageViews", "sessions"];
+function fixture() { return {
+  summary: report([], summaryMetrics, [["10", "12", "30", "0.5"]]), trend: report(["date"], summaryMetrics, [["20261004", "10", "12", "30", "0.5"]]),
+  channels: report(["sessionDefaultChannelGroup"], listMetrics, [["Organic Search", "20", "8"]]), devices: report(["deviceCategory"], listMetrics, [["mobile", "16", "7"]]), countries: report(["country"], listMetrics, [["United Kingdom", "12", "6"]]), landingPages: report(["landingPagePlusQueryString"], listMetrics, [["/story", "9", "4"]]), articlePaths: report(["pagePath"], listMetrics, [["/story", "9", "4"]])
+}; }
+describe("GA4 transforms", () => {
+  it("parses official-shaped reports without inventing rows", () => expect(transformGa4Reports(fixture())).toMatchObject({ summary: { activeUsers: 10, sessions: 12, views: 30, engagementRate: .5 }, trend: [{ date: "2026-10-04" }], channels: [{ name: "Organic Search", views: 20, sessions: 8 }] }));
+  it("rejects missing dimensions and nonfinite values", () => { const missing = fixture(); missing.channels = report([], listMetrics, [["20", "8"]]); expect(() => transformGa4Reports(missing)).toThrow(/columns/); const invalid = fixture(); invalid.summary = report([], summaryMetrics, [["10", "12", "Infinity", "0.5"]]); expect(() => transformGa4Reports(invalid)).toThrow(/Invalid/); });
+  it("uses official date fields and never stores an invalid response", async () => { const bodies: string[] = []; let successes = 0; let failures = 0; const request = async (_url: string, init?: RequestInit) => { bodies.push(String(init?.body)); return { broken: true }; }; const cache = { read: async () => ({ source: "Google Analytics", range: { start: "2026-10-01", end: "2026-10-01" }, fetchedAt: null, state: "unavailable" as const, data: null }), success: async () => { successes += 1; }, failure: async () => { failures += 1; } }; await createGa4Provider({ request, propertyId: "123", cache, now: () => new Date("2026-10-04T12:00:00Z") })("7d"); expect(JSON.parse(bodies[0]!)).toMatchObject({ dateRanges: [{ startDate: "2026-09-28", endDate: "2026-10-04" }] }); expect(successes).toBe(0); expect(failures).toBe(1); });
+});

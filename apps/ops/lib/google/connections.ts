@@ -19,6 +19,30 @@ type ConnectionRow = {
 type CredentialSummary = { provider: GoogleProvider; scopes: string[] };
 type StoredCredential = { ciphertext: string; iv: string; authentication_tag: string };
 
+export async function readGoogleRefreshToken(
+  provider: GoogleProvider,
+  encryptionKey: string,
+): Promise<string> {
+  const { data, error } = await createServiceSupabaseClient().schema("app_private").from("provider_credentials")
+    .select("ciphertext,iv,authentication_tag").eq("provider", provider).maybeSingle();
+  if (error || !data) throw new Error("Google connection requires reconnection");
+  try {
+    const sealed: SealedToken = {
+      version: 1,
+      ciphertext: fromBytea(data.ciphertext),
+      iv: fromBytea(data.iv),
+      authenticationTag: fromBytea(data.authentication_tag),
+    };
+    const parsed: unknown = JSON.parse(openToken(sealed, encryptionKey));
+    if (!parsed || typeof parsed !== "object" || !("refreshToken" in parsed) || typeof parsed.refreshToken !== "string" || !parsed.refreshToken) {
+      throw new Error("invalid");
+    }
+    return parsed.refreshToken;
+  } catch {
+    throw new Error("Google connection requires reconnection");
+  }
+}
+
 export type GoogleConnectionStore = {
   stageSetup(now: string): Promise<void>;
   saveCredentials(rows: Array<StoredCredential & { provider: GoogleProvider; scopes: string[] }>): Promise<void>;
