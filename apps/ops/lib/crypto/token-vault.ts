@@ -4,14 +4,22 @@ import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
 
 export type SealedToken = {
   version: 1;
-  ciphertext: string;
-  iv: string;
-  authenticationTag: string;
+  ciphertext: CanonicalBase64;
+  iv: CanonicalBase64;
+  authenticationTag: CanonicalBase64;
 };
+
+export type CanonicalBase64 = string & { readonly __canonicalBase64: unique symbol };
+
+function encodeCanonical(value: Uint8Array): CanonicalBase64 {
+  return Buffer.from(value).toString("base64") as CanonicalBase64;
+}
 
 function decodeKey(key: string | Uint8Array): Buffer {
   const decoded = typeof key === "string" ? Buffer.from(key, "base64") : Buffer.from(key);
-  if (decoded.byteLength !== 32) throw new Error("Token encryption key must be exactly 32 bytes");
+  if (decoded.byteLength !== 32 || (typeof key === "string" && encodeCanonical(decoded) !== key)) {
+    throw new Error("Token encryption key must be a canonical base64-encoded 32-byte key");
+  }
   return decoded;
 }
 
@@ -29,9 +37,9 @@ export function sealToken(plaintext: string, key: string | Uint8Array): SealedTo
   const ciphertext = Buffer.concat([cipher.update(plaintext, "utf8"), cipher.final()]);
   return {
     version: 1,
-    ciphertext: ciphertext.toString("base64"),
-    iv: iv.toString("base64"),
-    authenticationTag: cipher.getAuthTag().toString("base64")
+    ciphertext: encodeCanonical(ciphertext),
+    iv: encodeCanonical(iv),
+    authenticationTag: encodeCanonical(cipher.getAuthTag())
   };
 }
 

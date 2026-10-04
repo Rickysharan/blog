@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { createReportCache, type CachedReport, type ReportCacheStore } from "./cache";
+import { createReportCache, isUsableProviderConnection, type CachedReport, type ReportCacheStore } from "./cache";
 
 function memoryStore(connected = true) {
   let report: CachedReport | null = null;
@@ -15,6 +15,11 @@ function memoryStore(connected = true) {
 const range = { start: "2026-09-01", end: "2026-09-28" };
 
 describe("provider report cache", () => {
+  it("requires encrypted credential existence before treating a provider row as connected", () => {
+    expect(isUsableProviderConnection("connected", false)).toBe(false);
+    expect(isUsableProviderConnection("connected", true)).toBe(true);
+    expect(isUsableProviderConnection("disconnected", true)).toBe(false);
+  });
   it("returns fresh successful provider data as connected", async () => {
     const { cache } = memoryStore();
     await cache.writeSuccessfulReport("google-analytics", "overview", {

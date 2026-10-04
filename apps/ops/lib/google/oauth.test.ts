@@ -26,6 +26,7 @@ describe("Google OAuth", () => {
     expect(url.searchParams.get("scope")?.split(" ").sort()).toEqual([...GOOGLE_READ_ONLY_SCOPES].sort());
     expect(url.searchParams.get("code_challenge_method")).toBe("S256");
     expect(url.searchParams.get("access_type")).toBe("offline");
+    expect(url.searchParams.has("include_granted_scopes")).toBe(false);
     expect(url.searchParams.get("state")).toBe(request.transaction.state);
     expect(url.searchParams.get("nonce")).toBe(request.transaction.nonce);
     expect(new Date(request.transaction.expiresAt).getTime() - now.getTime()).toBeLessThanOrEqual(10 * 60_000);
@@ -77,6 +78,30 @@ describe("Google OAuth", () => {
       .mockResolvedValueOnce(new Response(JSON.stringify({ access_token: "access", refresh_token: "refresh", id_token: idToken, expires_in: 3600, scope: GOOGLE_READ_ONLY_SCOPES.join(" ") }), { status: 200 }))
       .mockResolvedValueOnce(new Response(JSON.stringify({ keys: [jwk] }), { status: 200 }));
     await expect(exchangeAuthorizationCode({ code: "code", verifier: "verifier", nonce: "different", config, fetcher: badNonceFetcher, now }))
+      .rejects.toThrow("Google authorization could not be completed");
+  });
+
+  it("rejects returned scopes outside the explicit read-only allowlist", async () => {
+    const fetcher = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      access_token: "access", refresh_token: "refresh", id_token: "irrelevant",
+      scope: `${GOOGLE_READ_ONLY_SCOPES.join(" ")} https://www.googleapis.com/auth/analytics.edit`
+    }), { status: 200 }));
+    await expect(exchangeAuthorizationCode({ code: "code", verifier: "verifier", nonce: "nonce", config, fetcher }))
+      .rejects.toThrow("Google authorization could not be completed");
+    expect(fetcher).toHaveBeenCalledOnce();
+  });
+
+  it("rejects a matching-kid JWKS entry unless it is an RS256 signing key permitted to verify", async () => {
+    const now = new Date("2026-10-04T10:00:00.000Z");
+    const { privateKey, publicKey } = generateKeyPairSync("rsa", { modulusLength: 2048 });
+    const header = Buffer.from(JSON.stringify({ alg: "RS256", kid: "key-unsafe" })).toString("base64url");
+    const payload = Buffer.from(JSON.stringify({ iss: "https://accounts.google.com", aud: config.clientId, sub: "sub", email: config.operatorEmail, email_verified: true, nonce: "nonce", iat: 1791107900, exp: 1791108600 })).toString("base64url");
+    const idToken = `${header}.${payload}.${sign("RSA-SHA256", Buffer.from(`${header}.${payload}`), privateKey).toString("base64url")}`;
+    const unsafeJwk = { ...publicKey.export({ format: "jwk" }), kid: "key-unsafe", alg: "RS256", use: "enc", key_ops: ["encrypt"] };
+    const fetcher = vi.fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ access_token: "access", refresh_token: "refresh", id_token: idToken, expires_in: 3600, scope: GOOGLE_READ_ONLY_SCOPES.join(" ") }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ keys: [unsafeJwk] }), { status: 200 }));
+    await expect(exchangeAuthorizationCode({ code: "code", verifier: "verifier", nonce: "nonce", config, fetcher, now }))
       .rejects.toThrow("Google authorization could not be completed");
   });
 });

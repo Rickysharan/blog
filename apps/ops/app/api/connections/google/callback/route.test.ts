@@ -21,7 +21,7 @@ beforeEach(() => {
   d.auth.mockResolvedValue({ email: "operator@example.com" });
   d.cookies.get.mockReturnValue({ value: JSON.stringify({ version: 1, ciphertext: "YQ==", iv: "YQ==", authenticationTag: "YQ==" }) });
   d.open.mockReturnValue(JSON.stringify(transaction));
-  d.config.mockReturnValue({ clientId: "client", clientSecret: "secret", redirectUri: "https://studio.example/api/connections/google/callback", encryptionKey: "key", operatorEmail: "operator@example.com" });
+  d.config.mockReturnValue({ clientId: "client", clientSecret: "secret", redirectUri: "https://studio.example/api/connections/google/callback", encryptionKey: "key", operatorEmail: "operator@example.com", studioOrigin: "https://studio.example" });
   d.exchange.mockResolvedValue({ refreshToken: "refresh-fixture", accessToken: "access-fixture", expiresAt: "2026-10-04T11:00:00.000Z", scopes: ["openid"], email: "operator@example.com", subject: "sub" });
 });
 
@@ -58,5 +58,13 @@ describe("Google OAuth callback", () => {
     expect(d.cookies.get).not.toHaveBeenCalled();
     expect(d.exchange).not.toHaveBeenCalled();
     expect(d.persist).not.toHaveBeenCalled();
+  });
+
+  it("uses only the configured Studio origin or inert fallback for error redirects", async () => {
+    d.auth.mockRejectedValue(new Error("denied"));
+    const poisoned = new Request("https://poisoned.example/api/connections/google/callback?code=x&state=y", { headers: { "x-forwarded-host": "evil.example" } });
+    expect((await GET(poisoned)).headers.get("location")).toBe("https://studio.example/settings/connections?error=verification");
+    d.config.mockImplementation(() => { throw new Error("invalid env"); });
+    expect((await GET(poisoned)).headers.get("location")).toBe("https://invalid.local/settings/connections?error=verification");
   });
 });

@@ -78,7 +78,8 @@ const googleOAuthEnvSchema = z.object({
   clientSecret: value.GOOGLE_OAUTH_CLIENT_SECRET,
   encryptionKey: value.GOOGLE_TOKEN_ENCRYPTION_KEY,
   redirectUri: value.GOOGLE_OAUTH_REDIRECT_URI,
-  operatorEmail: value.STUDIO_OPERATOR_EMAIL
+  operatorEmail: value.STUDIO_OPERATOR_EMAIL,
+  studioOrigin: value.NEXT_PUBLIC_STUDIO_URL
 }));
 
 type Environment = Record<string, string | undefined>;

@@ -56,7 +56,6 @@ export function createAuthorizationRequest(config: GoogleOAuthConfig, now = new 
     response_type: "code",
     scope: GOOGLE_READ_ONLY_SCOPES.join(" "),
     access_type: "offline",
-    include_granted_scopes: "true",
     prompt: "consent",
     state: transaction.state,
     nonce: transaction.nonce,
@@ -102,7 +101,10 @@ async function validateIdToken(
     const response = await fetcher(JWKS_ENDPOINT, { headers: { accept: "application/json" }, cache: "no-store" });
     if (!response.ok) throw new Error("invalid token");
     const body = (await response.json()) as { keys?: Array<Record<string, unknown>> };
-    const jwk = body.keys?.find((candidate) => candidate.kid === header.kid && candidate.kty === "RSA");
+    const jwk = body.keys?.find((candidate) =>
+      candidate.kid === header.kid && candidate.kty === "RSA" && candidate.alg === "RS256" && candidate.use === "sig" &&
+      (!Array.isArray(candidate.key_ops) || candidate.key_ops.includes("verify"))
+    );
     if (!jwk) throw new Error("invalid token");
     const key = createPublicKey({ key: jwk as import("node:crypto").JsonWebKey, format: "jwk" });
     if (!verify("RSA-SHA256", Buffer.from(`${encodedHeader}.${encodedPayload}`), key, Buffer.from(signature, "base64url"))) {
@@ -150,15 +152,20 @@ export async function exchangeAuthorizationCode(input: ExchangeInput): Promise<G
     if (typeof body.access_token !== "string" || typeof body.refresh_token !== "string" || typeof body.id_token !== "string") {
       throw new Error("exchange failed");
     }
+    const returnedScopes = typeof body.scope === "string" ? [...new Set(body.scope.split(/\s+/).filter(Boolean))] : [];
+    const allowedScopes = new Set<string>(GOOGLE_READ_ONLY_SCOPES);
+    if (returnedScopes.length !== GOOGLE_READ_ONLY_SCOPES.length ||
+        !returnedScopes.every((scope) => allowedScopes.has(scope)) ||
+        !GOOGLE_READ_ONLY_SCOPES.every((required) => returnedScopes.includes(required))) {
+      throw new Error("invalid scopes");
+    }
     const identity = await validateIdToken(body.id_token, input.config, input.nonce, fetcher, input.now);
     const expiresIn = typeof body.expires_in === "number" && body.expires_in > 0 ? body.expires_in : null;
-    const scope = typeof body.scope === "string" ? body.scope.split(/\s+/).filter(Boolean) : [];
-    if (!GOOGLE_READ_ONLY_SCOPES.every((required) => scope.includes(required))) throw new Error("missing scopes");
     return {
       accessToken: body.access_token,
       refreshToken: body.refresh_token,
       expiresAt: expiresIn ? new Date((input.now ?? new Date()).getTime() + expiresIn * 1000).toISOString() : null,
-      scopes: [...GOOGLE_READ_ONLY_SCOPES],
+      scopes: returnedScopes,
       ...identity
     };
   } catch {

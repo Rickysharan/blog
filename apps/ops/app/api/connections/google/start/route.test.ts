@@ -17,9 +17,20 @@ const request = (origin = "https://studio.example") => new Request("https://stud
 beforeEach(() => {
   vi.resetAllMocks();
   d.auth.mockResolvedValue({ email: "operator@example.com" });
-  d.config.mockReturnValue({ encryptionKey: "server-key" });
+  d.config.mockReturnValue({ encryptionKey: "server-key", studioOrigin: "https://studio.example" });
   d.create.mockReturnValue({ authorizationUrl: "https://accounts.google.com/o/oauth2/v2/auth?state=safe", transaction: { state: "safe" } });
   d.seal.mockReturnValue({ version: 1, ciphertext: "sealed", iv: "iv", authenticationTag: "tag" });
+});
+
+it("never builds an error redirect from a poisoned request host", async () => {
+  d.auth.mockRejectedValue(new Error("denied"));
+  const poisoned = new Request("https://poisoned.example/api/connections/google/start", {
+    method: "POST", headers: { origin: "https://poisoned.example", "x-forwarded-host": "also-evil.example" }
+  });
+  expect((await POST(poisoned)).headers.get("location")).toBe("https://studio.example/settings/connections?error=start");
+
+  d.config.mockImplementation(() => { throw new Error("invalid env"); });
+  expect((await POST(poisoned)).headers.get("location")).toBe("https://invalid.local/settings/connections?error=start");
 });
 
 it("requires same-origin operator intent before creating an OAuth transaction", async () => {

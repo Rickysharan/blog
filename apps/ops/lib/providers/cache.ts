@@ -32,6 +32,10 @@ function fallbackRange(): ReportRange {
   return { start: today, end: today };
 }
 
+export function isUsableProviderConnection(state: string | null, credentialExists: boolean): boolean {
+  return state !== null && state !== "disconnected" && credentialExists;
+}
+
 export function createReportCache(store: ReportCacheStore) {
   return {
     async readReport<T>(provider: GoogleProvider, key: string): Promise<ReportEnvelope<T>> {
@@ -60,10 +64,13 @@ export function createReportCache(store: ReportCacheStore) {
 
 const databaseStore: ReportCacheStore = {
   async hasConnection(provider) {
-    const { data, error } = await createServiceSupabaseClient().from("provider_connections")
-      .select("provider").eq("provider", provider).neq("state", "disconnected").maybeSingle();
-    if (error) throw new Error("Provider reports are temporarily unavailable");
-    return Boolean(data);
+    const client = createServiceSupabaseClient();
+    const [{ data: connection, error: connectionError }, { data: credential, error: credentialError }] = await Promise.all([
+      client.from("provider_connections").select("state").eq("provider", provider).maybeSingle(),
+      client.schema("app_private").from("provider_credentials").select("provider").eq("provider", provider).maybeSingle()
+    ]);
+    if (connectionError || credentialError) throw new Error("Provider reports are temporarily unavailable");
+    return isUsableProviderConnection(connection?.state ?? null, Boolean(credential));
   },
   async read(provider, key) {
     const { data, error } = await createServiceSupabaseClient().from("provider_report_cache")

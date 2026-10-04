@@ -20,11 +20,20 @@ describe("token vault", () => {
     const ciphertext = Buffer.from(sealed.ciphertext, "base64");
     ciphertext[0] ^= 1;
 
-    expect(() => openToken({ ...sealed, ciphertext: ciphertext.toString("base64") }, key)).toThrow(
+    expect(() => openToken({ ...sealed, ciphertext: ciphertext.toString("base64") } as typeof sealed, key)).toThrow(
       "Unable to open protected credential"
     );
-    expect(() => sealToken("x", Buffer.alloc(31).toString("base64"))).toThrow("32 bytes");
+    expect(() => sealToken("x", Buffer.alloc(31).toString("base64"))).toThrow("base64-encoded 32-byte key");
     expect(() => openToken(sealed, Buffer.alloc(32, 8).toString("base64"))).toThrow(
+      "Unable to open protected credential"
+    );
+  });
+
+  it("rejects non-canonical base64 even when it decodes to the required length", () => {
+    const canonical = Buffer.alloc(32, 7).toString("base64");
+    expect(() => sealToken("x", `${canonical}\n`)).toThrow("base64-encoded 32-byte key");
+    const sealed = sealToken("x", canonical);
+    expect(() => openToken({ ...sealed, iv: `${sealed.iv}\n` } as typeof sealed, canonical)).toThrow(
       "Unable to open protected credential"
     );
   });

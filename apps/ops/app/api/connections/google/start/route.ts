@@ -8,10 +8,12 @@ import { requireSameOrigin } from "../../../../../lib/http/same-origin";
 
 export const dynamic = "force-dynamic";
 export async function POST(request: Request) {
+  let studioOrigin = "https://invalid.local";
   try {
+    const config = parseGoogleOAuthEnv();
+    studioOrigin = config.studioOrigin;
     await requireStudioOperator();
     requireSameOrigin(request);
-    const config = parseGoogleOAuthEnv();
     const { authorizationUrl, transaction } = createAuthorizationRequest(config);
     const sealed = sealToken(JSON.stringify(transaction), config.encryptionKey);
     (await cookies()).set(GOOGLE_OAUTH_TRANSACTION_COOKIE, JSON.stringify(sealed), {
@@ -24,6 +26,6 @@ export async function POST(request: Request) {
     });
     return Response.redirect(authorizationUrl, 303);
   } catch {
-    return Response.redirect(new URL("/settings/connections?error=start", request.url), 303);
+    return Response.redirect(new URL("/settings/connections?error=start", studioOrigin), 303);
   }
 }
