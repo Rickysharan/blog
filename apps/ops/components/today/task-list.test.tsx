@@ -186,6 +186,53 @@ it("requires a refresh when native plan authorization is no longer available", a
   expect(screen.getByRole("button", { name: /refresh from this mac/i })).toBeEnabled();
 });
 
+it("settles only the current failed Mac refresh and can try refresh again", async () => {
+  window.__OMNILEDE_NATIVE__ = { available: true };
+  window.webkit = { messageHandlers: { omnilede: { postMessage } } };
+  const ids = ["refresh-failed-123", "refresh-retry-1234"];
+  render(<TaskList initialTasks={[task]} fetcher={fetcher} nativeRequestId={() => ids.shift()!} />);
+  const refresh = screen.getByRole("button", { name: /refresh from this mac/i });
+  fireEvent.click(refresh);
+  window.dispatchEvent(new CustomEvent(NATIVE_PLAN_EVENT, { detail: {
+    requestId: "stale-failure-123", status: "error", error: "Daily plan could not be refreshed. Try again.",
+  } }));
+  expect(refresh).toBeDisabled();
+  expect(screen.queryByText(/daily plan could not be refreshed/i)).not.toBeInTheDocument();
+
+  window.dispatchEvent(new CustomEvent(NATIVE_PLAN_EVENT, { detail: {
+    requestId: "refresh-failed-123", status: "error", error: "Daily plan could not be refreshed. Try again.",
+  } }));
+  expect(await screen.findByText(/daily plan could not be refreshed/i)).toBeInTheDocument();
+  expect(refresh).toBeEnabled();
+  fireEvent.click(refresh);
+  expect(postMessage).toHaveBeenLastCalledWith({ action: "refresh", requestId: "refresh-retry-1234" });
+});
+
+it("does not count or retry delivery when reconciliation fails after a delivered line", async () => {
+  window.__OMNILEDE_NATIVE__ = { available: true };
+  window.webkit = { messageHandlers: { omnilede: { postMessage } } };
+  const ids = ["plan-refresh-1234", "reconcile-write-12"];
+  render(<TaskList initialTasks={[task]} fetcher={fetcher} nativeRequestId={() => ids.shift()!} />);
+  fireEvent.click(screen.getByRole("button", { name: /refresh from this mac/i }));
+  window.dispatchEvent(new CustomEvent(NATIVE_PLAN_EVENT, { detail: {
+    requestId: "plan-refresh-1234", date: "2026-10-03", completedCount: 1, totalTasks: 3,
+    draftCount: 2, publishedCount: 24,
+    tasks: [
+      { category: "anime", label: "Anime", reason: "Least recent coverage", status: "todo" },
+      { category: "sports", label: "Sports", reason: "Draft waiting for review", status: "draft-ready" },
+      { category: "finance", label: "Finance", reason: "Saved work needs attention", status: "needs-attention" },
+    ],
+  } }));
+  fireEvent.click(await screen.findByRole("button", { name: /start writing anime/i }));
+  window.dispatchEvent(new CustomEvent("omnilede:native-status", { detail: {
+    category: "anime", requestId: "reconcile-write-12", phase: "delivery-reconciliation-failed", progress: 100,
+    etaSeconds: null, delivery: "not-delivered", error: "Delivery needs checking. Refresh this plan and check Content before writing again.",
+  } }));
+  expect(await screen.findByRole("alert")).toHaveTextContent(/refresh.*check content/i);
+  expect(screen.getByText(/1 of 3 written/i)).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: /start writing anime|try again anime/i })).not.toBeInTheDocument();
+});
+
 it("does not expose Mac planner refresh in an ordinary browser", () => {
   render(<TaskList initialTasks={[task]} fetcher={fetcher} />);
   expect(screen.queryByRole("button", { name: /refresh from this mac/i })).not.toBeInTheDocument();

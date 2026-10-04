@@ -6,6 +6,7 @@ import {
   hasNativeWriter,
   postNativeAction,
   readNativeStatus,
+  readNativePlanFailure,
   readNativePlanSnapshot,
 } from "./bridge";
 
@@ -71,6 +72,13 @@ describe("native writer bridge", () => {
     expect(readNativePlanSnapshot(new CustomEvent(NATIVE_PLAN_EVENT, { detail: { ...detail, totalTasks: 4 } }))).toBeNull();
     expect(readNativePlanSnapshot(new CustomEvent(NATIVE_PLAN_EVENT, { detail: { ...detail, tasks: [...detail.tasks, detail.tasks[0]] } }))).toBeNull();
     expect(readNativePlanSnapshot(new CustomEvent(NATIVE_PLAN_EVENT, { detail: { ...detail, tasks: [{ ...detail.tasks[0], category: "technology" }, ...detail.tasks.slice(1)] } }))).toBeNull();
+  });
+
+  it("accepts only the fixed correlated native planner failure", () => {
+    const detail = { requestId: "refresh-12345678", status: "error", error: "Daily plan could not be refreshed. Try again." };
+    expect(readNativePlanFailure(new CustomEvent(NATIVE_PLAN_EVENT, { detail }))).toEqual(detail);
+    expect(readNativePlanFailure(new CustomEvent(NATIVE_PLAN_EVENT, { detail: { ...detail, requestId: "short" } }))).toBeNull();
+    expect(readNativePlanFailure(new CustomEvent(NATIVE_PLAN_EVENT, { detail: { ...detail, error: "secret raw failure" } }))).toBeNull();
   });
 
   it("validates an optional exact plan date without requiring it for Categories writes", () => {

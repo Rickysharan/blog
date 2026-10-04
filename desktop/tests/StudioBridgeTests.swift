@@ -297,42 +297,128 @@ struct StudioBridgeTests {
         try expect(waitUntil { plans.last?["requestId"] as? String == "refresh-plan-again-123" }, "accepts a new validated snapshot after delivery")
         try expect(planner.beginPlannedWrite(category: "anime", planDate: "2026-10-03") == .startNew, "only a new validated actionable snapshot restores delivered authorization")
         planner.finishPlannedWrite(category: "anime", planDate: "2026-10-03", delivered: false)
+        try expect(planner.beginPlannedWrite(category: "anime", planDate: "2026-10-03") == .resume, "switches a failed first todo run to resume despite the stale todo snapshot")
+        planner.finishPlannedWrite(category: "anime", planDate: "2026-10-03", delivered: false)
+
+        planner.refresh(requestId: "refresh-todo-retry-123")
+        try expect(waitUntil { plans.last?["requestId"] as? String == "refresh-todo-retry-123" }, "refreshes before the todo failure integration")
 
         try """
         #!/bin/bash
         if [ "${OMNILEDE_START_NEW:-}" = "true" ]; then
+          touch "$PWD/saved-todo-state"
           printf '%s\n' '@omnilede {"status":"failed","stage":"content-conflict","percent":10,"deliveryStatus":"not-delivered"}'
           exit 17
         fi
+        if [ ! -f "$PWD/saved-todo-state" ]; then exit 18; fi
         touch "$PWD/resumed-saved-work"
         printf '%s\n' '@omnilede {"status":"completed","stage":"delivery-verification","percent":100,"deliveryStatus":"delivered"}'
         """.write(to: plannerRoot.appendingPathComponent("Start OmniLede.command"), atomically: true, encoding: .utf8)
         var resumedStatuses: [[String: Any]] = []
-        let resumeWriter = LocalWriterController(configuration: plannerConfiguration, completionSink: { category, _, planDate, delivered in
-            if let planDate { planner.finishPlannedWrite(category: category, planDate: planDate, delivered: delivered) }
+        let resumeWriter = LocalWriterController(configuration: plannerConfiguration, completionSink: { category, _, planDate, outcome in
+            if let planDate { planner.finishPlannedWrite(category: category, planDate: planDate, outcome: outcome) }
         }) { resumedStatuses.append($0) }
         let resumePolicy = StudioBridgePolicy(
             configuration: plannerConfiguration,
             plannedWriteMode: { planner.beginPlannedWrite(category: $0, planDate: $1) },
             start: { command in
                 if !resumeWriter.perform(command), case let .write(category, _, planDate?, _) = command {
-                    planner.finishPlannedWrite(category: category, planDate: planDate, delivered: false)
+                    planner.finishPlannedWrite(category: category, planDate: planDate, outcome: .retryableFailure)
                 }
             },
             reject: { _ in }
         )
         try expect(resumePolicy.handle(
-            body: ["action": "write", "category": "finance", "planDate": "2026-10-03", "requestId": "resume-saved-12345"],
+            body: ["action": "write", "category": "anime", "planDate": "2026-10-03", "requestId": "first-todo-12345"],
             sourceURL: URL(string: "https://studio.example.com/today")!, isMainFrame: true, hasUserActivation: true
-        ), "accepts a retry derived from the latest bound plan task")
+        ), "starts the first validated todo run as new")
+        try expect(waitUntil { resumedStatuses.contains { $0["phase"] as? String == "content-conflict" } }, "observes the first todo failure after resumable state is created")
+        try expect(resumePolicy.handle(
+            body: ["action": "write", "category": "anime", "planDate": "2026-10-03", "requestId": "resume-saved-12345"],
+            sourceURL: URL(string: "https://studio.example.com/today")!, isMainFrame: true, hasUserActivation: true
+        ), "allows Try again after cleanup")
         try expect(waitUntil { resumedStatuses.contains { $0["delivery"] as? String == "delivered" } }, "resumable saved work reaches verified delivery instead of content conflict")
         try expect(FileManager.default.fileExists(atPath: plannerRoot.appendingPathComponent("resumed-saved-work").path), "omits start-new for a validated resumable plan task")
         try expect(!resumePolicy.handle(
-            body: ["action": "write", "category": "finance", "planDate": "2026-10-03", "requestId": "duplicate-save-1234"],
+            body: ["action": "write", "category": "anime", "planDate": "2026-10-03", "requestId": "duplicate-save-1234"],
             sourceURL: URL(string: "https://studio.example.com/today")!, isMainFrame: true, hasUserActivation: true
         ), "rejects a second click after verified delivery until another validated snapshot")
         try expect(resumePolicy.rejectionReason == "rejected-plan-binding", "exposes only the fixed rejection reason needed for a truthful unavailable response")
         planner.shutdown()
+
+        let plannerFailureRoot = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("omnilede-planner-failures-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: plannerFailureRoot) }
+        try FileManager.default.createDirectory(at: plannerFailureRoot, withIntermediateDirectories: true)
+        let plannerFailureConfiguration = try StudioConfiguration(studioURL: "https://studio.example.com", projectPath: plannerFailureRoot.path)
+        var plannerFailures: [[String: Any]] = []
+        let failurePlanner = LocalPlannerController(configuration: plannerFailureConfiguration) { plannerFailures.append($0) }
+        try "#!/bin/bash\nprintf '%s\\n' '@omnilede-plan {malformed}'\n".write(to: plannerFailureRoot.appendingPathComponent("Start OmniLede.command"), atomically: true, encoding: .utf8)
+        failurePlanner.refresh(requestId: "malformed-plan-123")
+        try expect(waitUntil { plannerFailures.last?["requestId"] as? String == "malformed-plan-123" }, "settles malformed planner output with a correlated failure")
+        try expect(plannerFailures.last?["error"] as? String == "Daily plan could not be refreshed. Try again.", "uses fixed safe planner failure copy")
+        try "#!/bin/bash\nprintf '%s\\n' '@omnilede-plan-error {\"message\":\"secret raw failure\"}'\nexit 1\n".write(to: plannerFailureRoot.appendingPathComponent("Start OmniLede.command"), atomically: true, encoding: .utf8)
+        failurePlanner.refresh(requestId: "protocol-error-123")
+        try expect(waitUntil { plannerFailures.last?["requestId"] as? String == "protocol-error-123" }, "settles the explicit planner error protocol without exposing its message")
+        try "#!/bin/bash\nprintf '%s\\n' '@omnilede-plan {\"date\":\"2026-10-03\",\"completedCount\":1,\"totalTasks\":3,\"draftCount\":2,\"publishedCount\":24,\"tasks\":[{\"category\":\"anime\",\"label\":\"Anime\",\"reason\":\"Least recent coverage\",\"status\":\"todo\"},{\"category\":\"sports\",\"label\":\"Sports\",\"reason\":\"Draft waiting\",\"status\":\"draft-ready\"},{\"category\":\"finance\",\"label\":\"Finance\",\"reason\":\"Saved work\",\"status\":\"needs-attention\"}]}'\nexit 9\n".write(to: plannerFailureRoot.appendingPathComponent("Start OmniLede.command"), atomically: true, encoding: .utf8)
+        failurePlanner.refresh(requestId: "nonzero-plan-1234")
+        try expect(waitUntil { plannerFailures.last?["requestId"] as? String == "nonzero-plan-1234" }, "settles a nonzero planner even when it printed a valid snapshot")
+        let launchFailurePlanner = LocalPlannerController(
+            configuration: plannerFailureConfiguration,
+            launcherExecutableURL: plannerFailureRoot.appendingPathComponent("missing-bash")
+        ) { plannerFailures.append($0) }
+        launchFailurePlanner.refresh(requestId: "launch-failure-123")
+        try expect(waitUntil { plannerFailures.last?["requestId"] as? String == "launch-failure-123" }, "settles planner launch failure")
+        failurePlanner.shutdown()
+        launchFailurePlanner.shutdown()
+
+        let reconciliationRoot = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("omnilede-reconciliation-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: reconciliationRoot) }
+        try FileManager.default.createDirectory(at: reconciliationRoot, withIntermediateDirectories: true)
+        try """
+        #!/bin/bash
+        if [ "$OMNILEDE_ACTION" = "plan-snapshot" ]; then
+          printf '%s\n' '@omnilede-plan {"date":"2026-10-03","completedCount":1,"totalTasks":3,"draftCount":2,"publishedCount":24,"tasks":[{"category":"anime","label":"Anime","reason":"Least recent coverage","status":"todo"},{"category":"sports","label":"Sports","reason":"Draft waiting","status":"draft-ready"},{"category":"finance","label":"Finance","reason":"Saved work","status":"needs-attention"}]}'
+          exit 0
+        fi
+        printf '%s\n' '@omnilede {"status":"completed","stage":"delivery-verification","percent":100,"deliveryStatus":"delivered"}'
+        printf '%s\n' 'daily-plan reconciliation failed'
+        exit 23
+        """.write(to: reconciliationRoot.appendingPathComponent("Start OmniLede.command"), atomically: true, encoding: .utf8)
+        let reconciliationConfiguration = try StudioConfiguration(studioURL: "https://studio.example.com", projectPath: reconciliationRoot.path)
+        var reconciliationPlans: [[String: Any]] = []
+        let reconciliationPlanner = LocalPlannerController(configuration: reconciliationConfiguration) { reconciliationPlans.append($0) }
+        reconciliationPlanner.refresh(requestId: "reconcile-plan-123")
+        try expect(waitUntil { reconciliationPlans.last?["date"] as? String == "2026-10-03" }, "loads the plan for reconciliation failure coverage")
+        var reconciliationStatuses: [[String: Any]] = []
+        let reconciliationWriter = LocalWriterController(configuration: reconciliationConfiguration, completionSink: { category, _, planDate, outcome in
+            if let planDate { reconciliationPlanner.finishPlannedWrite(category: category, planDate: planDate, outcome: outcome) }
+        }) { reconciliationStatuses.append($0) }
+        let reconciliationPolicy = StudioBridgePolicy(
+            configuration: reconciliationConfiguration,
+            plannedWriteMode: { reconciliationPlanner.beginPlannedWrite(category: $0, planDate: $1) },
+            start: { command in
+                if !reconciliationWriter.perform(command), case let .write(category, _, planDate?, _) = command {
+                    reconciliationPlanner.finishPlannedWrite(category: category, planDate: planDate, outcome: .retryableFailure)
+                }
+            }, reject: { _ in }
+        )
+        try expect(reconciliationPolicy.handle(
+            body: ["action": "write", "category": "anime", "planDate": "2026-10-03", "requestId": "reconcile-write-12"],
+            sourceURL: URL(string: "https://studio.example.com/today")!, isMainFrame: true, hasUserActivation: true
+        ), "starts reconciliation failure fixture")
+        try expect(waitUntil { reconciliationStatuses.last?["phase"] as? String == "delivery-reconciliation-failed" }, "does not publish an early delivered line before the process exit is known")
+        try expect(!reconciliationStatuses.contains { $0["delivery"] as? String == "delivered" }, "never reports verified delivery when reconciliation exits nonzero")
+        try expect(!reconciliationPolicy.handle(
+            body: ["action": "write", "category": "anime", "planDate": "2026-10-03", "requestId": "reconcile-again-12"],
+            sourceURL: URL(string: "https://studio.example.com/today")!, isMainFrame: true, hasUserActivation: true
+        ), "keeps reconciliation failure consumed to prevent a duplicate article")
+        reconciliationPlanner.refresh(requestId: "reconcile-refresh-12")
+        try expect(waitUntil { reconciliationPlans.last?["requestId"] as? String == "reconcile-refresh-12" }, "can refresh after reconciliation failure")
+        try expect(!reconciliationPolicy.handle(
+            body: ["action": "write", "category": "anime", "planDate": "2026-10-03", "requestId": "reconcile-stale-12"],
+            sourceURL: URL(string: "https://studio.example.com/today")!, isMainFrame: true, hasUserActivation: true
+        ), "does not unlock a duplicate when refreshed plan state is still stale")
+        reconciliationPlanner.shutdown()
 
         let plannedWriterRoot = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("omnilede-planned-writer-\(UUID().uuidString)")
         defer { try? FileManager.default.removeItem(at: plannedWriterRoot) }

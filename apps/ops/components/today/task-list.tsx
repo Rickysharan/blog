@@ -9,6 +9,7 @@ import {
   NATIVE_STATUS_EVENT,
   hasNativeWriter,
   postNativeAction,
+  readNativePlanFailure,
   readNativePlanSnapshot,
   readNativeStatus,
   type NativePlanSnapshot,
@@ -34,12 +35,20 @@ export function TaskList({ initialTasks, fetcher = fetch, nativeRequestId = defa
   useEffect(() => {
     const listener = (event: Event) => {
       const snapshot = readNativePlanSnapshot(event);
-      if (!snapshot || snapshot.requestId !== pendingPlanRequest.current) return;
+      const failure = readNativePlanFailure(event);
+      const requestId = snapshot?.requestId ?? failure?.requestId;
+      if (!requestId || requestId !== pendingPlanRequest.current) return;
       pendingPlanRequest.current = null;
       setNativePlanPending(false);
       planWriterRequests.current = {};
       setPlanWriterStatuses({});
-      setNativePlan(snapshot);
+      if (snapshot) {
+        setNotice(undefined);
+        setNativePlan(snapshot);
+      } else if (failure) {
+        setNativePlan(undefined);
+        setNotice(failure.error);
+      }
     };
     window.addEventListener(NATIVE_PLAN_EVENT, listener);
     return () => {
@@ -142,7 +151,8 @@ export function TaskList({ initialTasks, fetcher = fetch, nativeRequestId = defa
           const writerStatus = planWriterStatuses[item.category];
           const active = writerStatus?.delivery === "pending" && !writerStatus.error;
           const actionable = (item.status === "todo" || item.status === "writing" || item.status === "needs-attention")
-            && writerStatus?.phase !== "plan-unavailable";
+            && writerStatus?.phase !== "plan-unavailable"
+            && writerStatus?.phase !== "delivery-reconciliation-failed";
           const actionLabel = item.status === "todo" && !writerStatus?.error ? "Start writing" : "Try again";
           return <li aria-label={`Mac plan ${item.label}`} key={item.category}>
             <strong>{item.label}</strong> · {item.status.replaceAll("-", " ")} · {item.reason}

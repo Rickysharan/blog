@@ -40,6 +40,13 @@ export interface NativePlanSnapshot {
   }>;
 }
 
+export const NATIVE_PLAN_REFRESH_ERROR = "Daily plan could not be refreshed. Try again.";
+export interface NativePlanFailure {
+  requestId: string;
+  status: "error";
+  error: typeof NATIVE_PLAN_REFRESH_ERROR;
+}
+
 const requestIdPattern = /^[A-Za-z0-9._:-]{8,128}$/;
 const phasePattern = /^[a-z][a-z0-9-]{0,63}$/;
 const validPlanDate = (value: string) => /^\d{4}-\d{2}-\d{2}$/.test(value)
@@ -111,4 +118,12 @@ export function readNativePlanSnapshot(event: Event): NativePlanSnapshot | null 
     publishedCount: value.publishedCount as number,
     tasks: tasks as NativePlanSnapshot["tasks"],
   };
+}
+
+export function readNativePlanFailure(event: Event): NativePlanFailure | null {
+  if (!(event instanceof CustomEvent) || !event.detail || typeof event.detail !== "object") return null;
+  const value = event.detail as Record<string, unknown>;
+  if (!requestIdPattern.test(String(value.requestId ?? ""))
+    || value.status !== "error" || value.error !== NATIVE_PLAN_REFRESH_ERROR) return null;
+  return { requestId: value.requestId as string, status: "error", error: NATIVE_PLAN_REFRESH_ERROR };
 }

@@ -12,6 +12,12 @@ enum StudioWriteMode: Equatable {
     case resume
 }
 
+enum StudioWriterOutcome: Equatable {
+    case delivered
+    case retryableFailure
+    case reconciliationFailure
+}
+
 enum StudioBridgeCommand: Equatable {
     case write(category: String, requestId: String, planDate: String? = nil, mode: StudioWriteMode = .startNew)
     case cancel(requestId: String)
@@ -175,7 +181,7 @@ final class StudioWriterAdmission {
 final class LocalWriterController {
     private let configuration: StudioConfiguration
     private let statusSink: ([String: Any]) -> Void
-    private let completionSink: (String, String, String?, Bool) -> Void
+    private let completionSink: (String, String, String?, StudioWriterOutcome) -> Void
     private let sanitizer = StudioStatusSanitizer()
     private let admission = StudioWriterAdmission()
     private let auditLog: StudioAuditLog
@@ -193,7 +199,7 @@ final class LocalWriterController {
 
     init(
         configuration: StudioConfiguration,
-        completionSink: @escaping (String, String, String?, Bool) -> Void = { _, _, _, _ in },
+        completionSink: @escaping (String, String, String?, StudioWriterOutcome) -> Void = { _, _, _, _ in },
         statusSink: @escaping ([String: Any]) -> Void
     ) {
         self.configuration = configuration
@@ -269,7 +275,7 @@ final class LocalWriterController {
             process = nil
             pipe = nil
             _ = admission.finish(requestId: requestId)
-            completionSink(category, requestId, planDate, false)
+            completionSink(category, requestId, planDate, .retryableFailure)
             emit(["phase": "failed", "progress": 0, "etaSeconds": NSNull(), "delivery": "not-delivered", "error": "The local writer could not start. Try again."])
             return true
         }
@@ -346,8 +352,18 @@ final class LocalWriterController {
         process = nil
         pipe = nil
         _ = admission.finish(requestId: requestId)
-        completionSink(category, requestId, planDate, verifiedDelivery)
-        if hadTerminalEvent, let terminalStatus {
+        let successfulDelivery = verifiedDelivery && finishedProcess.terminationStatus == 0
+        let outcome: StudioWriterOutcome = successfulDelivery
+            ? .delivered
+            : (verifiedDelivery ? .reconciliationFailure : .retryableFailure)
+        completionSink(category, requestId, planDate, outcome)
+        if verifiedDelivery && !successfulDelivery {
+            emit(
+                ["phase": "delivery-reconciliation-failed", "progress": 100, "etaSeconds": NSNull(), "delivery": "not-delivered", "error": "Delivery needs checking. Refresh this plan and check Content before writing again."],
+                category: category,
+                requestId: requestId
+            )
+        } else if hadTerminalEvent, let terminalStatus {
             emit(terminalStatus, category: category, requestId: requestId)
         } else {
             emit(
@@ -378,6 +394,12 @@ final class LocalWriterController {
 }
 
 struct StudioPlanSanitizer {
+    static let refreshError = "Daily plan could not be refreshed. Try again."
+
+    func failurePayload(requestId: String) -> [String: Any] {
+        ["requestId": requestId, "status": "error", "error": Self.refreshError]
+    }
+
     func payload(snapshot: DailyPlanSnapshot, requestId: String) -> [String: Any]? {
         let formatter = DateFormatter()
         formatter.calendar = Calendar(identifier: .gregorian)
@@ -417,6 +439,7 @@ final class LocalPlannerController {
     private let configuration: StudioConfiguration
     private let sink: ([String: Any]) -> Void
     private let auditLog: StudioAuditLog
+    private let launcherExecutableURL: URL
     private let lock = NSLock()
     private var process: Process?
     private var output = Data()
@@ -424,15 +447,25 @@ final class LocalPlannerController {
     private var latestSnapshot: DailyPlanSnapshot?
     private var activeWrites = Set<PlannedTaskKey>()
     private var deliveredWrites = Set<PlannedTaskKey>()
+    private var reconciliationWrites = Set<PlannedTaskKey>()
+    private var retryWrites = Set<PlannedTaskKey>()
 
-    init(configuration: StudioConfiguration, sink: @escaping ([String: Any]) -> Void) {
+    init(
+        configuration: StudioConfiguration,
+        launcherExecutableURL: URL = URL(fileURLWithPath: "/bin/bash"),
+        sink: @escaping ([String: Any]) -> Void
+    ) {
         self.configuration = configuration
+        self.launcherExecutableURL = launcherExecutableURL
         self.sink = sink
         self.auditLog = StudioAuditLog(projectPath: configuration.projectPath)
     }
 
     func refresh(requestId: String) {
-        guard process?.isRunning != true else { return }
+        guard process?.isRunning != true else {
+            sink(StudioPlanSanitizer().failurePayload(requestId: requestId))
+            return
+        }
         lock.lock()
         output = Data()
         overflowed = false
@@ -440,7 +473,7 @@ final class LocalPlannerController {
         lock.unlock()
         let task = Process()
         let pipe = Pipe()
-        task.executableURL = URL(fileURLWithPath: "/bin/bash")
+        task.executableURL = launcherExecutableURL
         task.arguments = [URL(fileURLWithPath: configuration.projectPath).appendingPathComponent("Start OmniLede.command").path]
         task.currentDirectoryURL = URL(fileURLWithPath: configuration.projectPath)
         var environment = ProcessInfo.processInfo.environment
@@ -456,6 +489,7 @@ final class LocalPlannerController {
         catch {
             process = nil
             auditLog.append("planner-launch-error\n")
+            sink(StudioPlanSanitizer().failurePayload(requestId: requestId))
         }
     }
 
@@ -466,14 +500,14 @@ final class LocalPlannerController {
         defer { lock.unlock() }
         let key = PlannedTaskKey(category: category, date: planDate)
         return writeMode(category: category, planDate: planDate) != nil
-            && !activeWrites.contains(key) && !deliveredWrites.contains(key)
+            && !activeWrites.contains(key) && !deliveredWrites.contains(key) && !reconciliationWrites.contains(key)
     }
 
     func beginPlannedWrite(category: String, planDate: String) -> StudioWriteMode? {
         lock.lock()
         defer { lock.unlock() }
         let key = PlannedTaskKey(category: category, date: planDate)
-        guard !activeWrites.contains(key), !deliveredWrites.contains(key),
+        guard !activeWrites.contains(key), !deliveredWrites.contains(key), !reconciliationWrites.contains(key),
               let mode = writeMode(category: category, planDate: planDate)
         else { return nil }
         activeWrites.insert(key)
@@ -481,17 +515,35 @@ final class LocalPlannerController {
     }
 
     func finishPlannedWrite(category: String, planDate: String, delivered: Bool) {
+        finishPlannedWrite(category: category, planDate: planDate, outcome: delivered ? .delivered : .retryableFailure)
+    }
+
+    func finishPlannedWrite(category: String, planDate: String, outcome: StudioWriterOutcome) {
         lock.lock()
         defer { lock.unlock() }
         let key = PlannedTaskKey(category: category, date: planDate)
         guard activeWrites.remove(key) != nil else { return }
-        if delivered { deliveredWrites.insert(key) }
+        switch outcome {
+        case .delivered:
+            retryWrites.remove(key)
+            reconciliationWrites.remove(key)
+            deliveredWrites.insert(key)
+        case .reconciliationFailure:
+            retryWrites.remove(key)
+            deliveredWrites.remove(key)
+            reconciliationWrites.insert(key)
+        case .retryableFailure:
+            deliveredWrites.remove(key)
+            reconciliationWrites.remove(key)
+            retryWrites.insert(key)
+        }
     }
 
     private func writeMode(category: String, planDate: String) -> StudioWriteMode? {
         guard let snapshot = latestSnapshot, snapshot.date == planDate,
               let task = snapshot.tasks.first(where: { $0.category == category })
         else { return nil }
+        if retryWrites.contains(PlannedTaskKey(category: category, date: planDate)), task.status.isActionable { return .resume }
         switch task.status {
         case .todo: return .startNew
         case .writing, .needsAttention: return .resume
@@ -528,8 +580,13 @@ final class LocalPlannerController {
         lock.unlock()
         var payload: [String: Any]?
         var acceptedSnapshot: DailyPlanSnapshot?
+        var sawPlanError = false
         if !invalid {
             for line in String(decoding: bytes, as: UTF8.self).split(separator: "\n", omittingEmptySubsequences: true) {
+                if line.hasPrefix("@omnilede-plan-error ") {
+                    sawPlanError = true
+                    continue
+                }
                 guard line.hasPrefix("@omnilede-plan ") else { continue }
                 let raw = String(line.dropFirst("@omnilede-plan ".count))
                 guard let data = raw.data(using: .utf8), let snapshot = try? JSONDecoder().decode(DailyPlanSnapshot.self, from: data) else { continue }
@@ -539,14 +596,19 @@ final class LocalPlannerController {
                 }
             }
         }
+        let succeeded = finished.terminationStatus == 0 && payload != nil && !sawPlanError
         lock.lock()
-        latestSnapshot = finished.terminationStatus == 0 ? acceptedSnapshot : nil
-        if latestSnapshot != nil { deliveredWrites.removeAll() }
+        latestSnapshot = succeeded ? acceptedSnapshot : nil
+        if latestSnapshot != nil {
+            deliveredWrites.removeAll()
+            retryWrites.removeAll()
+        }
         lock.unlock()
+        let result = succeeded ? payload! : StudioPlanSanitizer().failurePayload(requestId: requestId)
         DispatchQueue.main.async { [weak self] in
             guard let self, process === finished else { return }
             process = nil
-            if finished.terminationStatus == 0, let payload { sink(payload) }
+            sink(result)
         }
     }
 }
@@ -567,9 +629,9 @@ final class StudioBridge: NSObject, WKScriptMessageHandler {
                 NotificationCenter.default.post(name: .omniledeNativePlan, object: json)
             }
         }
-        let controller = LocalWriterController(configuration: configuration, completionSink: { category, _, planDate, delivered in
+        let controller = LocalWriterController(configuration: configuration, completionSink: { category, _, planDate, outcome in
             guard let planDate else { return }
-            planner.finishPlannedWrite(category: category, planDate: planDate, delivered: delivered)
+            planner.finishPlannedWrite(category: category, planDate: planDate, outcome: outcome)
         }) { payload in
             guard JSONSerialization.isValidJSONObject(payload),
                   let data = try? JSONSerialization.data(withJSONObject: payload),
@@ -587,7 +649,7 @@ final class StudioBridge: NSObject, WKScriptMessageHandler {
             if case let .refresh(requestId) = command { planner.refresh(requestId: requestId) }
             else if !controller.perform(command),
                     case let .write(category, _, planDate?, _) = command {
-                planner.finishPlannedWrite(category: category, planDate: planDate, delivered: false)
+                planner.finishPlannedWrite(category: category, planDate: planDate, outcome: .retryableFailure)
             }
         }) { reason in
             auditLog.append("bridge-rejection \(reason)\n")
