@@ -11,7 +11,7 @@ describe("ConsentManager", () => {
 
   it("loads neither GA4 nor AdSense before consent", () => {
     render(
-      <ConsentManager ga4Id="G-TEST" adsenseClientId="ca-pub-test" adsenseEnabled />,
+      <ConsentManager ga4Id="G-TEST" adsenseClientId="ca-pub-1234567890123456" adsenseEnabled />,
     );
 
     expect(document.querySelector('script[src*="googletagmanager"]')).toBeNull();
@@ -23,7 +23,7 @@ describe("ConsentManager", () => {
   it("loads configured scripts only after accepting", async () => {
     const user = userEvent.setup();
     render(
-      <ConsentManager ga4Id="G-TEST" adsenseClientId="ca-pub-test" adsenseEnabled />,
+      <ConsentManager ga4Id="G-TEST" adsenseClientId="ca-pub-1234567890123456" adsenseEnabled />,
     );
     await user.click(
       screen.getByRole("button", { name: /accept optional cookies/i }),
@@ -40,7 +40,7 @@ describe("ConsentManager", () => {
   it("stores a decline with equal prominence and keeps scripts blocked", async () => {
     const user = userEvent.setup();
     render(
-      <ConsentManager ga4Id="G-TEST" adsenseClientId="ca-pub-test" adsenseEnabled />,
+      <ConsentManager ga4Id="G-TEST" adsenseClientId="ca-pub-1234567890123456" adsenseEnabled />,
     );
     await user.click(
       screen.getByRole("button", { name: /decline optional cookies/i }),
@@ -65,5 +65,12 @@ describe("ConsentManager", () => {
 
     expect(screen.getByText(/load analytics services/i)).toBeVisible();
     expect(screen.queryByText(/analytics and advertising services/i)).toBeNull();
+  });
+
+  it("keeps the AdSense script blocked after consent when the strict client id is invalid", async () => {
+    const user = userEvent.setup();
+    render(<ConsentManager adsenseEnabled adsenseClientId="ca-pub-test" />);
+    await user.click(screen.getByRole("button", { name: /accept optional cookies/i }));
+    expect(document.querySelector('script[src*="adsbygoogle"]')).toBeNull();
   });
 });

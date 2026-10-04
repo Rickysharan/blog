@@ -44,11 +44,11 @@ describe("AdSlot", () => {
   it("creates an ad unit only after consent when advertising is enabled", async () => {
     const user = userEvent.setup();
     render(
-      <ConsentManager adsenseClientId="ca-pub-test" adsenseEnabled>
+      <ConsentManager adsenseClientId="ca-pub-1234567890123456" adsenseEnabled>
         <AdSlot
           variant="article"
           commercialEnabled
-          adsenseClientId="ca-pub-test"
+          adsenseClientId="ca-pub-1234567890123456"
           slotId="1234567890"
           adsenseEnabled
         />
@@ -68,11 +68,11 @@ describe("AdSlot", () => {
   it("keeps the house ad when an approved slot id is missing", async () => {
     const user = userEvent.setup();
     render(
-      <ConsentManager adsenseClientId="ca-pub-test" adsenseEnabled>
+      <ConsentManager adsenseClientId="ca-pub-1234567890123456" adsenseEnabled>
         <AdSlot
           variant="article"
           commercialEnabled
-          adsenseClientId="ca-pub-test"
+          adsenseClientId="ca-pub-1234567890123456"
           adsenseEnabled
         />
       </ConsentManager>,
@@ -95,6 +95,19 @@ describe("AdSlot", () => {
     );
 
     expect(screen.getByText(/reach globally curious readers/i)).toBeInTheDocument();
+    expect(document.querySelector("ins.adsbygoogle")).toBeNull();
+  });
+
+  it.each(["ca-pub-test", "ca-pub-12345678901234567", "ca-pub-123456789012345X"])("keeps ads disabled for malformed client id %s", async (clientId) => {
+    localStorage.setItem("omnilede_consent_v1", JSON.stringify({ version: 1, choice: "granted", updatedAt: new Date().toISOString() }));
+    render(<ConsentManager adsenseEnabled adsenseClientId={clientId}><AdSlot variant="article" commercialEnabled adsenseEnabled adsenseClientId={clientId} slotId="1234567890" /></ConsentManager>);
+    expect(document.querySelector("ins.adsbygoogle")).toBeNull();
+    expect(document.querySelector('script[src*="adsbygoogle"]')).toBeNull();
+  });
+
+  it.each(["12345", "12345678901", "abcdefghij"])("keeps ads disabled for malformed slot id %s", (slotId) => {
+    localStorage.setItem("omnilede_consent_v1", JSON.stringify({ version: 1, choice: "granted", updatedAt: new Date().toISOString() }));
+    render(<ConsentManager adsenseEnabled adsenseClientId="ca-pub-1234567890123456"><AdSlot variant="article" commercialEnabled adsenseEnabled adsenseClientId="ca-pub-1234567890123456" slotId={slotId} /></ConsentManager>);
     expect(document.querySelector("ins.adsbygoogle")).toBeNull();
   });
 });

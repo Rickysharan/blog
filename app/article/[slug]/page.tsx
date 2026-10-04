@@ -19,7 +19,7 @@ import {
 } from "@/lib/content/articles";
 import { renderArticleMdx } from "@/lib/content/mdx";
 import { SITE_CONFIG } from "@/lib/config/site";
-import { commercialFeaturesEnabled } from "@/lib/config/commercial";
+import { adsenseServingConfig, commercialFeaturesEnabled } from "@/lib/config/commercial";
 import { buildNewsArticleJsonLd, serializeJsonLd } from "@/lib/seo/json-ld";
 
 type ArticlePageProps = { params: Promise<{ slug: string }> };
@@ -70,6 +70,7 @@ export async function generateMetadata({
 
 export default async function ArticlePage({ params }: ArticlePageProps) {
   const commercialEnabled = commercialFeaturesEnabled();
+  const adsense = adsenseServingConfig();
   const { slug } = await params;
   const [article, allArticles] = await Promise.all([
     getArticle(slug),
@@ -146,8 +147,8 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
             )}
             <div className="mt-12">
               <AdSlot
-                adsenseClientId={process.env.ADSENSE_CLIENT_ID}
-                adsenseEnabled={process.env.ADSENSE_ENABLED === "true"}
+                adsenseClientId={adsense.clientId ?? undefined}
+                adsenseEnabled={adsense.enabled}
                 commercialEnabled={commercialEnabled}
                 slotId={process.env.ADSENSE_SLOT_ARTICLE}
                 variant="article"
@@ -170,8 +171,8 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
               </Link>
             </div>
             <AdSlot
-              adsenseClientId={process.env.ADSENSE_CLIENT_ID}
-              adsenseEnabled={process.env.ADSENSE_ENABLED === "true"}
+              adsenseClientId={adsense.clientId ?? undefined}
+              adsenseEnabled={adsense.enabled}
               commercialEnabled={commercialEnabled}
               slotId={process.env.ADSENSE_SLOT_SIDEBAR}
               variant="sidebar"

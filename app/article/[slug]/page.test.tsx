@@ -40,7 +40,10 @@ vi.mock("@/components/articles/contributor-attribution", () => ({ ContributorAtt
 vi.mock("@/components/articles/related-articles", () => ({ RelatedArticles: () => null }));
 vi.mock("@/components/articles/share-actions", () => ({ ShareActions: () => null }));
 vi.mock("@/components/ads/ad-slot", () => ({ AdSlot: () => null }));
-vi.mock("@/lib/config/commercial", () => ({ commercialFeaturesEnabled: () => false }));
+vi.mock("@/lib/config/commercial", () => ({
+  commercialFeaturesEnabled: () => false,
+  adsenseServingConfig: () => ({ enabled: false, publisherId: null, clientId: null }),
+}));
 vi.mock("@/lib/config/site", () => ({ SITE_CONFIG: { name: "OmniLede", url: "https://omnilede.example" } }));
 vi.mock("@/lib/seo/json-ld", () => ({ buildNewsArticleJsonLd: () => ({}), serializeJsonLd: () => "{}" }));
 

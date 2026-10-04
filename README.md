@@ -56,12 +56,14 @@ Copy `.env.example` to `.env.local` and replace only values you own. Never expos
 | `GA4_ID` | optional | Consent-gated Google Analytics measurement ID. |
 | `COMMERCIAL_FEATURES_ENABLED` | optional | Master gate for advertising, sponsorship and partnership invitations. Keep `false` during preparation and enable only after the operator confirms permission and launch requirements. |
 | `ADSENSE_CLIENT_ID` | optional | Consent-gated AdSense client ID; keep ads disabled until approved. |
+| `ADSENSE_PUBLISHER_ID` | optional | Exact `pub-` plus 16-digit publisher ID used to prepare the root seller record. |
 | `ADSENSE_SLOT_HEADER` | optional | Approved numeric AdSense slot for the top leaderboard placement. |
 | `ADSENSE_SLOT_IN_FEED` | optional | Approved numeric AdSense slot for homepage/category feed placements. |
 | `ADSENSE_SLOT_ARTICLE` | optional | Approved numeric AdSense slot within article content. |
 | `ADSENSE_SLOT_SIDEBAR` | optional | Approved numeric AdSense slot for the desktop article rail. |
 | `ADSENSE_SLOT_FOOTER` | optional | Approved numeric AdSense slot for the footer placement. |
-| `ADSENSE_ENABLED` | optional | Set `true` only after AdSense approval, the exact `public/ads.txt` seller record, valid slot IDs, consent review, and commercial hosting terms are ready. |
+| `ADSENSE_ENABLED` | optional | Set `true` only after AdSense approval, the validated root `ads.txt` seller record, valid slot IDs, consent review, and commercial hosting terms are ready. |
+| `ADSENSE_SITE_STATUS` | optional | Exact provider state. Only uppercase `READY` passes the server activation gate. |
 | `CRON_SECRET` | optional | 16+ character bearer secret for the opt-in Vercel Cron endpoint. |
 
 The market strip remains truthful when `STOCK_API_KEY` is absent. With `COMMERCIAL_FEATURES_ENABLED=false`, advertising and partnership links are removed, commercial contact submissions are rejected, and placement areas show editorial publication notes. After commercial launch, missing or inactive third-party ads fall back to clearly labelled OmniLede house ads. GA4 and AdSense scripts do not load until the reader grants consent, and an AdSense unit is created only when both commercial gates, the client ID and that placement's approved numeric slot ID are valid. Manual drafts never need an API key.
@@ -151,13 +153,13 @@ The existing Vercel Hobby deployment remains useful as a rollback target, but Ve
 AdSense is deliberately disabled in this repository until the site has approval, an exact seller record, consent checks, and a host whose terms permit commercial use. Complete these steps in the operator-owned dashboards:
 
 1. Apply for AdSense using the real site owner and business/contact details. Keep the article library original, useful and manually reviewed; do not submit scraped or unreviewed generated copy.
-2. After Google approves the site, replace the placeholder in `public/ads.txt` with Google's exact publisher seller line. Never guess or edit the publisher ID or seller relationship.
-3. Add `ADSENSE_CLIENT_ID`, each approved numeric `ADSENSE_SLOT_*`, and only then set `ADSENSE_ENABLED=true` in Netlify Production. Redeploy after saving the variables; keep them server-side unless a provider integration explicitly requires the client identifier.
+2. Copy the exact 16-digit publisher ID into `ADSENSE_PUBLISHER_ID`. The root `/ads.txt` route will then publish Google's direct seller record; it returns 404 instead of a placeholder while the ID is absent or invalid.
+3. After Google reports the site as Ready, set `ADSENSE_SITE_STATUS=READY`, add the matching `ADSENSE_CLIENT_ID` and each approved numeric `ADSENSE_SLOT_*`, and only then set `ADSENSE_ENABLED=true` in Netlify Production. Redeploy after saving the variables.
 4. Test with optional consent denied and granted. Confirm no AdSense script or unit loads before consent, every live placement is labelled, and the house-ad fallback remains when any approved value is missing.
 5. For an Indian bank account, use AdSense **Payments → Payments info → Manage payment methods → Transfer to bank account**. Enter the account-holder name, bank name, account number, IFSC, and SWIFT/BIC exactly as the bank records them. Keep PAN, income-tax, GST, foreign-remittance, and business-structure decisions with an Indian chartered accountant.
 6. Keep `COMMERCIAL_FEATURES_ENABLED=false` and `ADSENSE_ENABLED=false` until every preceding step is complete and the production route/privacy checks pass. Enable the commercial gate first, then AdSense, and redeploy. Approval and payout setup are not the same as guaranteed revenue; Google can still withhold or adjust payments under its policies.
 
-The committed `public/ads.txt` file intentionally contains only a placeholder. The operator must replace it after approval and review the result at `https://<production-domain>/ads.txt` before enabling ads.
+Review the generated seller record at `https://<production-domain>/ads.txt` before requesting site review. Application submission and review requests remain explicit actions in the operator-owned AdSense dashboard.
 
 ## Deploy to a brand-new Vercel account
 

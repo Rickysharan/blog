@@ -4,6 +4,7 @@ import { CATEGORIES } from "@/lib/config/categories";
 import { SITE_CONFIG } from "@/lib/config/site";
 import { AdSlot } from "@/components/ads/ad-slot";
 import { ConsentSettingsButton } from "@/components/privacy/consent-manager";
+import { adsenseServingConfig } from "@/lib/config/commercial";
 
 const policyLinks = [
   ["About", "/about"],
@@ -15,6 +16,7 @@ const policyLinks = [
 ] as const;
 
 export function SiteFooter({ commercialEnabled }: { commercialEnabled: boolean }) {
+  const adsense = adsenseServingConfig();
   return (
     <footer className="retro-footer mt-20 border-t border-brandInk/15 bg-brand text-brandInk">
       <div className="mx-auto grid max-w-7xl gap-10 px-5 py-12 sm:px-8 md:grid-cols-[1fr_2fr]">
@@ -69,8 +71,8 @@ export function SiteFooter({ commercialEnabled }: { commercialEnabled: boolean }
         {commercialEnabled ? (
           <div className="mx-auto mb-5 max-w-3xl">
             <AdSlot
-              adsenseClientId={process.env.ADSENSE_CLIENT_ID}
-              adsenseEnabled={process.env.ADSENSE_ENABLED === "true"}
+              adsenseClientId={adsense.clientId ?? undefined}
+              adsenseEnabled={adsense.enabled}
               commercialEnabled={commercialEnabled}
               slotId={process.env.ADSENSE_SLOT_FOOTER}
               variant="footer"

@@ -7,7 +7,7 @@ function validGa4Id(value: string | undefined): value is string {
 }
 
 function validAdsenseClient(value: string | undefined): value is string {
-  return Boolean(value && /^ca-pub-[A-Z0-9-]+$/i.test(value));
+  return Boolean(value && /^ca-pub-\d{16}$/.test(value));
 }
 
 function appendExternalScript(id: string, src: string): void {

@@ -3,13 +3,14 @@ import { LeadStory } from "@/components/articles/lead-story";
 import { MarketStrip } from "@/components/market/market-strip";
 import { RegionalFeed } from "@/components/region/regional-feed";
 import { CATEGORIES } from "@/lib/config/categories";
-import { commercialFeaturesEnabled } from "@/lib/config/commercial";
+import { adsenseServingConfig, commercialFeaturesEnabled } from "@/lib/config/commercial";
 import { getAllArticles } from "@/lib/content/articles";
 import { selectHomepageStories } from "@/lib/content/homepage";
 import { fetchMarketSnapshot } from "@/lib/market/provider";
 
 export default async function HomePage() {
   const commercialEnabled = commercialFeaturesEnabled();
+  const adsense = adsenseServingConfig();
   const [articles, marketSnapshot] = await Promise.all([
     getAllArticles(),
     fetchMarketSnapshot({ apiKey: process.env.STOCK_API_KEY }),
@@ -47,8 +48,8 @@ export default async function HomePage() {
         {commercialEnabled ? (
           <div className="mt-14">
             <AdSlot
-              adsenseClientId={process.env.ADSENSE_CLIENT_ID}
-              adsenseEnabled={process.env.ADSENSE_ENABLED === "true"}
+              adsenseClientId={adsense.clientId ?? undefined}
+              adsenseEnabled={adsense.enabled}
               commercialEnabled={commercialEnabled}
               slotId={process.env.ADSENSE_SLOT_IN_FEED}
               variant="article"

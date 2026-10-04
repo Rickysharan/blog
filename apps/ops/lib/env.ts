@@ -101,6 +101,23 @@ const googleReportEnvSchema = z.object({
   blogOrigin: new URL(value.NEXT_PUBLIC_BLOG_URL).origin
 }));
 
+const adsenseReportEnvSchema = z.object({
+  GOOGLE_OAUTH_CLIENT_ID: z.string().trim().min(1),
+  GOOGLE_OAUTH_CLIENT_SECRET: z.string().min(1),
+  GOOGLE_TOKEN_ENCRYPTION_KEY: encryptionKeySchema,
+  ADSENSE_PUBLISHER_ID: z.string().regex(/^pub-\d{16}$/),
+  NEXT_PUBLIC_BLOG_URL: z.string().url().refine((value) => {
+    const url = new URL(value);
+    return url.protocol === "https:" && url.username === "" && url.password === "";
+  })
+}).transform((value) => ({
+  clientId: value.GOOGLE_OAUTH_CLIENT_ID,
+  clientSecret: value.GOOGLE_OAUTH_CLIENT_SECRET,
+  encryptionKey: value.GOOGLE_TOKEN_ENCRYPTION_KEY,
+  publisherId: value.ADSENSE_PUBLISHER_ID,
+  blogOrigin: new URL(value.NEXT_PUBLIC_BLOG_URL).origin
+}));
+
 type Environment = Record<string, string | undefined>;
 
 export type OpsPublicEnv = z.infer<typeof opsPublicEnvSchema>;
@@ -132,4 +149,8 @@ export function parseGoogleOAuthEnv(environment: Environment = process.env) {
 
 export function parseGoogleReportEnv(environment: Environment = process.env) {
   return googleReportEnvSchema.parse(environment);
+}
+
+export function parseAdsenseReportEnv(environment: Environment = process.env) {
+  return adsenseReportEnvSchema.parse(environment);
 }

@@ -29,11 +29,11 @@ const houseLinkClasses: Record<AdVariant, string> = {
 };
 
 function validClient(value: string | undefined): value is string {
-  return Boolean(value && /^ca-pub-[A-Z0-9-]+$/i.test(value));
+  return Boolean(value && /^ca-pub-\d{16}$/.test(value));
 }
 
 function validSlot(value: string | undefined): value is string {
-  return Boolean(value && /^\d{6,20}$/.test(value));
+  return Boolean(value && /^\d{10}$/.test(value));
 }
 
 export function AdSlot({

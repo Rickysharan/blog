@@ -8,7 +8,7 @@ import { IosInstallBanner } from "@/components/pwa/ios-install-banner";
 import { InstallProvider } from "@/components/pwa/install-provider";
 import { ConsentManager } from "@/components/privacy/consent-manager";
 import { THEME_BOOTSTRAP } from "@/components/theme/theme-script";
-import { commercialFeaturesEnabled } from "@/lib/config/commercial";
+import { adsenseServingConfig, commercialFeaturesEnabled } from "@/lib/config/commercial";
 import { SITE_CONFIG } from "@/lib/config/site";
 
 import "./globals.css";
@@ -79,6 +79,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const commercialEnabled = commercialFeaturesEnabled();
+  const adsense = adsenseServingConfig();
 
   return (
     <html
@@ -92,8 +93,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           {THEME_BOOTSTRAP}
         </Script>
         <ConsentManager
-          adsenseClientId={process.env.ADSENSE_CLIENT_ID}
-          adsenseEnabled={commercialEnabled && process.env.ADSENSE_ENABLED === "true"}
+          adsenseClientId={adsense.clientId ?? undefined}
+          adsenseEnabled={adsense.enabled}
           ga4Id={process.env.GA4_ID}
         >
           <InstallProvider>
