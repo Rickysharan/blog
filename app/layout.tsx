@@ -101,7 +101,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <ConsentManager
           adsenseClientId={adsense.clientId ?? undefined}
           adsenseEnabled={adsense.enabled}
-          ga4Id={process.env.GA4_ID}
+          ga4Id={process.env.GA4_ID ?? "G-1E1KP3HWNV"}
         >
           <InstallProvider>
             <a className="skip-link" href="#main-content">
