@@ -11,6 +11,7 @@ import { ContributorAttribution } from "@/components/articles/contributor-attrib
 import { RelatedArticles } from "@/components/articles/related-articles";
 import { ShareActions } from "@/components/articles/share-actions";
 import { SourceAttribution } from "@/components/articles/source-attribution";
+import { TopicLinks } from "@/components/articles/topic-links";
 import { AdSlot } from "@/components/ads/ad-slot";
 import {
   getAllArticles,
@@ -21,6 +22,9 @@ import { renderArticleMdx } from "@/lib/content/mdx";
 import { SITE_CONFIG } from "@/lib/config/site";
 import { adsenseServingConfig, commercialFeaturesEnabled } from "@/lib/config/commercial";
 import { buildNewsArticleJsonLd, serializeJsonLd } from "@/lib/seo/json-ld";
+import { buildBreadcrumbListJsonLd } from "@/lib/seo/site-json-ld";
+import { getQualifiedTopics } from "@/lib/content/topics";
+import { getCategory } from "@/lib/config/categories";
 
 type ArticlePageProps = { params: Promise<{ slug: string }> };
 
@@ -84,11 +88,21 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     Promise.resolve(getRelatedArticles(article, allArticles, 3)),
   ]);
   const jsonLd = buildNewsArticleJsonLd(article, SITE_CONFIG);
+  const breadcrumbs = buildBreadcrumbListJsonLd(SITE_CONFIG, [
+    { name: "Home", path: "/" },
+    { name: getCategory(article.category)?.label ?? article.category, path: `/category/${article.category}` },
+    { name: article.title, path: `/article/${article.slug}` },
+  ]);
+  const qualifiedTopics = getQualifiedTopics(allArticles);
 
   return (
     <main id="main-content" className="mx-auto max-w-7xl px-5 py-10 sm:px-8 sm:py-14">
       <script
         dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
+        type="application/ld+json"
+      />
+      <script
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(breadcrumbs) }}
         type="application/ld+json"
       />
       <article data-publication-id={article.publicationId}>
@@ -110,6 +124,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
               <ArticleMeta
                 author={article.author}
                 date={article.date}
+                modifiedDate={article.modifiedDate}
                 readTime={article.readTime}
               />
             </div>
@@ -145,6 +160,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
             {bodyContainsSourceAttribution(article.body) ? null : (
               <SourceAttribution name={article.sourceName} url={article.sourceUrl} />
             )}
+            <TopicLinks article={article} topics={qualifiedTopics} />
             <div className="mt-12">
               <AdSlot
                 adsenseClientId={adsense.clientId ?? undefined}

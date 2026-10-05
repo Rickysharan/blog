@@ -3,6 +3,7 @@ import type { MetadataRoute } from "next";
 import { CATEGORIES } from "@/lib/config/categories";
 import { SITE_CONFIG } from "@/lib/config/site";
 import { getAllArticles } from "@/lib/content/articles";
+import { getQualifiedTopics } from "@/lib/content/topics";
 
 const STATIC_PATHS = [
   "",
@@ -33,5 +34,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     changeFrequency: "weekly",
     priority: 0.7,
   }));
-  return [...staticEntries, ...categoryEntries, ...articleEntries];
+  const topicEntries: MetadataRoute.Sitemap = getQualifiedTopics(articles).map((topic) => ({
+    url: `${SITE_CONFIG.url}${topic.canonicalPath}`,
+    lastModified: new Date(`${topic.articles[0]!.date}T00:00:00.000Z`),
+    changeFrequency: "weekly",
+    priority: 0.6,
+  }));
+  return [...staticEntries, ...categoryEntries, ...topicEntries, ...articleEntries];
 }

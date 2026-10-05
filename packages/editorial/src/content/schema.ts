@@ -33,6 +33,7 @@ const articleFrontmatterInputSchema = z
     title: z.string().trim().min(1).max(180),
     slug: articleSlugSchema,
     date: publicationDateSchema,
+    modifiedDate: publicationDateSchema.optional(),
     category: categorySchema,
     tags: articleTagsSchema,
     author: z.string().trim().min(1).max(100),

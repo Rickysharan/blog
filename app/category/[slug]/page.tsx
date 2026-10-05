@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { AdSlot } from "@/components/ads/ad-slot";
@@ -11,11 +12,14 @@ import {
   isCategorySlug,
 } from "@/lib/config/categories";
 import {
-  getArticlesByCategory,
+  getAllArticles,
   paginateArticles,
 } from "@/lib/content/articles";
 import { SITE_CONFIG } from "@/lib/config/site";
 import { adsenseServingConfig, commercialFeaturesEnabled } from "@/lib/config/commercial";
+import { getQualifiedTopics } from "@/lib/content/topics";
+import { serializeJsonLd } from "@/lib/seo/json-ld";
+import { buildBreadcrumbListJsonLd } from "@/lib/seo/site-json-ld";
 
 const PAGE_SIZE = 10;
 
@@ -78,16 +82,23 @@ export default async function CategoryPage({
 
   const requestedPage = parsePage(query.page);
   const category = getCategory(slug);
-  const articles = await getArticlesByCategory(slug);
+  const allArticles = await getAllArticles();
+  const articles = allArticles.filter((article) => article.category === slug);
+  const relatedTopics = getQualifiedTopics(allArticles).filter(({ categories }) => categories.includes(slug));
   const pageCount = Math.max(1, Math.ceil(articles.length / PAGE_SIZE));
   if (requestedPage > pageCount) {
     notFound();
   }
   const archive = paginateArticles(articles, requestedPage, PAGE_SIZE);
   const [featured, ...remaining] = archive.items;
+  const breadcrumbs = buildBreadcrumbListJsonLd(SITE_CONFIG, [
+    { name: "Home", path: "/" },
+    { name: category.label, path: `/category/${slug}` },
+  ]);
 
   return (
     <main id="main-content" className="mx-auto max-w-7xl px-5 py-10 sm:px-8 sm:py-14">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(breadcrumbs) }} />
       <header className="retro-page-banner grid gap-7 lg:grid-cols-[1fr_auto] lg:items-end">
         <div>
           <p className="text-xs font-black uppercase tracking-[0.2em] text-muted">
@@ -140,6 +151,14 @@ export default async function CategoryPage({
         pageCount={archive.pageCount}
         basePath={`/category/${slug}`}
       />
+      {relatedTopics.length > 0 ? (
+        <nav aria-label={`${category.label} topics`} className="mt-12 border-t-2 border-ink pt-6">
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-muted">Explore related topics</p>
+          <div className="mt-3 flex flex-wrap gap-3">
+            {relatedTopics.map((topic) => <Link className="border border-ink px-3 py-2 font-semibold hover:border-signal" href={topic.canonicalPath} key={topic.slug}>{topic.label}</Link>)}
+          </div>
+        </nav>
+      ) : null}
     </main>
   );
 }

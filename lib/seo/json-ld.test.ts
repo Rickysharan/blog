@@ -43,6 +43,18 @@ describe("buildNewsArticleJsonLd", () => {
     expect(serializeJsonLd({ headline: "</script><script>alert(1)</script>" })).not.toContain(
       "</script>",
     );
-    expect(serializeJsonLd({ headline: "<unsafe>" })).toContain("\\u003cunsafe>");
+    expect(serializeJsonLd({ headline: "<unsafe>" })).toContain("\\u003cunsafe\\u003e");
+  });
+});
+
+describe("NewsArticle completeness", () => {
+  it("connects the author and publisher to Organization identities and exposes image and canonical dates", () => {
+    expect(buildNewsArticleJsonLd(article, site)).toMatchObject({
+      datePublished: "2026-08-25T00:00:00.000Z",
+      dateModified: "2026-08-25T00:00:00.000Z",
+      image: ["https://news.example/images/articles/politics.svg"],
+      author: { "@type": "Organization", name: "OmniLede Editorial" },
+      publisher: { "@id": "https://news.example/#organization" },
+    });
   });
 });

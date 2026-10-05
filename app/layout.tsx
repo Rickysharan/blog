@@ -10,6 +10,8 @@ import { ConsentManager } from "@/components/privacy/consent-manager";
 import { THEME_BOOTSTRAP } from "@/components/theme/theme-script";
 import { adsenseServingConfig, commercialFeaturesEnabled } from "@/lib/config/commercial";
 import { SITE_CONFIG } from "@/lib/config/site";
+import { serializeJsonLd } from "@/lib/seo/json-ld";
+import { buildOrganizationJsonLd } from "@/lib/seo/site-json-ld";
 
 import "./globals.css";
 
@@ -89,6 +91,10 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       suppressHydrationWarning
     >
       <body>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(buildOrganizationJsonLd(SITE_CONFIG)) }}
+        />
         <Script id="omnilede-theme-bootstrap" strategy="beforeInteractive">
           {THEME_BOOTSTRAP}
         </Script>

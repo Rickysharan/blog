@@ -17,7 +17,7 @@ export function buildNewsArticleJsonLd(
     headline: article.title,
     description: article.excerpt,
     datePublished: `${article.date}T00:00:00.000Z`,
-    dateModified: `${article.date}T00:00:00.000Z`,
+    dateModified: `${article.modifiedDate ?? article.date}T00:00:00.000Z`,
     mainEntityOfPage: canonical,
     url: canonical,
     image: [new URL(article.coverImage, `${site.url}/`).toString()],
@@ -26,11 +26,13 @@ export function buildNewsArticleJsonLd(
     keywords: article.tags,
     isBasedOn: article.sourceUrl,
     author: {
-      "@type": "Organization",
+      "@type": article.author === site.publisher ? "Organization" : "Person",
+      ...(article.author === site.publisher ? { "@id": `${site.url}/#organization` } : {}),
       name: article.author,
     },
     publisher: {
       "@type": "Organization",
+      "@id": `${site.url}/#organization`,
       name: site.publisher,
       url: site.url,
       logo: {
@@ -42,5 +44,10 @@ export function buildNewsArticleJsonLd(
 }
 
 export function serializeJsonLd(value: unknown): string {
-  return JSON.stringify(value).replace(/</g, "\\u003c");
+  return JSON.stringify(value)
+    .replace(/&/g, "\\u0026")
+    .replace(/</g, "\\u003c")
+    .replace(/>/g, "\\u003e")
+    .replace(/\u2028/g, "\\u2028")
+    .replace(/\u2029/g, "\\u2029");
 }
