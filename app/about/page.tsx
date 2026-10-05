@@ -5,6 +5,7 @@ import { InfoPage } from "@/components/layout/info-page";
 export const metadata: Metadata = {
   title: "About",
   description: "How OmniLede selects, drafts, reviews and corrects its global news explainers.",
+  alternates: { canonical: "/about" },
 };
 
 export default function AboutPage() {

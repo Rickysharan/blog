@@ -5,6 +5,7 @@ import { InfoPage } from "@/components/layout/info-page";
 export const metadata: Metadata = {
   title: "Terms",
   description: "Terms for using the OmniLede publication and contributor services.",
+  alternates: { canonical: "/terms" },
 };
 
 export default function TermsPage() {

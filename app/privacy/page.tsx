@@ -5,6 +5,7 @@ import { InfoPage } from "@/components/layout/info-page";
 export const metadata: Metadata = {
   title: "Privacy",
   description: "How OmniLede handles reader, contributor and contact data.",
+  alternates: { canonical: "/privacy" },
 };
 
 export default function PrivacyPage() {

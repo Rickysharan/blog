@@ -5,6 +5,7 @@ import { InfoPage } from "@/components/layout/info-page";
 export const metadata: Metadata = {
   title: "Disclaimer",
   description: "Editorial, financial and third-party source disclaimers for OmniLede.",
+  alternates: { canonical: "/disclaimer" },
 };
 
 export default function DisclaimerPage() {

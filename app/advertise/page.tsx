@@ -7,6 +7,7 @@ import { commercialFeaturesEnabled } from "@/lib/config/commercial";
 export const metadata: Metadata = {
   title: "Advertise and partner",
   description: "Truthful advertising and partnership information for OmniLede.",
+  alternates: { canonical: "/advertise" },
 };
 
 const metrics = [

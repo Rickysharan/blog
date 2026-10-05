@@ -40,12 +40,26 @@ function isPrivateHostname(hostname: string): boolean {
       (a === 198 && [18, 19, 51].includes(b)) || (a === 203 && b === 0);
   }
   if (isIP(host) === 6) {
-    if (host.startsWith("::ffff:")) {
-      const mapped = host.slice("::ffff:".length);
-      return isIP(mapped) !== 4 || isPrivateHostname(mapped);
+    // Fail closed to IANA's allocated global-unicast ranges; special-purpose
+    // addresses (including translation and transition mechanisms) are not web targets.
+    // https://www.iana.org/assignments/ipv6-unicast-address-assignments/
+    const expanded = new URL(`https://[${host}]/`).hostname.slice(1, -1);
+    const [left, right = ""] = expanded.split("::");
+    const start = left ? left.split(":") : [];
+    const end = right ? right.split(":") : [];
+    const words = [...start, ...Array(8 - start.length - end.length).fill("0"), ...end].map((word) => parseInt(word, 16));
+    const [first, second, third] = words;
+    if (first === 0x2001) {
+      if (second === 0xdb8) return true;
+      return !((second >= 0x200 && second < 0x1000) || (second >= 0x1200 && second < 0x4e00) ||
+        (second >= 0x5000 && second < 0x6000) || (second >= 0x8000 && second < 0xc000));
     }
-    return host === "::" || host === "::1" || /^f[cd]/.test(host) || /^fe[89ab]/.test(host) ||
-      host.startsWith("ff") || host.startsWith("2001:db8:");
+    if (first === 0x2003) return second >= 0x4000;
+    if (first === 0x2620 && second === 0x4f && third === 0x8000) return true;
+    return !((first >= 0x2400 && first <= 0x241f) || (first >= 0x2600 && first <= 0x260f) ||
+      (first >= 0x2610 && first <= 0x2611) || (first >= 0x2620 && first <= 0x2621) ||
+      (first >= 0x2630 && first <= 0x263f) || (first >= 0x2800 && first <= 0x280f) ||
+      (first >= 0x2a00 && first <= 0x2a1f) || (first >= 0x2c00 && first <= 0x2c0f));
   }
   return false;
 }
@@ -56,8 +70,12 @@ async function defaultResolveHostname(hostname: string): Promise<ResolvedAddress
 }
 
 async function resolvePublicAddresses(hostname: string, resolver: ResolveHostname): Promise<ResolvedAddress[]> {
-  const answers = await resolver(hostname);
-  if (answers.length === 0 || answers.some(({ address, family }) => family !== 4 && family !== 6 || isPrivateHostname(address))) {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const answers = await Promise.race([
+    resolver(hostname),
+    new Promise<never>((_resolve, reject) => { timer = setTimeout(() => reject(new Error("Site audit DNS lookup timed out.")), 8_000); }),
+  ]).finally(() => clearTimeout(timer));
+  if (answers.length === 0 || answers.some(({ address, family }) => (family !== 4 && family !== 6) || isIP(address) !== family || isPrivateHostname(address))) {
     throw new Error("Site audit hostname did not resolve exclusively to public addresses.");
   }
   return answers;
@@ -75,6 +93,8 @@ async function defaultPinnedRequest(url: URL, pinned: ResolvedAddress, signal: A
       headers: { Host: url.host, Accept: "text/html,application/xml,text/plain;q=0.9,*/*;q=0.1" },
       lookup: (_hostname, _options, callback) => callback(null, pinned.address, pinned.family),
     }, (response) => {
+      response.once("error", reject);
+      response.once("aborted", () => reject(new Error("Site audit response was interrupted.")));
       const headers = new Headers();
       for (const [name, value] of Object.entries(response.headers)) {
         if (Array.isArray(value)) value.forEach((entry) => headers.append(name, entry));
@@ -102,13 +122,17 @@ async function defaultPinnedRequest(url: URL, pinned: ResolvedAddress, signal: A
         }
         chunks.push(chunk);
       });
-      response.on("end", () => resolve(new Response(Buffer.concat(chunks), { status, headers })));
+      response.on("end", () => {
+        try { resolve(new Response(status === 204 || status === 304 ? null : Buffer.concat(chunks), { status, headers })); }
+        catch (error) { reject(error); }
+      });
     });
     const abort = () => request.destroy(new DOMException("The operation was aborted.", "AbortError"));
     signal.addEventListener("abort", abort, { once: true });
     request.once("close", () => signal.removeEventListener("abort", abort));
     request.once("error", reject);
-    request.end();
+    if (signal.aborted) abort();
+    else request.end();
   });
 }
 
@@ -244,39 +268,89 @@ function validOrganization(value: unknown, origin: string): boolean {
     typeof value.name === "string" && value.name.trim().length > 0;
 }
 
-function validBreadcrumb(value: unknown, pageUrl: string, origin: string): boolean {
-  if (!schemaType(value, "BreadcrumbList") || !Array.isArray(value.itemListElement) || value.itemListElement.length < 2) return false;
-  const items = value.itemListElement.map(objectValue);
-  if (items.some((item) => !item)) return false;
-  const urls = items.map((item, index) => {
-    if (item?.["@type"] !== "ListItem" || item.position !== index + 1 || typeof item.name !== "string" || !item.name.trim()) return undefined;
-    return exactSameOriginUrl(item.item, origin);
+function decodeHtml(value: string): string {
+  return value.replace(/&(#x[0-9a-f]+|#\d+|amp|quot|apos|lt|gt);/gi, (entity, code: string) => {
+    if (code[0] === "#") {
+      const point = code[1].toLowerCase() === "x" ? parseInt(code.slice(2), 16) : parseInt(code.slice(1), 10);
+      return point > 0 && point <= 0x10ffff ? String.fromCodePoint(point) : entity;
+    }
+    return ({ amp: "&", quot: '"', apos: "'", lt: "<", gt: ">" } as Record<string, string>)[code.toLowerCase()] ?? entity;
   });
-  return urls.every(Boolean) && urls[0] === `${origin}/` && urls.at(-1) === pageUrl;
+}
+
+function markedElements(html: string, element: string, property: string): Array<{ tag: string; text: string }> {
+  const pattern = new RegExp(`<${element}\\b[^>]*>([\\s\\S]*?)<\\/${element}>`, "gi");
+  return [...html.matchAll(pattern)].filter(([tag]) =>
+    (attribute(tag, element, "itemprop")[0] ?? "").split(/\s+/).includes(property),
+  ).map(([tag, contents]) => ({ tag, text: decodeHtml(contents.replace(/<[^>]*>/g, "")).trim() }));
+}
+
+function visibleImageUrl(source: string, origin: string): string | undefined {
+  try {
+    let url = new URL(decodeHtml(source), origin);
+    if (url.origin === origin && url.pathname === "/_next/image") {
+      const original = url.searchParams.get("url");
+      if (!original) return undefined;
+      url = new URL(original, origin);
+    }
+    return url.protocol === "https:" && !url.username && !url.password ? url.toString() : undefined;
+  } catch { return undefined; }
 }
 
 function structuredArticleProblem(html: string, pageUrl: string, origin: string, schemas: unknown[]): string | null {
   const news = schemas.find((value) => schemaType(value, "NewsArticle"));
   const breadcrumb = schemas.find((value) => schemaType(value, "BreadcrumbList"));
-  if (!news || !validBreadcrumb(breadcrumb, pageUrl, origin)) return "NewsArticle or canonical BreadcrumbList data is missing or invalid.";
-  if (typeof news.headline !== "string" || !news.headline.trim() || typeof news.description !== "string" || !news.description.trim()) {
-    return "NewsArticle headline or description is missing.";
+  const siteOrganization = schemas.find((value) => validOrganization(value, origin)) as Record<string, unknown> | undefined;
+  const article = [...html.matchAll(/<article\b[^>]*>[\s\S]*?<\/article>/gi)]
+    .find(([markup]) => decodeHtml(attribute(markup, "article", "itemid")[0] ?? "") === pageUrl)?.[0];
+  if (!news || !article) return "NewsArticle or its visible canonical article is missing.";
+  // Metadata belongs to the canonical article header; body/related-story dates cannot satisfy it.
+  const metadata = article.match(/<header\b[^>]*>[\s\S]*?<\/header>/i)?.[0] ?? "";
+  const headline = markedElements(metadata, "h1", "headline")[0]?.text;
+  if (!headline || news.headline !== headline || typeof news.description !== "string" || !news.description.trim()) {
+    return "NewsArticle headline does not match the visible article or description is missing.";
   }
   const author = objectValue(news.author);
-  if (!author || !["Person", "Organization"].includes(String(author["@type"])) || typeof author.name !== "string" || !author.name.trim()) {
-    return "NewsArticle author identity is missing or invalid.";
+  const publisher = objectValue(news.publisher);
+  if (!validOrganization(publisher, origin) || !siteOrganization || publisher?.name !== siteOrganization.name) {
+    return "NewsArticle publisher does not match the site Organization identity.";
+  }
+  const visibleAuthor = markedElements(metadata, "span", "author")[0]?.text;
+  if (!visibleAuthor || !author || !["Person", "Organization"].includes(String(author["@type"])) || author.name !== visibleAuthor ||
+    (author["@type"] === "Organization" && (author["@id"] !== `${origin}/#organization` || author.name !== publisher?.name))) {
+    return "NewsArticle author does not match the visible author and canonical Organization identity.";
   }
   if (schemaUrl(news.mainEntityOfPage) !== pageUrl || news.url !== pageUrl) return "NewsArticle identity does not match the visible canonical page.";
-  const publisher = objectValue(news.publisher);
-  if (!validOrganization(publisher, origin)) return "NewsArticle publisher does not match the site Organization identity.";
+  const section = markedElements(metadata, "a", "articleSection")[0];
+  const categoryHref = section && attribute(section.tag, "a", "href")[0];
+  const categoryUrl = categoryHref && visibleImageUrl(categoryHref, origin);
+  const expectedCategory = typeof news.articleSection === "string" && /^[a-z-]+$/.test(news.articleSection)
+    ? `${origin}/category/${news.articleSection}` : undefined;
+  if (!expectedCategory || categoryUrl !== expectedCategory) return "NewsArticle section does not match the visible category link.";
+  const expectedCrumbs = [{ name: "Home", item: `${origin}/` }, { name: section?.text, item: categoryUrl }, { name: headline, item: pageUrl }];
+  if (!schemaType(breadcrumb, "BreadcrumbList") || !Array.isArray(breadcrumb.itemListElement) || breadcrumb.itemListElement.length !== 3 ||
+    breadcrumb.itemListElement.some((value, index) => {
+      const item = objectValue(value);
+      return item?.["@type"] !== "ListItem" || item.position !== index + 1 || item.name !== expectedCrumbs[index].name ||
+        exactSameOriginUrl(item.item, origin) !== expectedCrumbs[index].item;
+    })) return "Article breadcrumbs do not match the Home, visible category, and current article hierarchy.";
+  const heroTag = (article.match(/<img\b[^>]*>/gi) ?? []).find((tag) =>
+    (attribute(tag, "img", "itemprop")[0] ?? "").split(/\s+/).includes("image"));
+  const hero = heroTag && visibleImageUrl(attribute(heroTag, "img", "src")[0] ?? "", origin);
   const images = Array.isArray(news.image) ? news.image : [news.image];
-  if (images.length === 0 || images.some((image) => !exactSameOriginUrl(schemaUrl(image) ?? image, origin))) return "NewsArticle image is missing or is not a canonical same-origin HTTPS URL.";
+  if (!hero || images.length === 0 || images.some((image) => {
+    const url = schemaUrl(image) ?? objectValue(image)?.url;
+    return typeof url !== "string" || visibleImageUrl(url, origin) !== hero;
+  })) return "NewsArticle image does not match the visible HTTPS hero image.";
   const published = typeof news.datePublished === "string" ? news.datePublished : "";
   const modified = typeof news.dateModified === "string" ? news.dateModified : "";
-  const publishedDate = /^\d{4}-\d{2}-\d{2}T/.test(published) && Number.isFinite(Date.parse(published)) ? published.slice(0, 10) : "";
-  const modifiedDate = /^\d{4}-\d{2}-\d{2}T/.test(modified) && Number.isFinite(Date.parse(modified)) ? modified.slice(0, 10) : "";
-  const visibleDates = new Set(attribute(html, "time", "datetime"));
-  if (!publishedDate || !modifiedDate || modifiedDate < publishedDate || !visibleDates.has(publishedDate) || !visibleDates.has(modifiedDate)) {
+  const publishedDate = markedElements(metadata, "time", "datePublished")[0];
+  const modifiedDate = markedElements(metadata, "time", "dateModified")[0];
+  const visiblePublished = publishedDate && attribute(publishedDate.tag, "time", "datetime")[0];
+  const visibleModified = modifiedDate && attribute(modifiedDate.tag, "time", "datetime")[0];
+  if (!visiblePublished || !visibleModified || published !== `${visiblePublished}T00:00:00.000Z` ||
+    modified !== `${visibleModified}T00:00:00.000Z` || !Number.isFinite(Date.parse(published)) ||
+    !Number.isFinite(Date.parse(modified)) || modified < published) {
     return "NewsArticle dates do not match the visible published/modified chronology.";
   }
   return null;
@@ -368,7 +442,7 @@ export async function auditPublicSite(originValue: string, options: AuditOptions
 
   for (const page of pages) {
     const canonicalUrl = canonical(page.html);
-    if (canonicalUrl !== page.url) canonicalProblems.push({ url: page.url, detail: `Expected canonical ${page.url}; found ${canonicalUrl ?? "none"}.` });
+    if (exactSameOriginUrl(canonicalUrl, origin) !== page.url) canonicalProblems.push({ url: page.url, detail: `Expected canonical ${page.url}; found ${canonicalUrl ?? "none"}.` });
     const pageTitle = title(page.html);
     const description = metaContent(page.html, "description")?.trim() ?? "";
     const robots = metaContent(page.html, "robots")?.toLocaleLowerCase() ?? "index,follow";

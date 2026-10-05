@@ -6,7 +6,7 @@ import { getAllArticles } from "@/lib/content/articles";
 import { getQualifiedTopics } from "@/lib/content/topics";
 
 const STATIC_PATHS = [
-  "",
+  "/",
   "/about",
   "/advertise",
   "/contact",

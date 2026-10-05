@@ -5,6 +5,7 @@ import { InfoPage } from "@/components/layout/info-page";
 export const metadata: Metadata = {
   title: "Contributor guidelines and points terms",
   description: "Editorial, licensing, points and redemption rules for OmniLede contributors.",
+  alternates: { canonical: "/guidelines" },
 };
 
 export default function GuidelinesPage() {

@@ -7,6 +7,7 @@ import { commercialFeaturesEnabled } from "@/lib/config/commercial";
 export const metadata: Metadata = {
   title: "Contact",
   description: "Contact the OmniLede editorial team about corrections, rights or privacy.",
+  alternates: { canonical: "/contact" },
 };
 
 function configuredEmail(): string | null {

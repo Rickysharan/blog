@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { SITE_CONFIG } from "@/lib/config/site";
+
 const articles = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/content/articles", () => ({ getAllArticles: articles }));
 
@@ -18,6 +20,7 @@ describe("sitemap", () => {
       { ...base, slug: "thin", title: "Thin", tags: ["One off"] },
     ]);
     const urls = (await sitemap()).map(({ url }) => url);
+    expect(urls).toContain(`${SITE_CONFIG.url}/`);
     expect(urls.some((url) => url.endsWith("/topic/streaming"))).toBe(true);
     expect(urls.some((url) => url.endsWith("/topic/one-off"))).toBe(false);
     expect(urls.some((url) => url.endsWith("/article/one"))).toBe(true);
