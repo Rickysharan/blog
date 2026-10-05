@@ -1,5 +1,7 @@
 import { redirect } from "next/navigation";
 
+import { SignInSubmit } from "../../../components/auth/sign-in-submit";
+import { classifyOtpError } from "../../../lib/auth/otp-errors";
 import { parseStudioOperatorEnv, parseStudioOriginEnv } from "../../../lib/env";
 import { createServerSupabaseClient } from "../../../lib/supabase/server";
 
@@ -29,7 +31,7 @@ async function sendSignInLink() {
       shouldCreateUser: false
     }
   });
-  if (error) redirect("/login?error=unavailable");
+  if (error) redirect(`/login?error=${classifyOtpError(error)}`);
   redirect("/login?sent=1");
 }
 
@@ -42,9 +44,10 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
         <h1 id="login-heading">OmniLede Studio</h1>
         <p>Use a secure sign-in link sent to the configured operator email.</p>
         {query.sent === "1" ? <p role="status">Sign-in link sent. Open the email on this device to continue.</p> : null}
-        {query.error ? <p role="alert">Sign-in is temporarily unavailable. Try again.</p> : null}
+        {query.error === "cooldown" ? <p role="alert">A link was requested recently. Check your email or wait one minute before trying again.</p> : null}
+        {query.error && query.error !== "cooldown" ? <p role="alert">Sign-in is temporarily unavailable. Try again.</p> : null}
         <form action={sendSignInLink}>
-          <button className="primary-action" type="submit">Email me a sign-in link</button>
+          <SignInSubmit />
         </form>
       </section>
     </main>
