@@ -18,13 +18,24 @@ const supabasePublishableKeySchema = z
     "Expected an sb_publishable_ browser key"
   );
 
+function isSupabaseServerKey(value: string): boolean {
+  if (value.startsWith("sb_secret_")) return true;
+
+  const parts = value.split(".");
+  if (parts.length !== 3 || parts.some((part) => !/^[A-Za-z0-9_-]+$/.test(part))) return false;
+  try {
+    const payload = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const paddedPayload = payload.padEnd(Math.ceil(payload.length / 4) * 4, "=");
+    return JSON.parse(atob(paddedPayload)).role === "service_role";
+  } catch {
+    return false;
+  }
+}
+
 const supabaseSecretKeySchema = z
   .string()
   .min(1)
-  .refine(
-    (value) => value.startsWith("sb_secret_"),
-    "Expected an sb_secret_ server key"
-  );
+  .refine(isSupabaseServerKey, "Expected an sb_secret_ key or a legacy service-role JWT");
 
 export const supabasePublicEnvSchema = z.object({
   NEXT_PUBLIC_SUPABASE_URL: httpsUrlSchema,

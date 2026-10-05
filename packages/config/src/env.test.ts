@@ -46,4 +46,15 @@ describe("environment parsing", () => {
     expect(() => parseSupabaseServerEnv({ ...environment, SUPABASE_SECRET_KEY: "sb_publishable_test" })).toThrow();
     expect(() => parseSupabaseServerEnv({ ...environment, SUPABASE_SECRET_KEY: "service_role" })).toThrow();
   });
+
+  test("accepts only service-role JWTs in the legacy server-key format", () => {
+    const serviceRoleJwt =
+      "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIn0.c2lnbmF0dXJl";
+    const anonJwt = "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiYW5vbiJ9.c2lnbmF0dXJl";
+
+    expect(parseSupabaseServerEnv({ ...environment, SUPABASE_SECRET_KEY: serviceRoleJwt })).toMatchObject({
+      SUPABASE_SECRET_KEY: serviceRoleJwt
+    });
+    expect(() => parseSupabaseServerEnv({ ...environment, SUPABASE_SECRET_KEY: anonJwt })).toThrow();
+  });
 });
