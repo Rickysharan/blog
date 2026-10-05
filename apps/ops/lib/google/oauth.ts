@@ -10,6 +10,10 @@ export const GOOGLE_READ_ONLY_SCOPES = [
   "https://www.googleapis.com/auth/adsense.readonly"
 ] as const;
 
+const GOOGLE_SCOPE_ALIASES: Readonly<Record<string, (typeof GOOGLE_READ_ONLY_SCOPES)[number]>> = {
+  "https://www.googleapis.com/auth/userinfo.email": "email"
+};
+
 const AUTHORIZATION_ENDPOINT = "https://accounts.google.com/o/oauth2/v2/auth";
 const TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token";
 const JWKS_ENDPOINT = "https://www.googleapis.com/oauth2/v3/certs";
@@ -152,7 +156,9 @@ export async function exchangeAuthorizationCode(input: ExchangeInput): Promise<G
     if (typeof body.access_token !== "string" || typeof body.refresh_token !== "string" || typeof body.id_token !== "string") {
       throw new Error("exchange failed");
     }
-    const returnedScopes = typeof body.scope === "string" ? [...new Set(body.scope.split(/\s+/).filter(Boolean))] : [];
+    const returnedScopes = typeof body.scope === "string"
+      ? [...new Set(body.scope.split(/\s+/).filter(Boolean).map((scope) => GOOGLE_SCOPE_ALIASES[scope] ?? scope))]
+      : [];
     const allowedScopes = new Set<string>(GOOGLE_READ_ONLY_SCOPES);
     if (returnedScopes.length !== GOOGLE_READ_ONLY_SCOPES.length ||
         !returnedScopes.every((scope) => allowedScopes.has(scope)) ||

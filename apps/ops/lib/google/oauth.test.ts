@@ -61,15 +61,23 @@ describe("Google OAuth", () => {
     const signature = sign("RSA-SHA256", Buffer.from(`${header}.${payload}`), privateKey).toString("base64url");
     const idToken = `${header}.${payload}.${signature}`;
     const jwk = { ...publicKey.export({ format: "jwk" }), kid: "key-1", alg: "RS256", use: "sig" };
+    const googleReturnedScopes = GOOGLE_READ_ONLY_SCOPES.map((scope) =>
+      scope === "email" ? "https://www.googleapis.com/auth/userinfo.email" : scope
+    ).join(" ");
     const fetcher = vi.fn()
       .mockResolvedValueOnce(new Response(JSON.stringify({
         access_token: "access-fixture", refresh_token: "refresh-fixture", id_token: idToken, expires_in: 3600,
-        scope: GOOGLE_READ_ONLY_SCOPES.join(" ")
+        scope: googleReturnedScopes
       }), { status: 200 }))
       .mockResolvedValueOnce(new Response(JSON.stringify({ keys: [jwk] }), { status: 200 }));
 
     const result = await exchangeAuthorizationCode({ code: "code", verifier: "verifier-fixture", nonce: "nonce-fixture", config, fetcher, now });
-    expect(result).toMatchObject({ email: config.operatorEmail, subject: "google-subject", refreshToken: "refresh-fixture" });
+    expect(result).toMatchObject({
+      email: config.operatorEmail,
+      subject: "google-subject",
+      refreshToken: "refresh-fixture",
+      scopes: [...GOOGLE_READ_ONLY_SCOPES]
+    });
     const tokenRequest = fetcher.mock.calls[0]?.[1] as RequestInit;
     expect(String(tokenRequest.body)).toContain(`redirect_uri=${encodeURIComponent(config.redirectUri)}`);
     expect(String(tokenRequest.body)).toContain("code_verifier=verifier-fixture");
