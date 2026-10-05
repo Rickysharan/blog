@@ -20,8 +20,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const articles = await getAllArticles();
   const staticEntries: MetadataRoute.Sitemap = STATIC_PATHS.map((pathname) => ({
     url: `${SITE_CONFIG.url}${pathname}`,
-    changeFrequency: pathname ? "monthly" : "daily",
-    priority: pathname ? 0.5 : 1,
+    changeFrequency: pathname === "/" ? "daily" : "monthly",
+    priority: pathname === "/" ? 1 : 0.5,
   }));
   const categoryEntries: MetadataRoute.Sitemap = CATEGORIES.map(({ slug }) => ({
     url: `${SITE_CONFIG.url}/category/${slug}`,

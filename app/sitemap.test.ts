@@ -19,8 +19,10 @@ describe("sitemap", () => {
       { ...base, slug: "three", title: "Three", tags: ["STREAMING"], category: "movies" },
       { ...base, slug: "thin", title: "Thin", tags: ["One off"] },
     ]);
-    const urls = (await sitemap()).map(({ url }) => url);
+    const entries = await sitemap();
+    const urls = entries.map(({ url }) => url);
     expect(urls).toContain(`${SITE_CONFIG.url}/`);
+    expect(entries.find(({ url }) => url === `${SITE_CONFIG.url}/`)).toMatchObject({ changeFrequency: "daily", priority: 1 });
     expect(urls.some((url) => url.endsWith("/topic/streaming"))).toBe(true);
     expect(urls.some((url) => url.endsWith("/topic/one-off"))).toBe(false);
     expect(urls.some((url) => url.endsWith("/article/one"))).toBe(true);
