@@ -63,8 +63,18 @@ export async function GET(request: Request) {
 
   try {
     const { error } = await (await createServerSupabaseClient()).auth.exchangeCodeForSession(code);
-    if (error) return loginRedirect(config);
-  } catch {
+    if (error) {
+      console.error("Studio OAuth code exchange failed", {
+        name: error.name,
+        code: "code" in error ? error.code : undefined,
+        status: "status" in error ? error.status : undefined
+      });
+      return loginRedirect(config);
+    }
+  } catch (error) {
+    console.error("Studio OAuth callback failed", {
+      name: error instanceof Error ? error.name : "UnknownError"
+    });
     return loginRedirect(config);
   }
 
