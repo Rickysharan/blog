@@ -2,8 +2,8 @@ import "server-only";
 
 import type { ReportEnvelope, ReportRange } from "@omnilede/contracts";
 
-import { parseGoogleReportEnv } from "../env";
-import { readGoogleRefreshToken } from "../google/connections";
+import { parseGoogleProviderEnv } from "../env";
+import { readGoogleRefreshToken, readGoogleResourceId } from "../google/connections";
 import { markReportFailure, readReport, writeSuccessfulReport } from "./cache";
 import { createGoogleHttpClient } from "./google-http";
 import { resolveReportRange, type ReportPreset } from "./report-range";
@@ -176,7 +176,13 @@ export function createSearchProvider(dependencies: Dependencies) {
 }
 
 export async function fetchSearchReport(preset: ReportPreset): Promise<ReportEnvelope<SearchReport>> {
-  const config = parseGoogleReportEnv();
+  const config = parseGoogleProviderEnv();
+  const siteUrl = config.searchSiteUrl ?? await readGoogleResourceId("google-search-console");
+  if (!siteUrl) {
+    const range = resolveReportRange(preset);
+    await markReportFailure("google-search-console", `search:${preset}`, { source: "Google Search Console API", range });
+    return readReport("google-search-console", `search:${preset}`);
+  }
   const request = createGoogleHttpClient({ clientId: config.clientId, clientSecret: config.clientSecret, readRefreshToken: () => readGoogleRefreshToken("google-search-console", config.encryptionKey) });
-  return createSearchProvider({ request, siteUrl: config.searchSiteUrl, blogOrigin: config.blogOrigin, cache: { read: readReport, success: writeSuccessfulReport, failure: markReportFailure } })(preset);
+  return createSearchProvider({ request, siteUrl, blogOrigin: config.blogOrigin, cache: { read: readReport, success: writeSuccessfulReport, failure: markReportFailure } })(preset);
 }

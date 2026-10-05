@@ -2,8 +2,8 @@ import "server-only";
 
 import type { ReportEnvelope, ReportRange } from "@omnilede/contracts";
 
-import { parseGoogleReportEnv } from "../env";
-import { readGoogleRefreshToken } from "../google/connections";
+import { parseGoogleProviderEnv } from "../env";
+import { readGoogleRefreshToken, readGoogleResourceId } from "../google/connections";
 import { markReportFailure, readReport, writeSuccessfulReport } from "./cache";
 import { createGoogleHttpClient } from "./google-http";
 import { resolveReportRange, type ReportPreset } from "./report-range";
@@ -130,7 +130,13 @@ export function createGa4Provider(dependencies: Ga4Dependencies) {
 }
 
 export async function fetchGa4Report(preset: ReportPreset): Promise<ReportEnvelope<Ga4Report>> {
-  const config = parseGoogleReportEnv();
+  const config = parseGoogleProviderEnv();
+  const propertyId = config.analyticsPropertyId ?? await readGoogleResourceId("google-analytics");
+  if (!propertyId) {
+    const range = resolveReportRange(preset);
+    await markReportFailure("google-analytics", `growth:${preset}`, { source: "Google Analytics Data API", range });
+    return readReport("google-analytics", `growth:${preset}`);
+  }
   const request = createGoogleHttpClient({ clientId: config.clientId, clientSecret: config.clientSecret, readRefreshToken: () => readGoogleRefreshToken("google-analytics", config.encryptionKey) });
-  return createGa4Provider({ propertyId: config.analyticsPropertyId, request, cache: { read: readReport, success: writeSuccessfulReport, failure: markReportFailure } })(preset);
+  return createGa4Provider({ propertyId, request, cache: { read: readReport, success: writeSuccessfulReport, failure: markReportFailure } })(preset);
 }

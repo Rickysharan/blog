@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import { parseGoogleOAuthEnv, parseOpsPublicEnv, parseOpsServerEnv } from "./env";
+import { parseGoogleOAuthEnv, parseGoogleProviderEnv, parseOpsPublicEnv, parseOpsServerEnv } from "./env";
 
 const publicEnvironment = {
   NEXT_PUBLIC_SUPABASE_URL: "https://project.supabase.co",
@@ -97,5 +97,21 @@ describe("ops environment", () => {
     expect(parseOpsPublicEnv(google)).not.toHaveProperty("GOOGLE_OAUTH_CLIENT_SECRET");
     expect(() => parseGoogleOAuthEnv({ ...google, GOOGLE_TOKEN_ENCRYPTION_KEY: Buffer.alloc(31).toString("base64") })).toThrow("32-byte");
     expect(() => parseGoogleOAuthEnv({ ...google, GOOGLE_OAUTH_REDIRECT_URI: "https://studio.omnilede.example/other" })).toThrow("exactly match");
+  });
+
+  test("allows Google report resource IDs to be discovered after connection", () => {
+    const base = {
+      NEXT_PUBLIC_BLOG_URL: "https://omnilede.example",
+      GOOGLE_OAUTH_CLIENT_ID: "client.apps.googleusercontent.com",
+      GOOGLE_OAUTH_CLIENT_SECRET: "client-secret-fixture",
+      GOOGLE_TOKEN_ENCRYPTION_KEY: Buffer.alloc(32, 4).toString("base64")
+    };
+    expect(parseGoogleProviderEnv(base)).toMatchObject({
+      analyticsPropertyId: null,
+      searchSiteUrl: null,
+      publisherId: null,
+      blogOrigin: "https://omnilede.example"
+    });
+    expect(() => parseGoogleProviderEnv({ ...base, GOOGLE_ANALYTICS_PROPERTY_ID: "not-a-number" })).toThrow("GOOGLE_ANALYTICS_PROPERTY_ID");
   });
 });

@@ -45,6 +45,7 @@ textarea {
 
 .connection-panel { margin-top: 2rem; padding: 1.25rem; background: rgb(255 253 247 / 82%); border: 1px solid #ded8c9; border-radius: 1rem; }
 .connection-heading, .connection-card-title { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.connection-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .6rem; }
 .connection-heading h2, .connection-card h3 { margin: .3rem 0 0; color: #173f35; }
 .connection-note, .connection-message { color: #52665f; line-height: 1.6; }
 .connection-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 1rem; margin: 1.25rem 0; }
@@ -59,6 +60,7 @@ textarea {
 .studio-button { display: inline-flex; min-height: 2.75rem; align-items: center; justify-content: center; padding: .65rem 1rem; color: #fffdf7; background: #173f35; border: 0; border-radius: .7rem; font-weight: 700; text-decoration: none; cursor: pointer; }
 .studio-button:disabled { cursor: wait; opacity: .65; }
 .studio-button-danger { background: #8b352e; }
+.studio-button-secondary { color: #173f35; background: #e8e2d4; }
 
 .skip-link {
   position: fixed;

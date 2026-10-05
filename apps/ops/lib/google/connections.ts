@@ -3,6 +3,7 @@ import "server-only";
 import { openToken, sealToken, type CanonicalBase64, type SealedToken } from "../crypto/token-vault";
 import { createServiceSupabaseClient } from "../supabase/server";
 import type { GoogleCredentials } from "./oauth";
+import { storedGoogleResourceId } from "./resource-identifiers";
 
 export const GOOGLE_PROVIDERS = ["google-analytics", "google-search-console", "google-adsense"] as const;
 export type GoogleProvider = (typeof GOOGLE_PROVIDERS)[number];
@@ -41,6 +42,13 @@ export async function readGoogleRefreshToken(
   } catch {
     throw new Error("Google connection requires reconnection");
   }
+}
+
+export async function readGoogleResourceId(provider: GoogleProvider): Promise<string | null> {
+  const { data, error } = await createServiceSupabaseClient().from("provider_connections")
+    .select("property_label").eq("provider", provider).maybeSingle();
+  if (error) throw new Error("Google resource configuration could not be read");
+  return storedGoogleResourceId(provider, data?.property_label ?? null);
 }
 
 export type GoogleConnectionStore = {

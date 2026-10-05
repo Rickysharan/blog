@@ -2,6 +2,7 @@ import "server-only";
 
 const TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token";
 const ALLOWED_API_ORIGINS = new Set([
+  "https://analyticsadmin.googleapis.com",
   "https://analyticsdata.googleapis.com",
   "https://adsense.googleapis.com",
   "https://searchconsole.googleapis.com",

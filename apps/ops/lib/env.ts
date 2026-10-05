@@ -82,6 +82,31 @@ const googleOAuthEnvSchema = z.object({
   studioOrigin: value.NEXT_PUBLIC_STUDIO_URL
 }));
 
+const optionalAnalyticsId = z.string().trim().regex(/^\d+$/).optional().transform((value) => value ?? null);
+const optionalSearchSite = z.string().trim().min(1).refine((value) => {
+  if (/^sc-domain:[a-z0-9.-]+$/i.test(value)) return true;
+  try { const url = new URL(value); return url.protocol === "https:" && url.username === "" && url.password === ""; } catch { return false; }
+}, "Expected an HTTPS URL-prefix or sc-domain Search Console property").optional().transform((value) => value ?? null);
+const optionalPublisherId = z.string().regex(/^pub-\d{16}$/).optional().transform((value) => value ?? null);
+
+const googleProviderEnvSchema = z.object({
+  GOOGLE_OAUTH_CLIENT_ID: z.string().trim().min(1),
+  GOOGLE_OAUTH_CLIENT_SECRET: z.string().min(1),
+  GOOGLE_TOKEN_ENCRYPTION_KEY: encryptionKeySchema,
+  GOOGLE_ANALYTICS_PROPERTY_ID: optionalAnalyticsId,
+  GOOGLE_SEARCH_CONSOLE_SITE_URL: optionalSearchSite,
+  ADSENSE_PUBLISHER_ID: optionalPublisherId,
+  NEXT_PUBLIC_BLOG_URL: z.string().url().refine((value) => new URL(value).protocol === "https:")
+}).transform((value) => ({
+  clientId: value.GOOGLE_OAUTH_CLIENT_ID,
+  clientSecret: value.GOOGLE_OAUTH_CLIENT_SECRET,
+  encryptionKey: value.GOOGLE_TOKEN_ENCRYPTION_KEY,
+  analyticsPropertyId: value.GOOGLE_ANALYTICS_PROPERTY_ID,
+  searchSiteUrl: value.GOOGLE_SEARCH_CONSOLE_SITE_URL,
+  publisherId: value.ADSENSE_PUBLISHER_ID,
+  blogOrigin: new URL(value.NEXT_PUBLIC_BLOG_URL).origin
+}));
+
 const googleReportEnvSchema = z.object({
   GOOGLE_OAUTH_CLIENT_ID: z.string().trim().min(1),
   GOOGLE_OAUTH_CLIENT_SECRET: z.string().min(1),
@@ -145,6 +170,10 @@ export function parseStudioContentEnv(environment: Environment) {
 
 export function parseGoogleOAuthEnv(environment: Environment = process.env) {
   return googleOAuthEnvSchema.parse(environment);
+}
+
+export function parseGoogleProviderEnv(environment: Environment = process.env) {
+  return googleProviderEnvSchema.parse(environment);
 }
 
 export function parseGoogleReportEnv(environment: Environment = process.env) {

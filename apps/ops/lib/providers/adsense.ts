@@ -2,8 +2,8 @@ import "server-only";
 
 import type { ReportEnvelope, ReportRange } from "@omnilede/contracts";
 
-import { parseAdsenseReportEnv } from "../env";
-import { readGoogleRefreshToken } from "../google/connections";
+import { parseGoogleProviderEnv } from "../env";
+import { readGoogleRefreshToken, readGoogleResourceId } from "../google/connections";
 import { markReportFailure, readReport, writeSuccessfulReport } from "./cache";
 import { createGoogleHttpClient } from "./google-http";
 import { resolveReportRange, type ReportPreset } from "./report-range";
@@ -268,10 +268,16 @@ export function createAdsenseProvider(dependencies: AdsenseDependencies) {
 }
 
 export async function fetchAdsenseReport(preset: ReportPreset): Promise<ReportEnvelope<AdsenseReport>> {
-  const config = parseAdsenseReportEnv();
+  const config = parseGoogleProviderEnv();
+  const publisherId = config.publisherId ?? await readGoogleResourceId("google-adsense");
+  if (!publisherId) {
+    const range = resolveReportRange(preset);
+    await markReportFailure("google-adsense", `revenue:${preset}`, { source: "Google AdSense Management API", range });
+    return readReport("google-adsense", `revenue:${preset}`);
+  }
   const request = createGoogleHttpClient({ clientId: config.clientId, clientSecret: config.clientSecret, readRefreshToken: () => readGoogleRefreshToken("google-adsense", config.encryptionKey) });
   return createAdsenseProvider({
-    publisherId: config.publisherId,
+    publisherId,
     blogOrigin: config.blogOrigin,
     request,
     fetchAdsTxt: createAdsTxtFetcher(config.blogOrigin),
