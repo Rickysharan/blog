@@ -3,10 +3,12 @@ import { createHash } from "node:crypto";
 import { describe, expect, it, vi } from "vitest";
 
 import {
+  OMNILEDE_BLOG_SITE_ID,
   OMNILEDE_PREVIEW_BRANCH,
   OMNILEDE_PRODUCTION_BRANCH,
   OMNILEDE_REPOSITORY,
   OMNILEDE_STUDIO_ORIGIN,
+  OMNILEDE_STUDIO_SITE_ID,
   createSignedRolloutVerdict,
   evaluateStudioRollout,
   gitBlobSha,
@@ -22,16 +24,26 @@ const version = (letter: string) => letter.repeat(40);
 const bytes = Buffer.from("---\ntitle: Controlled preview\n---\nExact bytes.\n", "utf8");
 const sha256 = createHash("sha256").update(bytes).digest("hex");
 const secret = "a sufficiently long test-only signing secret";
+const studioCommit = version("e");
+const blogCommit = version("f");
+const studioDeployUrl = "https://studio-deploy--omnilede-studio.netlify.app";
+const blogDeployUrl = "https://blog-deploy--omnilede-news.netlify.app";
 
 function trustedConfig(): TrustedRolloutConfig {
   return {
     studioOrigin: OMNILEDE_STUDIO_ORIGIN,
-    blogPreviewOrigin: "https://blog-retirement-preview.example.net",
+    blogPreviewOrigin: blogDeployUrl,
     operatorEmail: "operator@example.com",
     oauthCallbackUrl: `${OMNILEDE_STUDIO_ORIGIN}/api/connections/google/callback`,
     repository: OMNILEDE_REPOSITORY,
     previewBranch: OMNILEDE_PREVIEW_BRANCH,
     productionBranch: OMNILEDE_PRODUCTION_BRANCH,
+    studioSiteId: OMNILEDE_STUDIO_SITE_ID,
+    studioDeployId: "studio-deploy",
+    studioCommitRef: studioCommit,
+    blogSiteId: OMNILEDE_BLOG_SITE_ID,
+    blogDeployId: "blog-deploy",
+    blogCommitRef: blogCommit,
   };
 }
 
@@ -75,6 +87,10 @@ function passingEvidence(environment: StudioRolloutEvidence["environment"] = "pr
     native: {
       configuredOrigin: OMNILEDE_STUDIO_ORIGIN, bridgeOrigin: OMNILEDE_STUDIO_ORIGIN,
       bridgeAvailable: true, writerAutoStarted: false, terminalOpened: false,
+    },
+    deployments: {
+      studio: { siteId: OMNILEDE_STUDIO_SITE_ID, deployId: "studio-deploy", commitRef: studioCommit, deployUrl: studioDeployUrl },
+      blogPreview: { siteId: OMNILEDE_BLOG_SITE_ID, deployId: "blog-deploy", commitRef: blogCommit, deployUrl: blogDeployUrl },
     },
     providers: [
       { provider: "google-analytics", observed: "connected", displayed: "connected" },
@@ -141,7 +157,13 @@ describe("Studio rollout gate", () => {
   it("requires admin to remain present before authorizing a retirement preview", () => {
     const evidence = passingEvidence("preview");
     evidence.publicAdminPreview.statuses["/admin/review"] = 404;
-    expect(evaluateStudioRollout(evidence, trustedConfig()).failures).toContain("Pre-retirement public-admin route /admin/review is already missing.");
+    expect(evaluateStudioRollout(evidence, trustedConfig()).failures).toContain("Pre-retirement public-admin route /admin/review is not healthy.");
+  });
+
+  it.each([404, 429, 500, 503])("rejects unhealthy pre-retirement admin status %s", (status) => {
+    const evidence = passingEvidence("preview");
+    evidence.publicAdminPreview.statuses["/admin/review"] = status;
+    expect(evaluateStudioRollout(evidence, trustedConfig()).approved).toBe(false);
   });
 
   it("requires every admin route to be 404 before authorizing production retirement", () => {
@@ -176,6 +198,10 @@ describe("Studio rollout gate", () => {
     expect(parseTrustedRolloutConfig({
       STUDIO_ROLLOUT_BLOG_PREVIEW_ORIGIN: "https://preview.example.net",
       STUDIO_ROLLOUT_EXPECTED_OPERATOR_EMAIL: "Operator@Example.com",
+      STUDIO_ROLLOUT_STUDIO_DEPLOY_ID: "studio-deploy",
+      STUDIO_ROLLOUT_STUDIO_COMMIT: studioCommit,
+      STUDIO_ROLLOUT_BLOG_DEPLOY_ID: "blog-deploy",
+      STUDIO_ROLLOUT_BLOG_COMMIT: blogCommit,
     })).toEqual({ ...trustedConfig(), blogPreviewOrigin: "https://preview.example.net" });
   });
 
@@ -187,13 +213,15 @@ describe("Studio rollout gate", () => {
       requested.push(url);
       if (url === `${OMNILEDE_STUDIO_ORIGIN}/manifest.webmanifest`) return Response.json({ display: "standalone" });
       if (url === `${OMNILEDE_STUDIO_ORIGIN}/sw.js`) return new Response("worker");
+      if (url.endsWith("/deploys/studio-deploy")) return Response.json({ id: "studio-deploy", site_id: OMNILEDE_STUDIO_SITE_ID, commit_ref: studioCommit, state: "ready", deploy_ssl_url: studioDeployUrl });
+      if (url.endsWith("/deploys/blog-deploy")) return Response.json({ id: "blog-deploy", site_id: OMNILEDE_BLOG_SITE_ID, commit_ref: blogCommit, state: "ready", deploy_ssl_url: blogDeployUrl });
       if (url.startsWith(`https://raw.githubusercontent.com/${OMNILEDE_REPOSITORY}/`)) return new Response(bytes);
       if (url.includes("api.github.com")) return Response.json({ object: { sha: version("c") } });
       const route = url.replace(trustedConfig().blogPreviewOrigin, "");
       return new Response(null, { status: evidence.publicAdminPreview.statuses[route] ?? 500 });
     });
-    expect(await verifyLiveEvidence(evidence, trustedConfig(), fetchImpl as typeof fetch)).toEqual([]);
-    expect(requested).toHaveLength(10);
+    expect(await verifyLiveEvidence(evidence, trustedConfig(), fetchImpl as typeof fetch, "test-token")).toEqual([]);
+    expect(requested).toHaveLength(12);
     expect(requested.every((url) => !url.includes("attacker"))).toBe(true);
   });
 
@@ -201,7 +229,7 @@ describe("Studio rollout gate", () => {
     const evidence = passingEvidence();
     evidence.studioOrigin = "https://attacker.example";
     const fetchImpl = vi.fn();
-    expect(await verifyLiveEvidence(evidence, trustedConfig(), fetchImpl as typeof fetch)).toEqual([
+    expect(await verifyLiveEvidence(evidence, trustedConfig(), fetchImpl as typeof fetch, "test-token")).toEqual([
       "Static rollout evidence is not trusted; live probes were not attempted.",
     ]);
     expect(fetchImpl).not.toHaveBeenCalled();
@@ -213,17 +241,19 @@ describe("Studio rollout gate", () => {
       const url = String(input);
       if (url.endsWith("/manifest.webmanifest")) return Response.json({ display: "standalone" });
       if (url.endsWith("/sw.js")) return new Response("worker");
+      if (url.endsWith("/deploys/studio-deploy")) return Response.json({ id: "studio-deploy", site_id: OMNILEDE_STUDIO_SITE_ID, commit_ref: studioCommit, state: "ready", deploy_ssl_url: studioDeployUrl });
+      if (url.endsWith("/deploys/blog-deploy")) return Response.json({ id: "blog-deploy", site_id: OMNILEDE_BLOG_SITE_ID, commit_ref: blogCommit, state: "ready", deploy_ssl_url: blogDeployUrl });
       if (url.startsWith("https://raw.githubusercontent.com/")) return new Response(bytes);
       if (url.includes("api.github.com")) return Response.json({ object: { sha: version("d") } });
       const route = url.replace(trustedConfig().blogPreviewOrigin, "");
       return new Response(null, { status: evidence.publicAdminPreview.statuses[route] ?? 500 });
     };
-    expect(await verifyLiveEvidence(evidence, trustedConfig(), fetchImpl as typeof fetch)).toContain("Published commit is not the trusted preview branch head.");
+    expect(await verifyLiveEvidence(evidence, trustedConfig(), fetchImpl as typeof fetch, "test-token")).toContain("Published commit is not the trusted preview branch head.");
   });
 
   it("bounds live response bodies", async () => {
     const evidence = passingEvidence();
     const fetchImpl = vi.fn(async () => new Response("x".repeat(1024 * 1024 + 1)));
-    expect(await verifyLiveEvidence(evidence, trustedConfig(), fetchImpl as typeof fetch)).toContain("Live PWA manifest probe failed.");
+    expect(await verifyLiveEvidence(evidence, trustedConfig(), fetchImpl as typeof fetch, "test-token")).toContain("Live PWA manifest probe failed.");
   });
 });

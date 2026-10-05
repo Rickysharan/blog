@@ -40,6 +40,10 @@ export interface StudioRolloutEvidence {
     writerAutoStarted: boolean;
     terminalOpened: boolean;
   };
+  deployments: {
+    studio: { siteId: string; deployId: string; commitRef: string; deployUrl: string };
+    blogPreview: { siteId: string; deployId: string; commitRef: string; deployUrl: string };
+  };
   providers: Array<{ provider: string; observed: ProviderTruthState; displayed: ProviderTruthState }>;
   publicAdminPreview: { origin: string; statuses: Record<string, number> };
 }
@@ -52,6 +56,12 @@ export interface TrustedRolloutConfig {
   repository: string;
   previewBranch: string;
   productionBranch: string;
+  studioSiteId: string;
+  studioDeployId: string;
+  studioCommitRef: string;
+  blogSiteId: string;
+  blogDeployId: string;
+  blogCommitRef: string;
 }
 
 export interface RolloutEvaluation {
@@ -79,10 +89,16 @@ export const OMNILEDE_STUDIO_ORIGIN = "https://omnilede-studio.netlify.app";
 export const OMNILEDE_REPOSITORY = "Rickysharan/blog";
 export const OMNILEDE_PREVIEW_BRANCH = "studio-preview-content";
 export const OMNILEDE_PRODUCTION_BRANCH = "main";
+export const OMNILEDE_STUDIO_SITE_ID = "683e76d0-156a-4b65-9b1e-cb091ccfbdec";
+export const OMNILEDE_BLOG_SITE_ID = "074fd996-f0b8-4824-b254-a0b4753cf523";
 
 interface RolloutEnvironment {
   STUDIO_ROLLOUT_BLOG_PREVIEW_ORIGIN?: string;
   STUDIO_ROLLOUT_EXPECTED_OPERATOR_EMAIL?: string;
+  STUDIO_ROLLOUT_STUDIO_DEPLOY_ID?: string;
+  STUDIO_ROLLOUT_STUDIO_COMMIT?: string;
+  STUDIO_ROLLOUT_BLOG_DEPLOY_ID?: string;
+  STUDIO_ROLLOUT_BLOG_COMMIT?: string;
 }
 
 const SHA40 = /^[a-f0-9]{40}$/;
@@ -100,6 +116,14 @@ const REQUIRED_ADMIN_ROUTES = [
   "/api/admin/drafts",
   "/api/admin/drafts/anime/retirement-probe.mdx",
 ] as const;
+const PRE_RETIREMENT_ADMIN_STATUSES: Record<(typeof REQUIRED_ADMIN_ROUTES)[number], readonly number[]> = {
+  "/admin/login": [200],
+  "/admin/review": [200, 302, 303, 307, 308],
+  "/api/admin/login": [405],
+  "/api/admin/logout": [405],
+  "/api/admin/drafts": [401, 403],
+  "/api/admin/drafts/anime/retirement-probe.mdx": [401, 403],
+};
 const MAX_LIVE_BODY_BYTES = 1024 * 1024;
 
 function safeHttpsOrigin(value: string): string | null {
@@ -143,6 +167,10 @@ const evidenceSchema = z.object({
   native: z.object({
     configuredOrigin: z.string(), bridgeOrigin: z.string(), bridgeAvailable: z.boolean(), writerAutoStarted: z.boolean(), terminalOpened: z.boolean(),
   }).strict(),
+  deployments: z.object({
+    studio: z.object({ siteId: z.string(), deployId: z.string().min(1), commitRef: z.string(), deployUrl: httpsOriginSchema }).strict(),
+    blogPreview: z.object({ siteId: z.string(), deployId: z.string().min(1), commitRef: z.string(), deployUrl: httpsOriginSchema }).strict(),
+  }).strict(),
   providers: z.array(z.object({ provider: z.string(), observed: providerStateSchema, displayed: providerStateSchema }).strict()),
   publicAdminPreview: z.object({ origin: httpsOriginSchema, statuses: z.record(z.string(), z.number().int()) }).strict(),
 }).strict();
@@ -155,6 +183,12 @@ const trustedConfigSchema = z.object({
   repository: z.literal(OMNILEDE_REPOSITORY),
   previewBranch: z.literal(OMNILEDE_PREVIEW_BRANCH),
   productionBranch: z.literal(OMNILEDE_PRODUCTION_BRANCH),
+  studioSiteId: z.literal(OMNILEDE_STUDIO_SITE_ID),
+  studioDeployId: z.string().min(1),
+  studioCommitRef: z.string().regex(SHA40),
+  blogSiteId: z.literal(OMNILEDE_BLOG_SITE_ID),
+  blogDeployId: z.string().min(1),
+  blogCommitRef: z.string().regex(SHA40),
 }).strict();
 
 export function parseTrustedRolloutConfig(
@@ -168,6 +202,12 @@ export function parseTrustedRolloutConfig(
     repository: OMNILEDE_REPOSITORY,
     previewBranch: OMNILEDE_PREVIEW_BRANCH,
     productionBranch: OMNILEDE_PRODUCTION_BRANCH,
+    studioSiteId: OMNILEDE_STUDIO_SITE_ID,
+    studioDeployId: environment.STUDIO_ROLLOUT_STUDIO_DEPLOY_ID,
+    studioCommitRef: environment.STUDIO_ROLLOUT_STUDIO_COMMIT,
+    blogSiteId: OMNILEDE_BLOG_SITE_ID,
+    blogDeployId: environment.STUDIO_ROLLOUT_BLOG_DEPLOY_ID,
+    blogCommitRef: environment.STUDIO_ROLLOUT_BLOG_COMMIT,
   });
 }
 
@@ -274,6 +314,18 @@ export function evaluateStudioRollout(rawEvidence: unknown, rawTrusted: TrustedR
     !evidence.native.bridgeAvailable || evidence.native.writerAutoStarted || evidence.native.terminalOpened
   ) failures.push("The native app origin or background-writer bridge check failed.");
 
+  if (
+    evidence.deployments.studio.siteId !== trusted.studioSiteId ||
+    evidence.deployments.studio.deployId !== trusted.studioDeployId ||
+    evidence.deployments.studio.commitRef !== trusted.studioCommitRef
+  ) failures.push("The Studio evidence is not bound to the trusted deploy and commit.");
+  if (
+    evidence.deployments.blogPreview.siteId !== trusted.blogSiteId ||
+    evidence.deployments.blogPreview.deployId !== trusted.blogDeployId ||
+    evidence.deployments.blogPreview.commitRef !== trusted.blogCommitRef ||
+    evidence.deployments.blogPreview.deployUrl !== trusted.blogPreviewOrigin
+  ) failures.push("The blog evidence is not bound to the trusted preview deploy and commit.");
+
   for (const provider of REQUIRED_PROVIDERS) {
     const matches = evidence.providers.filter((item) => item.provider === provider);
     if (matches.length !== 1 || matches[0]!.observed !== matches[0]!.displayed) {
@@ -285,8 +337,8 @@ export function evaluateStudioRollout(rawEvidence: unknown, rawTrusted: TrustedR
   if (evidence.publicAdminPreview.origin !== trusted.blogPreviewOrigin) failures.push("The public-blog preview origin does not match trusted configuration.");
   for (const route of REQUIRED_ADMIN_ROUTES) {
     const status = evidence.publicAdminPreview.statuses[route];
-    if (evidence.environment === "preview" && (status === undefined || status === 404)) {
-      failures.push(`Pre-retirement public-admin route ${route} is already missing.`);
+    if (evidence.environment === "preview" && (status === undefined || !PRE_RETIREMENT_ADMIN_STATUSES[route].includes(status))) {
+      failures.push(`Pre-retirement public-admin route ${route} is not healthy.`);
     }
     if (evidence.environment === "production-candidate" && status !== 404) {
       failures.push(`Retirement preview route ${route} did not return 404.`);
@@ -389,10 +441,33 @@ export async function verifyLiveEvidence(
   evidence: StudioRolloutEvidence,
   trusted: TrustedRolloutConfig,
   fetchImpl: typeof fetch = fetch,
+  netlifyToken: string | undefined = process.env.NETLIFY_AUTH_TOKEN,
 ): Promise<string[]> {
   const evaluation = evaluateStudioRollout(evidence, trusted);
   if (!evaluation.approved) return ["Static rollout evidence is not trusted; live probes were not attempted."];
   const failures: string[] = [];
+
+  if (!netlifyToken) {
+    failures.push("A Netlify token is required to verify immutable deploy identities.");
+  } else {
+    for (const [label, expected] of [
+      ["Studio", { ...evidence.deployments.studio, expectedSiteId: trusted.studioSiteId }],
+      ["blog preview", { ...evidence.deployments.blogPreview, expectedSiteId: trusted.blogSiteId }],
+    ] as const) {
+      try {
+        const response = await fetchWithTimeout(fetchImpl, `https://api.netlify.com/api/v1/deploys/${expected.deployId}`, {
+          headers: { Authorization: `Bearer ${netlifyToken}` },
+        });
+        const body = await boundedJson(response) as {
+          id?: unknown; site_id?: unknown; commit_ref?: unknown; state?: unknown; deploy_ssl_url?: unknown;
+        };
+        if (
+          response.status !== 200 || body.id !== expected.deployId || body.site_id !== expected.expectedSiteId ||
+          body.commit_ref !== expected.commitRef || body.state !== "ready" || body.deploy_ssl_url !== expected.deployUrl
+        ) failures.push(`The ${label} Netlify deploy identity did not match the signed candidate.`);
+      } catch { failures.push(`The ${label} Netlify deploy identity could not be verified.`); }
+    }
+  }
 
   try {
     const manifest = await fetchWithTimeout(fetchImpl, `${trusted.studioOrigin}/manifest.webmanifest`);
@@ -448,12 +523,26 @@ async function main() {
   const evidence = parseStudioRolloutEvidence(JSON.parse(await readFile(evidencePath, "utf8")));
   if (evidence.environment !== environment) throw new Error("Evidence environment does not match the requested environment.");
   const trusted = parseTrustedRolloutConfig();
+  const secret = process.env.STUDIO_ROLLOUT_SIGNING_SECRET;
+  if (!secret) throw new Error("STUDIO_ROLLOUT_SIGNING_SECRET is required; no unsigned verdict can authorize rollout.");
+  const verdictPath = option(args, "--verify-verdict");
+  if (verdictPath) {
+    const currentStudioCommit = option(args, "--current-studio-commit");
+    const currentBlogCommit = option(args, "--current-blog-commit");
+    if (currentStudioCommit !== trusted.studioCommitRef || currentBlogCommit !== trusted.blogCommitRef) {
+      throw new Error("The deployment consumer commits do not match the signed rollout candidates.");
+    }
+    const verdict = JSON.parse(await readFile(resolve(verdictPath), "utf8")) as SignedRolloutVerdict;
+    if (!verifySignedRolloutVerdict(evidence, trusted, verdict, secret)) {
+      throw new Error("The signed rollout verdict is invalid for these exact deploys and commits.");
+    }
+    process.stdout.write(`Studio ${environment} verdict matches the exact deployment candidates.\n`);
+    return;
+  }
   const evaluation = evaluateStudioRollout(evidence, trusted);
   const liveFailures = await verifyLiveEvidence(evidence, trusted);
   const failures = [...evaluation.failures, ...liveFailures];
   if (failures.length) throw new Error(`Rollout checks failed:\n- ${failures.join("\n- ")}`);
-  const secret = process.env.STUDIO_ROLLOUT_SIGNING_SECRET;
-  if (!secret) throw new Error("STUDIO_ROLLOUT_SIGNING_SECRET is required; no unsigned verdict can authorize rollout.");
   const verdict = createSignedRolloutVerdict(evidence, trusted, secret, liveFailures);
   const outputPath = resolve(option(args, "--output") ?? `.audit/studio-rollout-${environment}.verdict.json`);
   await mkdir(dirname(outputPath), { recursive: true });

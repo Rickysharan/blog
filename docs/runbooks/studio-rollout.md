@@ -31,7 +31,7 @@ npm run verify:studio-rollout -- --environment preview
 
 The browser suite must read the draft at an immutable version, save and read back exact bytes, require the deliberate Publish confirmation, and fetch the published bytes from the returned Git commit. It must also check operator identity, source-backed dashboard states, phone navigation, the manifest, service worker, and offline failure for private navigation.
 
-Build `.audit/studio-rollout-preview.evidence.json` from those observed receipts. It contains no token or session. Set `STUDIO_ROLLOUT_EXPECTED_OPERATOR_EMAIL` to the exact operator, set `STUDIO_ROLLOUT_BLOG_PREVIEW_ORIGIN` to the exact public-blog preview being checked, and set a fresh local `STUDIO_ROLLOUT_SIGNING_SECRET` of at least 32 bytes. The verifier binds evidence to the fixed Studio origin, repository, preview branch, production branch, and OAuth callback. It independently probes the manifest, service worker, each current admin route, the published Git blob, and the exact preview-branch head. Its signed verdict is written mode `0600` under `.audit/` and remains untracked.
+Build `.audit/studio-rollout-preview.evidence.json` from those observed receipts. It contains no token or session. Set `STUDIO_ROLLOUT_EXPECTED_OPERATOR_EMAIL` to the exact operator. Set `STUDIO_ROLLOUT_BLOG_PREVIEW_ORIGIN` to the immutable `deploy_ssl_url` returned by Netlify, not the mutable site URL. Set `STUDIO_ROLLOUT_STUDIO_DEPLOY_ID`, `STUDIO_ROLLOUT_STUDIO_COMMIT`, `STUDIO_ROLLOUT_BLOG_DEPLOY_ID`, and `STUDIO_ROLLOUT_BLOG_COMMIT` from the two exact Netlify deploy records. Set a fresh local `STUDIO_ROLLOUT_SIGNING_SECRET` of at least 32 bytes and provide a read-only `NETLIFY_AUTH_TOKEN` directly in the local environment. The verifier binds evidence to the fixed site IDs, Studio origin, repository, preview branch, production branch, OAuth callback, deploy IDs, and Git commits. It queries Netlify for both immutable deploy records, then independently probes the manifest, service worker, each current admin route, the published Git blob, and the exact preview-branch head. Its signed verdict is written mode `0600` under `.audit/` and remains untracked.
 
 Any failed check exits nonzero. A preview verdict may set only `authorizeRetirementPreview`; it never authorizes a production change. Never delete the public blog admin, change `Start OmniLede.command`, or deploy reader-only production from an unsigned, failed, stale, or environment-mismatched verdict.
 
@@ -44,6 +44,15 @@ Only after the signed preview verdict verifies against the same evidence, truste
 3. Deploy the retirement commit to another blog preview and rerun every admin route check, including a representative dynamic draft route.
 4. Set `STUDIO_ROLLOUT_BLOG_PREVIEW_ORIGIN` to that retirement preview. Record 404 for every listed admin route, then run the full production-candidate suite and create a separate signed production-candidate verdict. Only that verdict may set `authorizeProductionRetirement`.
 5. Deploy Studio first. Verify the real operator session and a fresh controlled draft cycle. Verify the Mac app opens Studio without Terminal or automatic writing, and verify phone installation.
-6. Verify the production-candidate verdict against the same evidence, trusted configuration, and secret. Then deploy the reader-only blog and switch Studio publishing to `main`. Monitor the deployment, provider states, sitemap processing, and site health.
+6. Verify the production-candidate verdict against the same evidence, trusted configuration, and secret, passing the exact commits that the deployment will consume:
+
+   ```bash
+   npm run verify:studio-rollout -- --environment production-candidate \
+     --verify-verdict .audit/studio-rollout-production-candidate.verdict.json \
+     --current-studio-commit "$(git rev-parse origin/codex/omnilede-studio)" \
+     --current-blog-commit "$(git rev-parse HEAD)"
+   ```
+
+   A mismatch stops deployment. Then deploy that exact reader-only blog commit and switch Studio publishing to `main`. Monitor the deployment, provider states, sitemap processing, and site health.
 
 Keep the prior blog deployment and native app bundle available for rollback. Roll back Studio or the reader-only blog independently if a gate regresses. Advertising remains disabled throughout; activation requires a later reviewed change after Google reports Ready.
