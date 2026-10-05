@@ -1,7 +1,9 @@
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { chmod, mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+
+import { z } from "zod";
 
 export type ProviderTruthState = "connected" | "delayed" | "stale" | "unavailable" | "disconnected";
 
@@ -10,7 +12,7 @@ export interface StudioRolloutEvidence {
   environment: "preview" | "production-candidate";
   checkedAt: string;
   studioOrigin: string;
-  auth: { expectedOperator: string; authenticatedOperator: string; callbackOrigin: string };
+  auth: { expectedOperator: string; authenticatedOperator: string; callbackUrl: string };
   read: { draftPath: string; version: string; bytesSha256: string };
   save: { priorVersion: string; savedVersion: string; submittedBytesSha256: string; readBackBytesSha256: string };
   publish: {
@@ -42,9 +44,20 @@ export interface StudioRolloutEvidence {
   publicAdminPreview: { origin: string; statuses: Record<string, number> };
 }
 
+export interface TrustedRolloutConfig {
+  studioOrigin: string;
+  blogPreviewOrigin: string;
+  operatorEmail: string;
+  oauthCallbackUrl: string;
+  repository: string;
+  previewBranch: string;
+  productionBranch: string;
+}
+
 export interface RolloutEvaluation {
   approved: boolean;
-  authorizeAdminRetirement: false;
+  authorizeRetirementPreview: false;
+  authorizeProductionRetirement: false;
   failures: string[];
 }
 
@@ -53,11 +66,23 @@ export interface SignedRolloutVerdict {
   environment: StudioRolloutEvidence["environment"];
   checkedAt: string;
   evidenceDigest: string;
+  trustedConfigDigest: string;
   approved: true;
-  authorizeAdminRetirement: true;
+  authorizeRetirementPreview: boolean;
+  authorizeProductionRetirement: boolean;
   liveChecksPassed: true;
   algorithm: "hmac-sha256";
   signature: string;
+}
+
+export const OMNILEDE_STUDIO_ORIGIN = "https://omnilede-studio.netlify.app";
+export const OMNILEDE_REPOSITORY = "Rickysharan/blog";
+export const OMNILEDE_PREVIEW_BRANCH = "studio-preview-content";
+export const OMNILEDE_PRODUCTION_BRANCH = "main";
+
+interface RolloutEnvironment {
+  STUDIO_ROLLOUT_BLOG_PREVIEW_ORIGIN?: string;
+  STUDIO_ROLLOUT_EXPECTED_OPERATOR_EMAIL?: string;
 }
 
 const SHA40 = /^[a-f0-9]{40}$/;
@@ -66,6 +91,7 @@ const REPOSITORY = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
 const CONTENT_PATH = /^content\/(?:drafts|articles)\/[a-z0-9-]+\/[a-z0-9-]+\.mdx$/;
 const RESERVED_BRANCHES = new Set(["main", "master", "production", "prod"]);
 const REQUIRED_PROVIDERS = ["google-analytics", "google-search-console", "google-adsense"] as const;
+const PROVIDER_STATES = ["connected", "delayed", "stale", "unavailable", "disconnected"] as const;
 const REQUIRED_ADMIN_ROUTES = [
   "/admin/login",
   "/admin/review",
@@ -74,16 +100,79 @@ const REQUIRED_ADMIN_ROUTES = [
   "/api/admin/drafts",
   "/api/admin/drafts/anime/retirement-probe.mdx",
 ] as const;
+const MAX_LIVE_BODY_BYTES = 1024 * 1024;
 
 function safeHttpsOrigin(value: string): string | null {
   try {
     const url = new URL(value);
-    return url.protocol === "https:" && !url.username && !url.password && url.origin === value.replace(/\/$/, "")
+    return url.protocol === "https:" && !url.username && !url.password && url.origin === value.replace(/\/$/, "") && url.pathname === "/" && !url.search && !url.hash
       ? url.origin
       : null;
   } catch {
     return null;
   }
+}
+
+const httpsOriginSchema = z.string().superRefine((value, context) => {
+  if (!safeHttpsOrigin(value)) context.addIssue({ code: "custom", message: "Expected an exact HTTPS origin" });
+});
+
+const providerStateSchema = z.enum(PROVIDER_STATES);
+const evidenceSchema = z.object({
+  schemaVersion: z.literal(1),
+  environment: z.enum(["preview", "production-candidate"]),
+  checkedAt: z.string(),
+  studioOrigin: httpsOriginSchema,
+  auth: z.object({
+    expectedOperator: z.string().trim().email(),
+    authenticatedOperator: z.string().trim().email(),
+    callbackUrl: z.string().url(),
+  }).strict(),
+  read: z.object({ draftPath: z.string(), version: z.string(), bytesSha256: z.string() }).strict(),
+  save: z.object({
+    priorVersion: z.string(), savedVersion: z.string(), submittedBytesSha256: z.string(), readBackBytesSha256: z.string(),
+  }).strict(),
+  publish: z.object({
+    repository: z.string(), branch: z.string(), productionBranch: z.string(), articlePath: z.string(),
+    reviewedBytesBase64: z.string(), publishedBytesBase64: z.string(), gitBlobSha: z.string(), publicationUrl: z.string(),
+  }).strict(),
+  pwa: z.object({
+    manifestUrl: z.string(), manifestStatus: z.number().int(), serviceWorkerStatus: z.number().int(), display: z.string(),
+    installable: z.boolean(), privateRoutesNetworkOnly: z.boolean(),
+  }).strict(),
+  native: z.object({
+    configuredOrigin: z.string(), bridgeOrigin: z.string(), bridgeAvailable: z.boolean(), writerAutoStarted: z.boolean(), terminalOpened: z.boolean(),
+  }).strict(),
+  providers: z.array(z.object({ provider: z.string(), observed: providerStateSchema, displayed: providerStateSchema }).strict()),
+  publicAdminPreview: z.object({ origin: httpsOriginSchema, statuses: z.record(z.string(), z.number().int()) }).strict(),
+}).strict();
+
+const trustedConfigSchema = z.object({
+  studioOrigin: z.literal(OMNILEDE_STUDIO_ORIGIN),
+  blogPreviewOrigin: httpsOriginSchema,
+  operatorEmail: z.string().trim().email().transform((value) => value.toLowerCase()),
+  oauthCallbackUrl: z.literal(`${OMNILEDE_STUDIO_ORIGIN}/api/connections/google/callback`),
+  repository: z.literal(OMNILEDE_REPOSITORY),
+  previewBranch: z.literal(OMNILEDE_PREVIEW_BRANCH),
+  productionBranch: z.literal(OMNILEDE_PRODUCTION_BRANCH),
+}).strict();
+
+export function parseTrustedRolloutConfig(
+  environment: RolloutEnvironment = process.env as RolloutEnvironment,
+): TrustedRolloutConfig {
+  return trustedConfigSchema.parse({
+    studioOrigin: OMNILEDE_STUDIO_ORIGIN,
+    blogPreviewOrigin: environment.STUDIO_ROLLOUT_BLOG_PREVIEW_ORIGIN,
+    operatorEmail: environment.STUDIO_ROLLOUT_EXPECTED_OPERATOR_EMAIL,
+    oauthCallbackUrl: `${OMNILEDE_STUDIO_ORIGIN}/api/connections/google/callback`,
+    repository: OMNILEDE_REPOSITORY,
+    previewBranch: OMNILEDE_PREVIEW_BRANCH,
+    productionBranch: OMNILEDE_PRODUCTION_BRANCH,
+  });
+}
+
+export function parseStudioRolloutEvidence(value: unknown): StudioRolloutEvidence {
+  return evidenceSchema.parse(value) as StudioRolloutEvidence;
 }
 
 function decodeCanonicalBase64(value: string): Buffer | null {
@@ -104,35 +193,45 @@ export function gitBlobSha(value: Uint8Array): string {
   return createHash("sha1").update(header).update(value).digest("hex");
 }
 
-function publicationUrlMatches(evidence: StudioRolloutEvidence): boolean {
+function normalizedBranch(value: string): string {
+  return value.replace(/^refs\/heads\//, "");
+}
+
+function publicationIdentity(evidence: StudioRolloutEvidence, trusted: TrustedRolloutConfig): { commit: string } | null {
   try {
     const url = new URL(evidence.publish.publicationUrl);
-    const [owner, repository] = evidence.publish.repository.split("/");
+    const [owner, repository] = trusted.repository.split("/");
     const prefix = `/${owner}/${repository}/blob/`;
-    if (url.protocol !== "https:" || url.hostname !== "github.com" || !url.pathname.startsWith(prefix)) return false;
+    if (url.protocol !== "https:" || url.hostname !== "github.com" || !url.pathname.startsWith(prefix) || url.search || url.hash) return null;
     const remainder = url.pathname.slice(prefix.length);
     const separator = remainder.indexOf("/");
     const commit = remainder.slice(0, separator);
     const path = decodeURIComponent(remainder.slice(separator + 1));
-    return separator > 0 && SHA40.test(commit) && path === evidence.publish.articlePath;
+    return separator > 0 && SHA40.test(commit) && path === evidence.publish.articlePath ? { commit } : null;
   } catch {
-    return false;
+    return null;
   }
 }
 
-export function evaluateStudioRollout(evidence: StudioRolloutEvidence): RolloutEvaluation {
+export function evaluateStudioRollout(rawEvidence: unknown, rawTrusted: TrustedRolloutConfig): RolloutEvaluation {
   const failures: string[] = [];
-  const studioOrigin = safeHttpsOrigin(evidence.studioOrigin);
-  if (evidence.schemaVersion !== 1) failures.push("Unsupported evidence schema.");
-  if (!studioOrigin) failures.push("Studio origin must be an exact HTTPS origin.");
+  const evidenceResult = evidenceSchema.safeParse(rawEvidence);
+  const trustedResult = trustedConfigSchema.safeParse(rawTrusted);
+  if (!evidenceResult.success) failures.push("Rollout evidence failed runtime validation.");
+  if (!trustedResult.success) failures.push("Trusted rollout configuration is invalid.");
+  if (!evidenceResult.success || !trustedResult.success) {
+    return { approved: false, authorizeRetirementPreview: false, authorizeProductionRetirement: false, failures };
+  }
+  const evidence = evidenceResult.data as StudioRolloutEvidence;
+  const trusted = trustedResult.data as TrustedRolloutConfig;
   if (!Number.isFinite(Date.parse(evidence.checkedAt))) failures.push("Evidence timestamp is invalid.");
 
-  if (!evidence.auth.expectedOperator || evidence.auth.authenticatedOperator !== evidence.auth.expectedOperator) {
-    failures.push("The authenticated operator does not exactly match the configured operator.");
-  }
-  if (!studioOrigin || safeHttpsOrigin(evidence.auth.callbackOrigin) !== studioOrigin) {
-    failures.push("The authenticated callback origin does not match Studio.");
-  }
+  if (evidence.studioOrigin !== trusted.studioOrigin) failures.push("Studio origin does not match trusted deployment configuration.");
+  if (
+    evidence.auth.expectedOperator.toLowerCase() !== trusted.operatorEmail ||
+    evidence.auth.authenticatedOperator.toLowerCase() !== trusted.operatorEmail
+  ) failures.push("The authenticated operator does not exactly match trusted configuration.");
+  if (evidence.auth.callbackUrl !== trusted.oauthCallbackUrl) failures.push("The OAuth callback does not match trusted configuration.");
 
   if (!CONTENT_PATH.test(evidence.read.draftPath) || !evidence.read.draftPath.startsWith("content/drafts/")) {
     failures.push("The controlled draft read path is invalid.");
@@ -141,71 +240,39 @@ export function evaluateStudioRollout(evidence: StudioRolloutEvidence): RolloutE
     failures.push("The controlled draft read has no immutable version and byte digest.");
   }
   if (
-    !SHA40.test(evidence.save.priorVersion) ||
-    !SHA40.test(evidence.save.savedVersion) ||
-    evidence.save.priorVersion !== evidence.read.version ||
-    evidence.save.savedVersion === evidence.save.priorVersion ||
-    !SHA256.test(evidence.save.submittedBytesSha256) ||
-    evidence.save.submittedBytesSha256 !== evidence.save.readBackBytesSha256
-  ) {
-    failures.push("The controlled save was not versioned and read back byte-for-byte.");
-  }
+    !SHA40.test(evidence.save.priorVersion) || !SHA40.test(evidence.save.savedVersion) ||
+    evidence.save.priorVersion !== evidence.read.version || evidence.save.savedVersion === evidence.save.priorVersion ||
+    !SHA256.test(evidence.save.submittedBytesSha256) || evidence.save.submittedBytesSha256 !== evidence.save.readBackBytesSha256
+  ) failures.push("The controlled save was not versioned and read back byte-for-byte.");
 
   const reviewedBytes = decodeCanonicalBase64(evidence.publish.reviewedBytesBase64);
   const publishedBytes = decodeCanonicalBase64(evidence.publish.publishedBytesBase64);
-  const exactPublishedBytes = Boolean(
-    reviewedBytes &&
-    publishedBytes &&
-    reviewedBytes.byteLength === publishedBytes.byteLength &&
-    timingSafeEqual(reviewedBytes, publishedBytes),
-  );
-  const safeBranch = evidence.publish.branch.replace(/^refs\/heads\//, "");
-  const productionBranch = evidence.publish.productionBranch.replace(/^refs\/heads\//, "");
+  const exactPublishedBytes = Boolean(reviewedBytes && publishedBytes && reviewedBytes.byteLength === publishedBytes.byteLength && timingSafeEqual(reviewedBytes, publishedBytes));
+  const safeBranch = normalizedBranch(evidence.publish.branch);
+  const productionBranch = normalizedBranch(evidence.publish.productionBranch);
   if (
-    !safeBranch ||
-    safeBranch === productionBranch ||
-    RESERVED_BRANCHES.has(safeBranch.toLowerCase()) ||
-    safeBranch.includes("..") ||
-    safeBranch.startsWith("/") ||
-    safeBranch.endsWith("/")
-  ) {
-    failures.push("Controlled publishing must target a dedicated non-production branch.");
-  }
+    evidence.publish.repository !== trusted.repository || safeBranch !== trusted.previewBranch || productionBranch !== trusted.productionBranch ||
+    safeBranch === productionBranch || RESERVED_BRANCHES.has(safeBranch.toLowerCase())
+  ) failures.push("Controlled publishing is not bound to the trusted repository and preview branch.");
   if (!REPOSITORY.test(evidence.publish.repository)) failures.push("The controlled publication repository is invalid.");
   if (!CONTENT_PATH.test(evidence.publish.articlePath) || !evidence.publish.articlePath.startsWith("content/articles/")) {
     failures.push("The controlled publication article path is invalid.");
   }
   if (
-    !exactPublishedBytes ||
-    evidence.publish.gitBlobSha !== gitBlobSha(publishedBytes ?? Buffer.alloc(0)) ||
-    sha256(reviewedBytes ?? Buffer.alloc(0)) !== evidence.save.readBackBytesSha256 ||
-    !publicationUrlMatches(evidence)
-  ) {
-    failures.push("The controlled publication does not prove exact reviewed bytes and a matching Git blob receipt.");
-  }
+    !exactPublishedBytes || evidence.publish.gitBlobSha !== gitBlobSha(publishedBytes ?? Buffer.alloc(0)) ||
+    sha256(reviewedBytes ?? Buffer.alloc(0)) !== evidence.save.readBackBytesSha256 || !publicationIdentity(evidence, trusted)
+  ) failures.push("The controlled publication does not prove exact reviewed bytes and a matching Git blob receipt.");
 
   if (
-    !studioOrigin ||
-    evidence.pwa.manifestUrl !== `${studioOrigin}/manifest.webmanifest` ||
-    evidence.pwa.manifestStatus !== 200 ||
-    evidence.pwa.serviceWorkerStatus !== 200 ||
-    evidence.pwa.display !== "standalone" ||
-    !evidence.pwa.installable ||
+    evidence.pwa.manifestUrl !== `${trusted.studioOrigin}/manifest.webmanifest` || evidence.pwa.manifestStatus !== 200 ||
+    evidence.pwa.serviceWorkerStatus !== 200 || evidence.pwa.display !== "standalone" || !evidence.pwa.installable ||
     !evidence.pwa.privateRoutesNetworkOnly
-  ) {
-    failures.push("The Studio PWA is not installable with network-only private routes.");
-  }
+  ) failures.push("The Studio PWA is not installable with network-only private routes.");
 
   if (
-    !studioOrigin ||
-    safeHttpsOrigin(evidence.native.configuredOrigin) !== studioOrigin ||
-    safeHttpsOrigin(evidence.native.bridgeOrigin) !== studioOrigin ||
-    !evidence.native.bridgeAvailable ||
-    evidence.native.writerAutoStarted ||
-    evidence.native.terminalOpened
-  ) {
-    failures.push("The native app origin or background-writer bridge check failed.");
-  }
+    safeHttpsOrigin(evidence.native.configuredOrigin) !== trusted.studioOrigin || safeHttpsOrigin(evidence.native.bridgeOrigin) !== trusted.studioOrigin ||
+    !evidence.native.bridgeAvailable || evidence.native.writerAutoStarted || evidence.native.terminalOpened
+  ) failures.push("The native app origin or background-writer bridge check failed.");
 
   for (const provider of REQUIRED_PROVIDERS) {
     const matches = evidence.providers.filter((item) => item.provider === provider);
@@ -213,19 +280,24 @@ export function evaluateStudioRollout(evidence: StudioRolloutEvidence): RolloutE
       failures.push(`${provider} does not display its observed provider state truthfully.`);
     }
   }
+  if (evidence.providers.length !== REQUIRED_PROVIDERS.length) failures.push("Provider evidence contains an unexpected provider.");
 
-  if (!safeHttpsOrigin(evidence.publicAdminPreview.origin)) failures.push("The public-blog preview origin is invalid.");
+  if (evidence.publicAdminPreview.origin !== trusted.blogPreviewOrigin) failures.push("The public-blog preview origin does not match trusted configuration.");
   for (const route of REQUIRED_ADMIN_ROUTES) {
-    if (evidence.publicAdminPreview.statuses[route] !== 404) {
-      failures.push(`Public-blog preview route ${route} did not return 404.`);
+    const status = evidence.publicAdminPreview.statuses[route];
+    if (evidence.environment === "preview" && (status === undefined || status === 404)) {
+      failures.push(`Pre-retirement public-admin route ${route} is already missing.`);
+    }
+    if (evidence.environment === "production-candidate" && status !== 404) {
+      failures.push(`Retirement preview route ${route} did not return 404.`);
     }
   }
 
-  return { approved: failures.length === 0, authorizeAdminRetirement: false, failures };
+  return { approved: failures.length === 0, authorizeRetirementPreview: false, authorizeProductionRetirement: false, failures };
 }
 
-function canonicalVerdictPayload(evidence: StudioRolloutEvidence): string {
-  return JSON.stringify({ evidence, liveChecksPassed: true });
+function canonicalVerdictPayload(evidence: StudioRolloutEvidence, trusted: TrustedRolloutConfig): string {
+  return JSON.stringify({ evidence, trusted, liveChecksPassed: true });
 }
 
 function evidenceIsFresh(checkedAt: string): boolean {
@@ -235,23 +307,25 @@ function evidenceIsFresh(checkedAt: string): boolean {
 
 export function createSignedRolloutVerdict(
   evidence: StudioRolloutEvidence,
+  trusted: TrustedRolloutConfig,
   signingSecret: string,
   liveFailures: readonly string[],
 ): SignedRolloutVerdict {
-  const evaluation = evaluateStudioRollout(evidence);
+  const evaluation = evaluateStudioRollout(evidence, trusted);
   if (!evaluation.approved) throw new Error(`Rollout checks failed: ${evaluation.failures.join(" ")}`);
   if (liveFailures.length) throw new Error(`Live rollout checks failed: ${liveFailures.join(" ")}`);
   if (!evidenceIsFresh(evidence.checkedAt)) throw new Error("Rollout evidence must be less than 24 hours old.");
   if (Buffer.byteLength(signingSecret, "utf8") < 32) throw new Error("A rollout signing secret of at least 32 bytes is required.");
-  const serialized = canonicalVerdictPayload(evidence);
-  const evidenceDigest = sha256(Buffer.from(serialized, "utf8"));
+  const serialized = canonicalVerdictPayload(evidence, trusted);
   return {
     schemaVersion: 1,
     environment: evidence.environment,
     checkedAt: evidence.checkedAt,
-    evidenceDigest,
+    evidenceDigest: sha256(Buffer.from(JSON.stringify(evidence), "utf8")),
+    trustedConfigDigest: sha256(Buffer.from(JSON.stringify(trusted), "utf8")),
     approved: true,
-    authorizeAdminRetirement: true,
+    authorizeRetirementPreview: evidence.environment === "preview",
+    authorizeProductionRetirement: evidence.environment === "production-candidate",
     liveChecksPassed: true,
     algorithm: "hmac-sha256",
     signature: createHmac("sha256", signingSecret).update(serialized).digest("hex"),
@@ -260,22 +334,22 @@ export function createSignedRolloutVerdict(
 
 export function verifySignedRolloutVerdict(
   evidence: StudioRolloutEvidence,
+  trusted: TrustedRolloutConfig,
   verdict: SignedRolloutVerdict,
   signingSecret: string,
 ): boolean {
-  if (!evaluateStudioRollout(evidence).approved || !evidenceIsFresh(evidence.checkedAt) || Buffer.byteLength(signingSecret, "utf8") < 32) return false;
-  const serialized = canonicalVerdictPayload(evidence);
-  const digest = sha256(Buffer.from(serialized, "utf8"));
+  if (!evaluateStudioRollout(evidence, trusted).approved || !evidenceIsFresh(evidence.checkedAt) || Buffer.byteLength(signingSecret, "utf8") < 32) return false;
+  const serialized = canonicalVerdictPayload(evidence, trusted);
+  const evidenceDigest = sha256(Buffer.from(JSON.stringify(evidence), "utf8"));
+  const trustedConfigDigest = sha256(Buffer.from(JSON.stringify(trusted), "utf8"));
   const signature = createHmac("sha256", signingSecret).update(serialized).digest("hex");
-  if (!SHA256.test(verdict.evidenceDigest) || !SHA256.test(verdict.signature)) return false;
-  return verdict.schemaVersion === 1 &&
-    verdict.environment === evidence.environment &&
-    verdict.checkedAt === evidence.checkedAt &&
-    verdict.approved === true &&
-    verdict.authorizeAdminRetirement === true &&
-    verdict.liveChecksPassed === true &&
-    verdict.algorithm === "hmac-sha256" &&
-    timingSafeEqual(Buffer.from(verdict.evidenceDigest, "hex"), Buffer.from(digest, "hex")) &&
+  if (!SHA256.test(verdict.evidenceDigest) || !SHA256.test(verdict.trustedConfigDigest) || !SHA256.test(verdict.signature)) return false;
+  return verdict.schemaVersion === 1 && verdict.environment === evidence.environment && verdict.checkedAt === evidence.checkedAt &&
+    verdict.approved === true && verdict.liveChecksPassed === true && verdict.algorithm === "hmac-sha256" &&
+    verdict.authorizeRetirementPreview === (evidence.environment === "preview") &&
+    verdict.authorizeProductionRetirement === (evidence.environment === "production-candidate") &&
+    timingSafeEqual(Buffer.from(verdict.evidenceDigest, "hex"), Buffer.from(evidenceDigest, "hex")) &&
+    timingSafeEqual(Buffer.from(verdict.trustedConfigDigest, "hex"), Buffer.from(trustedConfigDigest, "hex")) &&
     timingSafeEqual(Buffer.from(verdict.signature, "hex"), Buffer.from(signature, "hex"));
 }
 
@@ -283,50 +357,81 @@ async function fetchWithTimeout(fetchImpl: typeof fetch, url: string, init: Requ
   return fetchImpl(url, { ...init, redirect: "manual", signal: AbortSignal.timeout(10_000) });
 }
 
-export async function verifyLiveEvidence(evidence: StudioRolloutEvidence, fetchImpl: typeof fetch = fetch): Promise<string[]> {
+async function boundedBytes(response: Response): Promise<Buffer> {
+  const declared = Number(response.headers.get("content-length"));
+  if (Number.isFinite(declared) && declared > MAX_LIVE_BODY_BYTES) throw new Error("Live response exceeded the size limit.");
+  if (!response.body) return Buffer.alloc(0);
+  const reader = response.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let size = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      size += value.byteLength;
+      if (size > MAX_LIVE_BODY_BYTES) {
+        await reader.cancel();
+        throw new Error("Live response exceeded the size limit.");
+      }
+      chunks.push(value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+  return Buffer.concat(chunks.map((chunk) => Buffer.from(chunk)), size);
+}
+
+async function boundedJson(response: Response): Promise<unknown> {
+  return JSON.parse((await boundedBytes(response)).toString("utf8"));
+}
+
+export async function verifyLiveEvidence(
+  evidence: StudioRolloutEvidence,
+  trusted: TrustedRolloutConfig,
+  fetchImpl: typeof fetch = fetch,
+): Promise<string[]> {
+  const evaluation = evaluateStudioRollout(evidence, trusted);
+  if (!evaluation.approved) return ["Static rollout evidence is not trusted; live probes were not attempted."];
   const failures: string[] = [];
-  const studioOrigin = safeHttpsOrigin(evidence.studioOrigin);
-  const blogOrigin = safeHttpsOrigin(evidence.publicAdminPreview.origin);
-  if (!studioOrigin || !blogOrigin) return ["Live probes require valid HTTPS preview origins."];
 
   try {
-    const manifest = await fetchWithTimeout(fetchImpl, `${studioOrigin}/manifest.webmanifest`);
-    const body = await manifest.json() as { display?: unknown };
+    const manifest = await fetchWithTimeout(fetchImpl, `${trusted.studioOrigin}/manifest.webmanifest`);
+    const body = await boundedJson(manifest) as { display?: unknown };
     if (manifest.status !== 200 || body.display !== "standalone") failures.push("Live PWA manifest probe failed.");
-  } catch {
-    failures.push("Live PWA manifest probe failed.");
-  }
+  } catch { failures.push("Live PWA manifest probe failed."); }
   try {
-    const worker = await fetchWithTimeout(fetchImpl, `${studioOrigin}/sw.js`);
+    const worker = await fetchWithTimeout(fetchImpl, `${trusted.studioOrigin}/sw.js`);
     if (worker.status !== 200) failures.push("Live service-worker probe failed.");
-  } catch {
-    failures.push("Live service-worker probe failed.");
-  }
+    await worker.body?.cancel();
+  } catch { failures.push("Live service-worker probe failed."); }
+
   for (const route of REQUIRED_ADMIN_ROUTES) {
     try {
-      const response = await fetchWithTimeout(fetchImpl, `${blogOrigin}${route}`);
-      if (response.status !== 404) failures.push(`Live public-admin probe ${route} returned ${response.status}.`);
-    } catch {
-      failures.push(`Live public-admin probe ${route} failed.`);
-    }
-  }
-  if (REPOSITORY.test(evidence.publish.repository) && publicationUrlMatches(evidence)) {
-    const publication = new URL(evidence.publish.publicationUrl);
-    const marker = "/blob/";
-    const remainder = publication.pathname.slice(publication.pathname.indexOf(marker) + marker.length);
-    const separator = remainder.indexOf("/");
-    const commit = remainder.slice(0, separator);
-    const rawUrl = `https://raw.githubusercontent.com/${evidence.publish.repository}/${commit}/${evidence.publish.articlePath}`;
-    try {
-      const response = await fetchWithTimeout(fetchImpl, rawUrl);
-      const value = Buffer.from(await response.arrayBuffer());
-      if (response.status !== 200 || gitBlobSha(value) !== evidence.publish.gitBlobSha) {
-        failures.push("Live GitHub publication blob probe failed.");
+      const response = await fetchWithTimeout(fetchImpl, `${trusted.blogPreviewOrigin}${route}`);
+      if (response.status !== evidence.publicAdminPreview.statuses[route]) {
+        failures.push(`Live public-admin probe ${route} did not match recorded status.`);
       }
-    } catch {
-      failures.push("Live GitHub publication blob probe failed.");
-    }
+      await response.body?.cancel();
+    } catch { failures.push(`Live public-admin probe ${route} failed.`); }
   }
+
+  const identity = publicationIdentity(evidence, trusted);
+  if (!identity) return [...failures, "Live GitHub publication identity is invalid."];
+  const rawUrl = `https://raw.githubusercontent.com/${trusted.repository}/${identity.commit}/${evidence.publish.articlePath}`;
+  try {
+    const response = await fetchWithTimeout(fetchImpl, rawUrl);
+    const value = await boundedBytes(response);
+    if (response.status !== 200 || gitBlobSha(value) !== evidence.publish.gitBlobSha) failures.push("Live GitHub publication blob probe failed.");
+  } catch { failures.push("Live GitHub publication blob probe failed."); }
+
+  const branchPath = trusted.previewBranch.split("/").map(encodeURIComponent).join("/");
+  try {
+    const response = await fetchWithTimeout(fetchImpl, `https://api.github.com/repos/${trusted.repository}/git/ref/heads/${branchPath}`, {
+      headers: { Accept: "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28" },
+    });
+    const body = await boundedJson(response) as { object?: { sha?: unknown } };
+    if (response.status !== 200 || body.object?.sha !== identity.commit) failures.push("Published commit is not the trusted preview branch head.");
+  } catch { failures.push("Published commit is not the trusted preview branch head."); }
   return failures;
 }
 
@@ -338,22 +443,22 @@ function option(args: string[], name: string): string | undefined {
 async function main() {
   const args = process.argv.slice(2);
   const environment = option(args, "--environment");
-  if (environment !== "preview" && environment !== "production-candidate") {
-    throw new Error("Use --environment preview or --environment production-candidate.");
-  }
+  if (environment !== "preview" && environment !== "production-candidate") throw new Error("Use --environment preview or --environment production-candidate.");
   const evidencePath = resolve(option(args, "--evidence") ?? `.audit/studio-rollout-${environment}.evidence.json`);
-  const evidence = JSON.parse(await readFile(evidencePath, "utf8")) as StudioRolloutEvidence;
+  const evidence = parseStudioRolloutEvidence(JSON.parse(await readFile(evidencePath, "utf8")));
   if (evidence.environment !== environment) throw new Error("Evidence environment does not match the requested environment.");
-  const evaluation = evaluateStudioRollout(evidence);
-  const liveFailures = await verifyLiveEvidence(evidence);
+  const trusted = parseTrustedRolloutConfig();
+  const evaluation = evaluateStudioRollout(evidence, trusted);
+  const liveFailures = await verifyLiveEvidence(evidence, trusted);
   const failures = [...evaluation.failures, ...liveFailures];
   if (failures.length) throw new Error(`Rollout checks failed:\n- ${failures.join("\n- ")}`);
   const secret = process.env.STUDIO_ROLLOUT_SIGNING_SECRET;
-  if (!secret) throw new Error("STUDIO_ROLLOUT_SIGNING_SECRET is required; no unsigned verdict can authorize retirement.");
-  const verdict = createSignedRolloutVerdict(evidence, secret, liveFailures);
+  if (!secret) throw new Error("STUDIO_ROLLOUT_SIGNING_SECRET is required; no unsigned verdict can authorize rollout.");
+  const verdict = createSignedRolloutVerdict(evidence, trusted, secret, liveFailures);
   const outputPath = resolve(option(args, "--output") ?? `.audit/studio-rollout-${environment}.verdict.json`);
   await mkdir(dirname(outputPath), { recursive: true });
   await writeFile(outputPath, `${JSON.stringify(verdict, null, 2)}\n`, { mode: 0o600 });
+  await chmod(outputPath, 0o600);
   process.stdout.write(`Studio ${environment} rollout verified. Signed verdict: ${outputPath}\n`);
 }
 

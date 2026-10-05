@@ -1,90 +1,100 @@
 import { createHash } from "node:crypto";
 
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
+  OMNILEDE_PREVIEW_BRANCH,
+  OMNILEDE_PRODUCTION_BRANCH,
+  OMNILEDE_REPOSITORY,
+  OMNILEDE_STUDIO_ORIGIN,
   createSignedRolloutVerdict,
   evaluateStudioRollout,
   gitBlobSha,
+  parseStudioRolloutEvidence,
+  parseTrustedRolloutConfig,
   verifySignedRolloutVerdict,
   verifyLiveEvidence,
   type StudioRolloutEvidence,
+  type TrustedRolloutConfig,
 } from "./verify-studio-rollout";
 
 const version = (letter: string) => letter.repeat(40);
 const bytes = Buffer.from("---\ntitle: Controlled preview\n---\nExact bytes.\n", "utf8");
 const sha256 = createHash("sha256").update(bytes).digest("hex");
+const secret = "a sufficiently long test-only signing secret";
 
-function passingEvidence(): StudioRolloutEvidence {
+function trustedConfig(): TrustedRolloutConfig {
+  return {
+    studioOrigin: OMNILEDE_STUDIO_ORIGIN,
+    blogPreviewOrigin: "https://blog-retirement-preview.example.net",
+    operatorEmail: "operator@example.com",
+    oauthCallbackUrl: `${OMNILEDE_STUDIO_ORIGIN}/api/connections/google/callback`,
+    repository: OMNILEDE_REPOSITORY,
+    previewBranch: OMNILEDE_PREVIEW_BRANCH,
+    productionBranch: OMNILEDE_PRODUCTION_BRANCH,
+  };
+}
+
+function passingEvidence(environment: StudioRolloutEvidence["environment"] = "preview"): StudioRolloutEvidence {
+  const statuses = environment === "production-candidate"
+    ? Object.fromEntries(adminRoutes.map((route) => [route, 404]))
+    : {
+        "/admin/login": 200,
+        "/admin/review": 307,
+        "/api/admin/login": 405,
+        "/api/admin/logout": 405,
+        "/api/admin/drafts": 401,
+        "/api/admin/drafts/anime/retirement-probe.mdx": 401,
+      };
   return {
     schemaVersion: 1,
-    environment: "preview",
+    environment,
     checkedAt: new Date().toISOString(),
-    studioOrigin: "https://studio-preview.example.net",
+    studioOrigin: OMNILEDE_STUDIO_ORIGIN,
     auth: {
       expectedOperator: "operator@example.com",
       authenticatedOperator: "operator@example.com",
-      callbackOrigin: "https://studio-preview.example.net",
+      callbackUrl: `${OMNILEDE_STUDIO_ORIGIN}/api/connections/google/callback`,
     },
-    read: {
-      draftPath: "content/drafts/anime/controlled-preview.mdx",
-      version: version("a"),
-      bytesSha256: sha256,
-    },
-    save: {
-      priorVersion: version("a"),
-      savedVersion: version("b"),
-      submittedBytesSha256: sha256,
-      readBackBytesSha256: sha256,
-    },
+    read: { draftPath: "content/drafts/anime/controlled-preview.mdx", version: version("a"), bytesSha256: sha256 },
+    save: { priorVersion: version("a"), savedVersion: version("b"), submittedBytesSha256: sha256, readBackBytesSha256: sha256 },
     publish: {
-      repository: "Rickysharan/blog",
-      branch: "studio-preview-content",
-      productionBranch: "main",
+      repository: OMNILEDE_REPOSITORY,
+      branch: OMNILEDE_PREVIEW_BRANCH,
+      productionBranch: OMNILEDE_PRODUCTION_BRANCH,
       articlePath: "content/articles/anime/controlled-preview.mdx",
       reviewedBytesBase64: bytes.toString("base64"),
       publishedBytesBase64: bytes.toString("base64"),
       gitBlobSha: gitBlobSha(bytes),
-      publicationUrl: `https://github.com/Rickysharan/blog/blob/${version("c")}/content/articles/anime/controlled-preview.mdx`,
+      publicationUrl: `https://github.com/${OMNILEDE_REPOSITORY}/blob/${version("c")}/content/articles/anime/controlled-preview.mdx`,
     },
     pwa: {
-      manifestUrl: "https://studio-preview.example.net/manifest.webmanifest",
-      manifestStatus: 200,
-      serviceWorkerStatus: 200,
-      display: "standalone",
-      installable: true,
-      privateRoutesNetworkOnly: true,
+      manifestUrl: `${OMNILEDE_STUDIO_ORIGIN}/manifest.webmanifest`, manifestStatus: 200, serviceWorkerStatus: 200,
+      display: "standalone", installable: true, privateRoutesNetworkOnly: true,
     },
     native: {
-      configuredOrigin: "https://studio-preview.example.net",
-      bridgeOrigin: "https://studio-preview.example.net",
-      bridgeAvailable: true,
-      writerAutoStarted: false,
-      terminalOpened: false,
+      configuredOrigin: OMNILEDE_STUDIO_ORIGIN, bridgeOrigin: OMNILEDE_STUDIO_ORIGIN,
+      bridgeAvailable: true, writerAutoStarted: false, terminalOpened: false,
     },
     providers: [
       { provider: "google-analytics", observed: "connected", displayed: "connected" },
       { provider: "google-search-console", observed: "unavailable", displayed: "unavailable" },
       { provider: "google-adsense", observed: "disconnected", displayed: "disconnected" },
     ],
-    publicAdminPreview: {
-      origin: "https://blog-preview.example.net",
-      statuses: {
-        "/admin/login": 404,
-        "/admin/review": 404,
-        "/api/admin/login": 404,
-        "/api/admin/logout": 404,
-        "/api/admin/drafts": 404,
-        "/api/admin/drafts/anime/retirement-probe.mdx": 404,
-      },
-    },
+    publicAdminPreview: { origin: trustedConfig().blogPreviewOrigin, statuses },
   };
 }
 
+const adminRoutes = [
+  "/admin/login", "/admin/review", "/api/admin/login", "/api/admin/logout", "/api/admin/drafts",
+  "/api/admin/drafts/anime/retirement-probe.mdx",
+] as const;
+
 describe("Studio rollout gate", () => {
-  it("approves a complete preview without granting an unsigned retirement authorization", () => {
-    const result = evaluateStudioRollout(passingEvidence());
-    expect(result).toMatchObject({ approved: true, authorizeAdminRetirement: false, failures: [] });
+  it("approves complete pre-retirement evidence without unsigned authorization", () => {
+    expect(evaluateStudioRollout(passingEvidence(), trustedConfig())).toEqual({
+      approved: true, authorizeRetirementPreview: false, authorizeProductionRetirement: false, failures: [],
+    });
   });
 
   it.each([
@@ -99,54 +109,121 @@ describe("Studio rollout gate", () => {
     ["no automatic writer", (value: StudioRolloutEvidence) => { value.native.writerAutoStarted = true; }],
     ["no Terminal", (value: StudioRolloutEvidence) => { value.native.terminalOpened = true; }],
     ["provider truth", (value: StudioRolloutEvidence) => { value.providers[1]!.displayed = "connected"; }],
-    ["public admin preview", (value: StudioRolloutEvidence) => { value.publicAdminPreview.statuses["/admin/review"] = 200; }],
   ])("refuses approval when %s fails", (_name, breakEvidence) => {
     const evidence = passingEvidence();
     breakEvidence(evidence);
-    expect(evaluateStudioRollout(evidence)).toMatchObject({ approved: false, authorizeAdminRetirement: false });
+    expect(evaluateStudioRollout(evidence, trustedConfig())).toMatchObject({ approved: false, authorizeRetirementPreview: false, authorizeProductionRetirement: false });
   });
 
-  it.each(["main", "master", "production", "refs/heads/main"])("refuses the production branch %s", (branch) => {
+  it.each([
+    ["Studio origin", (value: StudioRolloutEvidence) => { value.studioOrigin = "https://attacker.example"; }],
+    ["OAuth callback", (value: StudioRolloutEvidence) => { value.auth.callbackUrl = "https://attacker.example/callback"; }],
+    ["claimed operator", (value: StudioRolloutEvidence) => { value.auth.expectedOperator = value.auth.authenticatedOperator = "attacker@example.com"; }],
+    ["repository", (value: StudioRolloutEvidence) => { value.publish.repository = "attacker/repo"; }],
+    ["preview branch", (value: StudioRolloutEvidence) => { value.publish.branch = "attacker-preview"; }],
+    ["production branch", (value: StudioRolloutEvidence) => { value.publish.productionBranch = "release"; }],
+    ["blog preview", (value: StudioRolloutEvidence) => { value.publicAdminPreview.origin = "https://attacker.example"; }],
+  ])("refuses caller-selected %s", (_name, mutate) => {
     const evidence = passingEvidence();
-    evidence.publish.branch = branch;
-    expect(evaluateStudioRollout(evidence)).toMatchObject({ approved: false, authorizeAdminRetirement: false });
+    mutate(evidence);
+    expect(evaluateStudioRollout(evidence, trustedConfig()).approved).toBe(false);
   });
 
-  it("only authorizes retirement with a complete signed verdict", () => {
-    const failed = passingEvidence();
-    failed.pwa.installable = false;
-    expect(() => createSignedRolloutVerdict(failed, "a sufficiently long test-only signing secret", [])).toThrow(/failed/i);
-    expect(() => createSignedRolloutVerdict(
-      passingEvidence(),
-      "a sufficiently long test-only signing secret",
-      ["live public-admin probe failed"],
-    )).toThrow(/live/i);
+  it("runtime-validates provider states and rejects extra providers", () => {
+    const invalid = passingEvidence() as unknown as { providers: Array<Record<string, string>> };
+    invalid.providers[0]!.observed = "invented";
+    expect(() => parseStudioRolloutEvidence(invalid)).toThrow();
+    const extra = passingEvidence();
+    extra.providers.push({ provider: "attacker", observed: "connected", displayed: "connected" });
+    expect(evaluateStudioRollout(extra, trustedConfig()).approved).toBe(false);
+  });
 
+  it("requires admin to remain present before authorizing a retirement preview", () => {
+    const evidence = passingEvidence("preview");
+    evidence.publicAdminPreview.statuses["/admin/review"] = 404;
+    expect(evaluateStudioRollout(evidence, trustedConfig()).failures).toContain("Pre-retirement public-admin route /admin/review is already missing.");
+  });
+
+  it("requires every admin route to be 404 before authorizing production retirement", () => {
+    const evidence = passingEvidence("production-candidate");
+    evidence.publicAdminPreview.statuses["/admin/review"] = 200;
+    expect(evaluateStudioRollout(evidence, trustedConfig()).failures).toContain("Retirement preview route /admin/review did not return 404.");
+  });
+
+  it("issues distinct signed authorizations for retirement preview and production deployment", () => {
+    const preview = passingEvidence("preview");
+    const previewVerdict = createSignedRolloutVerdict(preview, trustedConfig(), secret, []);
+    expect(previewVerdict).toMatchObject({ authorizeRetirementPreview: true, authorizeProductionRetirement: false });
+    expect(verifySignedRolloutVerdict(preview, trustedConfig(), previewVerdict, secret)).toBe(true);
+
+    const production = passingEvidence("production-candidate");
+    const productionVerdict = createSignedRolloutVerdict(production, trustedConfig(), secret, []);
+    expect(productionVerdict).toMatchObject({ authorizeRetirementPreview: false, authorizeProductionRetirement: true });
+    expect(verifySignedRolloutVerdict(production, trustedConfig(), productionVerdict, secret)).toBe(true);
+  });
+
+  it("binds a verdict to trusted configuration and rejects failed or stale evidence", () => {
     const evidence = passingEvidence();
-    const verdict = createSignedRolloutVerdict(
-      evidence,
-      "a sufficiently long test-only signing secret",
-      [],
-    );
-    expect(verdict).toMatchObject({ approved: true, authorizeAdminRetirement: true, liveChecksPassed: true, algorithm: "hmac-sha256" });
-    expect(verdict.signature).toMatch(/^[a-f0-9]{64}$/);
-    expect(verifySignedRolloutVerdict(evidence, verdict, "a sufficiently long test-only signing secret")).toBe(true);
-    const altered = passingEvidence();
-    altered.native.writerAutoStarted = true;
-    expect(verifySignedRolloutVerdict(altered, verdict, "a sufficiently long test-only signing secret")).toBe(false);
+    const verdict = createSignedRolloutVerdict(evidence, trustedConfig(), secret, []);
+    const changedTrust = { ...trustedConfig(), blogPreviewOrigin: "https://different-preview.example.net" };
+    expect(verifySignedRolloutVerdict(evidence, changedTrust, verdict, secret)).toBe(false);
+    expect(() => createSignedRolloutVerdict(evidence, trustedConfig(), secret, ["live failure"])).toThrow(/live/i);
+    evidence.checkedAt = "2020-01-01T00:00:00.000Z";
+    expect(() => createSignedRolloutVerdict(evidence, trustedConfig(), secret, [])).toThrow(/24 hours/i);
   });
 
-  it("performs bounded live checks against the PWA, retired routes, and published Git blob", async () => {
+  it("loads only the two variable trusted values from environment", () => {
+    expect(parseTrustedRolloutConfig({
+      STUDIO_ROLLOUT_BLOG_PREVIEW_ORIGIN: "https://preview.example.net",
+      STUDIO_ROLLOUT_EXPECTED_OPERATOR_EMAIL: "Operator@Example.com",
+    })).toEqual({ ...trustedConfig(), blogPreviewOrigin: "https://preview.example.net" });
+  });
+
+  it("probes only trusted endpoints, exact recorded admin statuses, the blob, and preview branch head", async () => {
+    const evidence = passingEvidence();
     const requested: string[] = [];
-    const fetchImpl = async (input: string | URL | Request) => {
+    const fetchImpl = vi.fn(async (input: string | URL | Request) => {
       const url = String(input);
       requested.push(url);
+      if (url === `${OMNILEDE_STUDIO_ORIGIN}/manifest.webmanifest`) return Response.json({ display: "standalone" });
+      if (url === `${OMNILEDE_STUDIO_ORIGIN}/sw.js`) return new Response("worker");
+      if (url.startsWith(`https://raw.githubusercontent.com/${OMNILEDE_REPOSITORY}/`)) return new Response(bytes);
+      if (url.includes("api.github.com")) return Response.json({ object: { sha: version("c") } });
+      const route = url.replace(trustedConfig().blogPreviewOrigin, "");
+      return new Response(null, { status: evidence.publicAdminPreview.statuses[route] ?? 500 });
+    });
+    expect(await verifyLiveEvidence(evidence, trustedConfig(), fetchImpl as typeof fetch)).toEqual([]);
+    expect(requested).toHaveLength(10);
+    expect(requested.every((url) => !url.includes("attacker"))).toBe(true);
+  });
+
+  it("does not probe caller-selected endpoints when static trust binding fails", async () => {
+    const evidence = passingEvidence();
+    evidence.studioOrigin = "https://attacker.example";
+    const fetchImpl = vi.fn();
+    expect(await verifyLiveEvidence(evidence, trustedConfig(), fetchImpl as typeof fetch)).toEqual([
+      "Static rollout evidence is not trusted; live probes were not attempted.",
+    ]);
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  it("rejects a publication commit that is not the trusted preview branch head", async () => {
+    const evidence = passingEvidence();
+    const fetchImpl = async (input: string | URL | Request) => {
+      const url = String(input);
       if (url.endsWith("/manifest.webmanifest")) return Response.json({ display: "standalone" });
       if (url.endsWith("/sw.js")) return new Response("worker");
       if (url.startsWith("https://raw.githubusercontent.com/")) return new Response(bytes);
-      return new Response("missing", { status: 404 });
+      if (url.includes("api.github.com")) return Response.json({ object: { sha: version("d") } });
+      const route = url.replace(trustedConfig().blogPreviewOrigin, "");
+      return new Response(null, { status: evidence.publicAdminPreview.statuses[route] ?? 500 });
     };
-    expect(await verifyLiveEvidence(passingEvidence(), fetchImpl as typeof fetch)).toEqual([]);
-    expect(requested).toHaveLength(9);
+    expect(await verifyLiveEvidence(evidence, trustedConfig(), fetchImpl as typeof fetch)).toContain("Published commit is not the trusted preview branch head.");
+  });
+
+  it("bounds live response bodies", async () => {
+    const evidence = passingEvidence();
+    const fetchImpl = vi.fn(async () => new Response("x".repeat(1024 * 1024 + 1)));
+    expect(await verifyLiveEvidence(evidence, trustedConfig(), fetchImpl as typeof fetch)).toContain("Live PWA manifest probe failed.");
   });
 });

@@ -11,6 +11,7 @@
   NEXT_PUBLIC_STUDIO_URL = "https://omnilede-studio.netlify.app"
   AUTH_ALLOWED_ORIGINS = "https://omnilede-studio.netlify.app"
   GOOGLE_OAUTH_REDIRECT_URI = "https://omnilede-studio.netlify.app/api/connections/google/callback"
+  GITHUB_CONTENT_BRANCH = "studio-preview-content"
   ADSENSE_ENABLED = "false"
   COMMERCIAL_FEATURES_ENABLED = "false"
 
