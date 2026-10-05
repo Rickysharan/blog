@@ -142,6 +142,16 @@ publicationId: 10000000-0000-4000-8000-000000000003`
     ).toThrow(/filename must match frontmatter slug/i);
   });
 
+  it("rejects a modification date before publication", () => {
+    const invalid = validMdx.replace(
+      "date: 2026-08-20",
+      "date: 2026-08-20\nmodifiedDate: 2026-08-19",
+    );
+    expect(() =>
+      parseArticleFile(invalid, "/content/articles/politics/published-story.mdx"),
+    ).toThrow(/modifiedDate must be on or after/i);
+  });
+
   it("rejects insecure source URLs and unsupported fields", () => {
     const invalid = validMdx
       .replace(

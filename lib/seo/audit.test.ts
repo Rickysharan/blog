@@ -3,11 +3,11 @@ import { describe, expect, it } from "vitest";
 import { auditPublicSite, siteFindingsToSeoWarnings } from "./audit";
 
 const origin = "https://news.example";
-const organization = JSON.stringify({ "@context": "https://schema.org", "@type": "Organization", name: "OmniLede Editorial", url: origin });
-const articleLd = JSON.stringify({ "@context": "https://schema.org", "@type": "NewsArticle", headline: "Useful story", description: "A useful description", datePublished: "2026-10-01T00:00:00.000Z", dateModified: "2026-10-01T00:00:00.000Z", image: [`${origin}/image.jpg`], author: { "@type": "Organization", name: "OmniLede Editorial" }, publisher: { "@type": "Organization", name: "OmniLede Editorial" }, mainEntityOfPage: `${origin}/article/story` });
+const organization = JSON.stringify({ "@context": "https://schema.org", "@type": "Organization", "@id": `${origin}/#organization`, name: "OmniLede Editorial", url: origin });
+const articleLd = JSON.stringify({ "@context": "https://schema.org", "@type": "NewsArticle", headline: "Useful story", description: "A useful description", datePublished: "2026-10-01T00:00:00.000Z", dateModified: "2026-10-01T00:00:00.000Z", image: [`${origin}/image.jpg`], author: { "@type": "Organization", name: "OmniLede Editorial" }, publisher: { "@type": "Organization", "@id": `${origin}/#organization`, name: "OmniLede Editorial", url: origin }, mainEntityOfPage: `${origin}/article/story`, url: `${origin}/article/story` });
 const breadcrumbLd = JSON.stringify({ "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [{ "@type": "ListItem", position: 1, name: "Home", item: `${origin}/` }, { "@type": "ListItem", position: 2, name: "Story", item: `${origin}/article/story` }] });
 
-function html({ canonical, title = "Useful story | OmniLede", description = "A useful and distinct page description.", body = `<a href=\"/category/anime\">Anime</a><img src=\"/image.jpg\" alt=\"Story scene\">`, jsonLd = articleLd }: { canonical: string; title?: string; description?: string; body?: string; jsonLd?: string }) {
+function html({ canonical, title = "Useful story | OmniLede", description = "A useful and distinct page description.", body = `<time datetime=\"2026-10-01\">1 October 2026</time><a href=\"/category/anime\">Anime</a><img src=\"/image.jpg\" alt=\"Story scene\">`, jsonLd = articleLd }: { canonical: string; title?: string; description?: string; body?: string; jsonLd?: string }) {
   return `<!doctype html><html><head><title>${title}</title><meta name="description" content="${description}"><meta name="robots" content="index,follow"><link rel="canonical" href="${canonical}"><script type="application/ld+json">${organization}</script><script type="application/ld+json">${jsonLd}</script><script type="application/ld+json">${breadcrumbLd}</script></head><body>${body}</body></html>`;
 }
 
@@ -67,5 +67,54 @@ describe("auditPublicSite", () => {
     const oversized = fixtureFetch({ [`${origin}/robots.txt`]: new Response("x".repeat(600_000), { status: 200 }) });
     const oversizedFindings = await auditPublicSite(origin, { fetchImpl: oversized.fetch });
     expect(oversizedFindings.some(({ check, evidence }) => check === "robots" && /size/i.test(evidence))).toBe(true);
+  });
+
+  it("rejects private, mixed, and mapped DNS answers and pins one validated resolution", async () => {
+    const fixture = fixtureFetch();
+    const requestImpl = async (url: URL, address: { address: string }) => {
+      expect(address.address).toBe("93.184.216.34");
+      return fixture.fetch(url);
+    };
+    await expect(auditPublicSite(origin, {
+      resolveHostname: async () => [{ address: "10.0.0.2", family: 4 }],
+      requestImpl,
+    })).rejects.toThrow(/public addresses/i);
+    await expect(auditPublicSite(origin, {
+      resolveHostname: async () => [{ address: "93.184.216.34", family: 4 }, { address: "127.0.0.1", family: 4 }],
+      requestImpl,
+    })).rejects.toThrow(/public addresses/i);
+    await expect(auditPublicSite(origin, {
+      resolveHostname: async () => [{ address: "::ffff:127.0.0.1", family: 6 }],
+      requestImpl,
+    })).rejects.toThrow(/public addresses/i);
+
+    let resolutions = 0;
+    const findings = await auditPublicSite(origin, {
+      resolveHostname: async () => {
+        resolutions += 1;
+        return resolutions === 1 ? [{ address: "93.184.216.34", family: 4 }] : [{ address: "127.0.0.1", family: 4 }];
+      },
+      requestImpl,
+    });
+    expect(resolutions).toBe(1);
+    expect(findings.every(({ state }) => state === "pass")).toBe(true);
+  });
+
+  it("rejects nonempty structured data that disagrees with the canonical visible page", async () => {
+    const wrong = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "NewsArticle",
+      headline: "Useful story",
+      description: "A useful description",
+      datePublished: "2026-10-02T00:00:00.000Z",
+      dateModified: "2026-10-01T00:00:00.000Z",
+      image: ["https://other.example/image.jpg"],
+      publisher: { "@type": "Organization", "@id": `${origin}/#wrong`, name: "Wrong", url: origin },
+      mainEntityOfPage: `${origin}/article/other`,
+      url: `${origin}/article/other`,
+    });
+    const fixture = fixtureFetch({ [`${origin}/article/story`]: new Response(html({ canonical: `${origin}/article/story`, jsonLd: wrong }), { status: 200 }) });
+    const findings = await auditPublicSite(origin, { fetchImpl: fixture.fetch });
+    expect(findings.find(({ check }) => check === "structured-data")?.state).toBe("warning");
   });
 });

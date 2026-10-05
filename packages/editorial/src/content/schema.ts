@@ -51,6 +51,14 @@ const articleFrontmatterInputSchema = z
   })
   .strict()
   .superRefine((article, context) => {
+    if (article.modifiedDate && article.modifiedDate < article.date) {
+      context.addIssue({
+        code: "custom",
+        path: ["modifiedDate"],
+        message: "modifiedDate must be on or after the publication date",
+      });
+    }
+
     const contributorFields = [
       "contributorId",
       "contributorName",

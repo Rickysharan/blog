@@ -57,4 +57,11 @@ describe("NewsArticle completeness", () => {
       publisher: { "@id": "https://news.example/#organization" },
     });
   });
+
+  it("uses the same reviewed modification date exposed by the visible article metadata", () => {
+    expect(buildNewsArticleJsonLd({ ...article, modifiedDate: "2026-09-02" }, site)).toMatchObject({
+      datePublished: "2026-08-25T00:00:00.000Z",
+      dateModified: "2026-09-02T00:00:00.000Z",
+    });
+  });
 });

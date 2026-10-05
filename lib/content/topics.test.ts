@@ -56,4 +56,20 @@ describe("getQualifiedTopics", () => {
     expect(getQualifiedTopics([...articles].reverse())).toEqual(getQualifiedTopics(articles));
     expect(getQualifiedTopics(articles)[0]?.articles.map(({ slug }) => slug)).toEqual(["a", "m", "z"]);
   });
+
+  it("uses the canonical slug as the unique topic identity", () => {
+    const topics = getQualifiedTopics([
+      article("one", ["AI News"]),
+      article("two", ["AI-News"]),
+      article("three", ["ai news"]),
+    ]);
+    expect(topics).toHaveLength(1);
+    expect(topics[0]).toMatchObject({ slug: "ai-news", canonicalPath: "/topic/ai-news", label: "Ai News" });
+
+    expect(getQualifiedTopics([
+      article("ambiguous", ["AI News", "AI-News"]),
+      article("two", ["AI News"]),
+      article("three", ["AI-News"]),
+    ])).toEqual([]);
+  });
 });

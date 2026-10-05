@@ -13,17 +13,16 @@ export type QualifiedTopic = {
   categories: CategorySlug[];
 };
 
-function normalizedTag(value: string): { key: string; slug: string } | null {
+function normalizedTag(value: string): { slug: string } | null {
   const trimmed = value.trim().replace(/\s+/g, " ");
   if (trimmed.length < 2 || !SAFE_TOPIC.test(trimmed)) return null;
-  const key = trimmed.toLocaleLowerCase("en");
-  const slug = key.replaceAll(" ", "-");
+  const slug = trimmed.toLocaleLowerCase("en").replaceAll(" ", "-");
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) || slug.length > 80) return null;
-  return { key, slug };
+  return { slug };
 }
 
-function displayLabel(key: string): string {
-  return key.replace(/\b[a-z]/g, (letter) => letter.toUpperCase());
+function displayLabel(slug: string): string {
+  return slug.replaceAll("-", " ").replace(/\b[a-z]/g, (letter) => letter.toUpperCase());
 }
 
 export function getQualifiedTopics(
@@ -33,7 +32,7 @@ export function getQualifiedTopics(
   const threshold = Number.isSafeInteger(minimumArticles) && minimumArticles >= 3
     ? minimumArticles
     : 3;
-  const grouped = new Map<string, { slug: string; articles: Map<string, ArticleSummary> }>();
+  const grouped = new Map<string, { articles: Map<string, ArticleSummary> }>();
   const ambiguous = new Set<string>();
 
   for (const article of articles) {
@@ -42,43 +41,41 @@ export function getQualifiedTopics(
     for (const tag of article.tags) {
       const normalized = normalizedTag(tag);
       if (!normalized) continue;
-      if (seen.has(normalized.key)) {
-        ambiguous.add(normalized.key);
+      if (seen.has(normalized.slug)) {
+        ambiguous.add(normalized.slug);
         continue;
       }
-      seen.add(normalized.key);
-      const group = grouped.get(normalized.key) ?? {
-        slug: normalized.slug,
+      seen.add(normalized.slug);
+      const group = grouped.get(normalized.slug) ?? {
         articles: new Map<string, ArticleSummary>(),
       };
       group.articles.set(article.slug, article);
-      grouped.set(normalized.key, group);
+      grouped.set(normalized.slug, group);
     }
   }
 
   const categoryOrder = new Map(CATEGORIES.map(({ slug }, index) => [slug, index]));
   return [...grouped.entries()]
     .filter(([key, group]) => !ambiguous.has(key) && group.articles.size >= threshold)
-    .map(([key, group]) => {
+    .map(([slug, group]) => {
       const topicArticles = [...group.articles.values()].sort(
         (left, right) => right.date.localeCompare(left.date) || left.slug.localeCompare(right.slug),
       );
       const categories = [...new Set(topicArticles.map(({ category }) => category))].sort(
         (left, right) => (categoryOrder.get(left) ?? 99) - (categoryOrder.get(right) ?? 99),
       );
-      const label = displayLabel(key);
+      const label = displayLabel(slug);
       const categoryNames = categories
         .map((slug) => CATEGORIES.find((category) => category.slug === slug)?.label ?? slug)
         .join(", ");
       return {
-        slug: group.slug,
+        slug,
         label,
         summary: `Explore OmniLede's independently reviewed ${label} coverage, with context from ${topicArticles.length} articles across ${categoryNames}.`,
-        canonicalPath: `/topic/${group.slug}` as const,
+        canonicalPath: `/topic/${slug}` as const,
         articles: topicArticles,
         categories,
       };
     })
     .sort((left, right) => left.slug.localeCompare(right.slug));
 }
-

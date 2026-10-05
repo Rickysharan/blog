@@ -1,3 +1,5 @@
+import { lookup } from "node:dns/promises";
+import { request as httpsRequest } from "node:https";
 import { isIP } from "node:net";
 
 export type SiteFindingState = "pass" | "warning" | "error";
@@ -11,7 +13,15 @@ export type SiteFinding = {
 };
 
 type FetchLike = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
-type AuditOptions = { fetchImpl?: FetchLike; now?: Date };
+type ResolvedAddress = { address: string; family: 4 | 6 };
+type ResolveHostname = (hostname: string) => Promise<ResolvedAddress[]>;
+type PinnedRequest = (url: URL, address: ResolvedAddress, signal: AbortSignal) => Promise<Response>;
+type AuditOptions = {
+  fetchImpl?: FetchLike;
+  now?: Date;
+  resolveHostname?: ResolveHostname;
+  requestImpl?: PinnedRequest;
+};
 type PageEvidence = { url: string; html: string };
 
 const MAX_RESPONSE_BYTES = 512 * 1024;
@@ -29,8 +39,77 @@ function isPrivateHostname(hostname: string): boolean {
       (a === 172 && b >= 16 && b <= 31) || (a === 192 && [0, 2, 168].includes(b)) ||
       (a === 198 && [18, 19, 51].includes(b)) || (a === 203 && b === 0);
   }
-  if (isIP(host) === 6) return host === "::" || host === "::1" || host.startsWith("::ffff:") || /^f[cd]/.test(host) || /^fe[89ab]/.test(host) || host.startsWith("2001:db8:");
+  if (isIP(host) === 6) {
+    if (host.startsWith("::ffff:")) {
+      const mapped = host.slice("::ffff:".length);
+      return isIP(mapped) !== 4 || isPrivateHostname(mapped);
+    }
+    return host === "::" || host === "::1" || /^f[cd]/.test(host) || /^fe[89ab]/.test(host) ||
+      host.startsWith("ff") || host.startsWith("2001:db8:");
+  }
   return false;
+}
+
+async function defaultResolveHostname(hostname: string): Promise<ResolvedAddress[]> {
+  const answers = await lookup(hostname, { all: true, verbatim: true });
+  return answers.map(({ address, family }) => ({ address, family: family as 4 | 6 }));
+}
+
+async function resolvePublicAddresses(hostname: string, resolver: ResolveHostname): Promise<ResolvedAddress[]> {
+  const answers = await resolver(hostname);
+  if (answers.length === 0 || answers.some(({ address, family }) => family !== 4 && family !== 6 || isPrivateHostname(address))) {
+    throw new Error("Site audit hostname did not resolve exclusively to public addresses.");
+  }
+  return answers;
+}
+
+async function defaultPinnedRequest(url: URL, pinned: ResolvedAddress, signal: AbortSignal): Promise<Response> {
+  return new Promise((resolve, reject) => {
+    const request = httpsRequest({
+      protocol: "https:",
+      hostname: url.hostname,
+      port: url.port || 443,
+      path: `${url.pathname}${url.search}`,
+      method: "GET",
+      servername: url.hostname,
+      headers: { Host: url.host, Accept: "text/html,application/xml,text/plain;q=0.9,*/*;q=0.1" },
+      lookup: (_hostname, _options, callback) => callback(null, pinned.address, pinned.family),
+    }, (response) => {
+      const headers = new Headers();
+      for (const [name, value] of Object.entries(response.headers)) {
+        if (Array.isArray(value)) value.forEach((entry) => headers.append(name, entry));
+        else if (value !== undefined) headers.set(name, String(value));
+      }
+      const status = response.statusCode ?? 500;
+      if (status >= 300 && status < 400) {
+        response.resume();
+        resolve(new Response(null, { status, headers }));
+        return;
+      }
+      const declared = Number(headers.get("content-length"));
+      if (Number.isFinite(declared) && declared > MAX_RESPONSE_BYTES) {
+        response.destroy();
+        reject(new Error("Response exceeded the safe size limit."));
+        return;
+      }
+      const chunks: Buffer[] = [];
+      let size = 0;
+      response.on("data", (chunk: Buffer) => {
+        size += chunk.byteLength;
+        if (size > MAX_RESPONSE_BYTES) {
+          response.destroy(new Error("Response exceeded the safe size limit."));
+          return;
+        }
+        chunks.push(chunk);
+      });
+      response.on("end", () => resolve(new Response(Buffer.concat(chunks), { status, headers })));
+    });
+    const abort = () => request.destroy(new DOMException("The operation was aborted.", "AbortError"));
+    signal.addEventListener("abort", abort, { once: true });
+    request.once("close", () => signal.removeEventListener("abort", abort));
+    request.once("error", reject);
+    request.end();
+  });
 }
 
 function requirePublicOrigin(value: string): string {
@@ -139,6 +218,70 @@ function schemaType(value: unknown, type: string): value is Record<string, unkno
   return Boolean(value && typeof value === "object" && (value as Record<string, unknown>)["@type"] === type);
 }
 
+function objectValue(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : null;
+}
+
+function schemaUrl(value: unknown): string | undefined {
+  if (typeof value === "string") return value;
+  const record = objectValue(value);
+  return typeof record?.["@id"] === "string" ? record["@id"] : undefined;
+}
+
+function exactSameOriginUrl(value: unknown, origin: string): string | undefined {
+  if (typeof value !== "string") return undefined;
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === "https:" && parsed.origin === origin ? parsed.toString() : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function validOrganization(value: unknown, origin: string): boolean {
+  if (!schemaType(value, "Organization")) return false;
+  return value["@id"] === `${origin}/#organization` && value.url === origin &&
+    typeof value.name === "string" && value.name.trim().length > 0;
+}
+
+function validBreadcrumb(value: unknown, pageUrl: string, origin: string): boolean {
+  if (!schemaType(value, "BreadcrumbList") || !Array.isArray(value.itemListElement) || value.itemListElement.length < 2) return false;
+  const items = value.itemListElement.map(objectValue);
+  if (items.some((item) => !item)) return false;
+  const urls = items.map((item, index) => {
+    if (item?.["@type"] !== "ListItem" || item.position !== index + 1 || typeof item.name !== "string" || !item.name.trim()) return undefined;
+    return exactSameOriginUrl(item.item, origin);
+  });
+  return urls.every(Boolean) && urls[0] === `${origin}/` && urls.at(-1) === pageUrl;
+}
+
+function structuredArticleProblem(html: string, pageUrl: string, origin: string, schemas: unknown[]): string | null {
+  const news = schemas.find((value) => schemaType(value, "NewsArticle"));
+  const breadcrumb = schemas.find((value) => schemaType(value, "BreadcrumbList"));
+  if (!news || !validBreadcrumb(breadcrumb, pageUrl, origin)) return "NewsArticle or canonical BreadcrumbList data is missing or invalid.";
+  if (typeof news.headline !== "string" || !news.headline.trim() || typeof news.description !== "string" || !news.description.trim()) {
+    return "NewsArticle headline or description is missing.";
+  }
+  const author = objectValue(news.author);
+  if (!author || !["Person", "Organization"].includes(String(author["@type"])) || typeof author.name !== "string" || !author.name.trim()) {
+    return "NewsArticle author identity is missing or invalid.";
+  }
+  if (schemaUrl(news.mainEntityOfPage) !== pageUrl || news.url !== pageUrl) return "NewsArticle identity does not match the visible canonical page.";
+  const publisher = objectValue(news.publisher);
+  if (!validOrganization(publisher, origin)) return "NewsArticle publisher does not match the site Organization identity.";
+  const images = Array.isArray(news.image) ? news.image : [news.image];
+  if (images.length === 0 || images.some((image) => !exactSameOriginUrl(schemaUrl(image) ?? image, origin))) return "NewsArticle image is missing or is not a canonical same-origin HTTPS URL.";
+  const published = typeof news.datePublished === "string" ? news.datePublished : "";
+  const modified = typeof news.dateModified === "string" ? news.dateModified : "";
+  const publishedDate = /^\d{4}-\d{2}-\d{2}T/.test(published) && Number.isFinite(Date.parse(published)) ? published.slice(0, 10) : "";
+  const modifiedDate = /^\d{4}-\d{2}-\d{2}T/.test(modified) && Number.isFinite(Date.parse(modified)) ? modified.slice(0, 10) : "";
+  const visibleDates = new Set(attribute(html, "time", "datetime"));
+  if (!publishedDate || !modifiedDate || modifiedDate < publishedDate || !visibleDates.has(publishedDate) || !visibleDates.has(modifiedDate)) {
+    return "NewsArticle dates do not match the visible published/modified chronology.";
+  }
+  return null;
+}
+
 function aggregate(
   check: SiteFinding["check"],
   problems: Array<{ url: string; detail: string }>,
@@ -156,7 +299,13 @@ function aggregate(
 export async function auditPublicSite(originValue: string, options: AuditOptions = {}): Promise<SiteFinding[]> {
   const origin = requirePublicOrigin(originValue);
   const checkedAt = (options.now ?? new Date()).toISOString();
-  const fetchImpl = options.fetchImpl ?? fetch;
+  let fetchImpl = options.fetchImpl;
+  if (!fetchImpl) {
+    const addresses = await resolvePublicAddresses(new URL(origin).hostname, options.resolveHostname ?? defaultResolveHostname);
+    const pinned = addresses[0] as ResolvedAddress;
+    const requestImpl = options.requestImpl ?? defaultPinnedRequest;
+    fetchImpl = (input, init) => requestImpl(new URL(String(input)), pinned, init?.signal ?? AbortSignal.timeout(8_000));
+  }
   const findings: SiteFinding[] = [];
   let robotsText = "";
   let sitemapText = "";
@@ -248,12 +397,10 @@ export async function auditPublicSite(originValue: string, options: AuditOptions
     }
 
     const schemas = jsonLd(page.html);
-    if (schemas.some((value) => schemaType(value, "Organization"))) hasOrganization = true;
+    if (schemas.some((value) => validOrganization(value, origin))) hasOrganization = true;
     if (new URL(page.url).pathname.startsWith("/article/")) {
-      const news = schemas.find((value) => schemaType(value, "NewsArticle"));
-      const breadcrumb = schemas.find((value) => schemaType(value, "BreadcrumbList"));
-      const required = news && ["headline", "description", "datePublished", "dateModified", "image", "author", "publisher", "mainEntityOfPage"].every((key) => news[key]);
-      if (!required || !breadcrumb) structuredProblems.push({ url: page.url, detail: "NewsArticle or BreadcrumbList required fields are missing." });
+      const problem = structuredArticleProblem(page.html, page.url, origin, schemas);
+      if (problem) structuredProblems.push({ url: page.url, detail: problem });
     }
   }
   if (!hasOrganization) structuredProblems.push({ url: origin, detail: "Organization structured data is missing." });
