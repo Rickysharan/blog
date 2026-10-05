@@ -211,17 +211,18 @@ describe("Studio rollout gate", () => {
     const fetchImpl = vi.fn(async (input: string | URL | Request) => {
       const url = String(input);
       requested.push(url);
-      if (url === `${OMNILEDE_STUDIO_ORIGIN}/manifest.webmanifest`) return Response.json({ display: "standalone" });
-      if (url === `${OMNILEDE_STUDIO_ORIGIN}/sw.js`) return new Response("worker");
+      if (url === `${studioDeployUrl}/manifest.webmanifest`) return Response.json({ display: "standalone" });
+      if (url === `${studioDeployUrl}/sw.js`) return new Response("worker");
       if (url.endsWith("/deploys/studio-deploy")) return Response.json({ id: "studio-deploy", site_id: OMNILEDE_STUDIO_SITE_ID, commit_ref: studioCommit, state: "ready", deploy_ssl_url: studioDeployUrl });
       if (url.endsWith("/deploys/blog-deploy")) return Response.json({ id: "blog-deploy", site_id: OMNILEDE_BLOG_SITE_ID, commit_ref: blogCommit, state: "ready", deploy_ssl_url: blogDeployUrl });
+      if (url.endsWith(`/sites/${OMNILEDE_STUDIO_SITE_ID}`)) return Response.json({ published_deploy: { id: "studio-deploy" } });
       if (url.startsWith(`https://raw.githubusercontent.com/${OMNILEDE_REPOSITORY}/`)) return new Response(bytes);
       if (url.includes("api.github.com")) return Response.json({ object: { sha: version("c") } });
       const route = url.replace(trustedConfig().blogPreviewOrigin, "");
       return new Response(null, { status: evidence.publicAdminPreview.statuses[route] ?? 500 });
     });
     expect(await verifyLiveEvidence(evidence, trustedConfig(), fetchImpl as typeof fetch, "test-token")).toEqual([]);
-    expect(requested).toHaveLength(12);
+    expect(requested).toHaveLength(13);
     expect(requested.every((url) => !url.includes("attacker"))).toBe(true);
   });
 
@@ -243,6 +244,7 @@ describe("Studio rollout gate", () => {
       if (url.endsWith("/sw.js")) return new Response("worker");
       if (url.endsWith("/deploys/studio-deploy")) return Response.json({ id: "studio-deploy", site_id: OMNILEDE_STUDIO_SITE_ID, commit_ref: studioCommit, state: "ready", deploy_ssl_url: studioDeployUrl });
       if (url.endsWith("/deploys/blog-deploy")) return Response.json({ id: "blog-deploy", site_id: OMNILEDE_BLOG_SITE_ID, commit_ref: blogCommit, state: "ready", deploy_ssl_url: blogDeployUrl });
+      if (url.endsWith(`/sites/${OMNILEDE_STUDIO_SITE_ID}`)) return Response.json({ published_deploy: { id: "studio-deploy" } });
       if (url.startsWith("https://raw.githubusercontent.com/")) return new Response(bytes);
       if (url.includes("api.github.com")) return Response.json({ object: { sha: version("d") } });
       const route = url.replace(trustedConfig().blogPreviewOrigin, "");
@@ -255,5 +257,24 @@ describe("Studio rollout gate", () => {
     const evidence = passingEvidence();
     const fetchImpl = vi.fn(async () => new Response("x".repeat(1024 * 1024 + 1)));
     expect(await verifyLiveEvidence(evidence, trustedConfig(), fetchImpl as typeof fetch, "test-token")).toContain("Live PWA manifest probe failed.");
+  });
+
+  it("rejects a signed Studio deploy that is not currently published", async () => {
+    const evidence = passingEvidence();
+    const fetchImpl = async (input: string | URL | Request) => {
+      const url = String(input);
+      if (url.endsWith(`/sites/${OMNILEDE_STUDIO_SITE_ID}`)) return Response.json({ published_deploy: { id: "different-deploy" } });
+      if (url.endsWith("/deploys/studio-deploy")) return Response.json({ id: "studio-deploy", site_id: OMNILEDE_STUDIO_SITE_ID, commit_ref: studioCommit, state: "ready", deploy_ssl_url: studioDeployUrl });
+      if (url.endsWith("/deploys/blog-deploy")) return Response.json({ id: "blog-deploy", site_id: OMNILEDE_BLOG_SITE_ID, commit_ref: blogCommit, state: "ready", deploy_ssl_url: blogDeployUrl });
+      if (url.endsWith("/manifest.webmanifest")) return Response.json({ display: "standalone" });
+      if (url.endsWith("/sw.js")) return new Response("worker");
+      if (url.startsWith("https://raw.githubusercontent.com/")) return new Response(bytes);
+      if (url.includes("api.github.com")) return Response.json({ object: { sha: version("c") } });
+      const route = url.replace(trustedConfig().blogPreviewOrigin, "");
+      return new Response(null, { status: evidence.publicAdminPreview.statuses[route] ?? 500 });
+    };
+    expect(await verifyLiveEvidence(evidence, trustedConfig(), fetchImpl as typeof fetch, "test-token")).toContain(
+      "The stable Studio origin is not publishing the signed Studio deploy.",
+    );
   });
 });

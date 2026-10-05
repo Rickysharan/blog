@@ -467,15 +467,24 @@ export async function verifyLiveEvidence(
         ) failures.push(`The ${label} Netlify deploy identity did not match the signed candidate.`);
       } catch { failures.push(`The ${label} Netlify deploy identity could not be verified.`); }
     }
+    try {
+      const response = await fetchWithTimeout(fetchImpl, `https://api.netlify.com/api/v1/sites/${trusted.studioSiteId}`, {
+        headers: { Authorization: `Bearer ${netlifyToken}` },
+      });
+      const body = await boundedJson(response) as { published_deploy?: { id?: unknown } };
+      if (response.status !== 200 || body.published_deploy?.id !== trusted.studioDeployId) {
+        failures.push("The stable Studio origin is not publishing the signed Studio deploy.");
+      }
+    } catch { failures.push("The stable Studio published deploy could not be verified."); }
   }
 
   try {
-    const manifest = await fetchWithTimeout(fetchImpl, `${trusted.studioOrigin}/manifest.webmanifest`);
+    const manifest = await fetchWithTimeout(fetchImpl, `${evidence.deployments.studio.deployUrl}/manifest.webmanifest`);
     const body = await boundedJson(manifest) as { display?: unknown };
     if (manifest.status !== 200 || body.display !== "standalone") failures.push("Live PWA manifest probe failed.");
   } catch { failures.push("Live PWA manifest probe failed."); }
   try {
-    const worker = await fetchWithTimeout(fetchImpl, `${trusted.studioOrigin}/sw.js`);
+    const worker = await fetchWithTimeout(fetchImpl, `${evidence.deployments.studio.deployUrl}/sw.js`);
     if (worker.status !== 200) failures.push("Live service-worker probe failed.");
     await worker.body?.cancel();
   } catch { failures.push("Live service-worker probe failed."); }
@@ -535,6 +544,10 @@ async function main() {
     const verdict = JSON.parse(await readFile(resolve(verdictPath), "utf8")) as SignedRolloutVerdict;
     if (!verifySignedRolloutVerdict(evidence, trusted, verdict, secret)) {
       throw new Error("The signed rollout verdict is invalid for these exact deploys and commits.");
+    }
+    const consumerLiveFailures = await verifyLiveEvidence(evidence, trusted);
+    if (consumerLiveFailures.length) {
+      throw new Error(`The signed candidates changed before deployment:\n- ${consumerLiveFailures.join("\n- ")}`);
     }
     process.stdout.write(`Studio ${environment} verdict matches the exact deployment candidates.\n`);
     return;
