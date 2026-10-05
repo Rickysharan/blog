@@ -23,7 +23,7 @@ async function signInWithGoogle() {
   const { data, error } = await (await createServerSupabaseClient()).auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: new URL("/auth/callback?next=%2Foverview", studioOrigin).toString()
+      redirectTo: new URL("/auth/callback", studioOrigin).toString()
     }
   });
   if (error || !data.url) redirect("/login?error=unavailable");
@@ -50,7 +50,7 @@ async function sendSignInLink() {
   const { error } = await (await createServerSupabaseClient()).auth.signInWithOtp({
     email: operatorEmail,
     options: {
-      emailRedirectTo: new URL("/auth/callback?next=%2Foverview", studioOrigin).toString(),
+      emailRedirectTo: new URL("/auth/callback", studioOrigin).toString(),
       shouldCreateUser: false
     }
   });

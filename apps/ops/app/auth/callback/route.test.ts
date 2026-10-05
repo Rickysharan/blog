@@ -29,6 +29,13 @@ describe("Studio OAuth callback", () => {
     expect(response.headers.get("cache-control")).toBe("private, no-store");
   });
 
+  test("uses the overview when the exact production callback has no next query", async () => {
+    const response = await GET(new Request("https://studio.example/auth/callback?code=pkce-code"));
+
+    expect(mocks.exchangeCodeForSession).toHaveBeenCalledWith("pkce-code");
+    expect(response.headers.get("location")).toBe("https://studio.example/overview");
+  });
+
   test.each([
     "https://evil.example/steal",
     "//evil.example/steal",
