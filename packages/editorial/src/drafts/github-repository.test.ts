@@ -13,12 +13,12 @@ const draftPath = "content/drafts/anime/story.mdx";
 const articlePath = "content/articles/anime/story.mdx";
 
 function github(paths = [draftPath, "content/drafts/anime/other.mdx"]) {
-  const calls: { url: string; method: string; body: any }[] = [];
+  const calls: { url: string; method: string; body: Record<string, unknown> }[] = [];
   const state = { head: A, refStatus: 200, blobStatus: 200 };
   const fetchImpl = async (input: string | URL | Request, init?: RequestInit) => {
     const url = String(input);
     const method = init?.method ?? "GET";
-    const body = typeof init?.body === "string" ? JSON.parse(init.body) : undefined;
+    const body = typeof init?.body === "string" ? JSON.parse(init.body) as Record<string, unknown> : {};
     calls.push({ url, method, body });
     if (url.endsWith("/git/ref/heads/editorial/content")) return Response.json({ object: { sha: state.head } });
     if (url.endsWith(`/git/commits/${state.head}`)) return Response.json({ tree: { sha: TREE } });

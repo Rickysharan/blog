@@ -48,7 +48,7 @@ describe("Studio contracts", () => {
     ["postponed", "2026-10-02T08:00:00.000Z", "2026-10-03T08:00:00.000Z", "postponed tasks cannot be completed"],
     ["open", "2026-10-02T08:00:00.000Z", null, "open tasks cannot retain a completion timestamp"],
     ["open", null, "2026-10-03T08:00:00.000Z", "open tasks cannot retain a postponement timestamp"]
-  ] as const)("rejects %s task timestamps: %s", (state, completedAt, postponedUntil, _reason) => {
+  ] as const)("rejects %s task timestamps: %s", (state, completedAt, postponedUntil, reason) => {
     const input = {
       evidenceKey: `state:${state}:${completedAt ?? "none"}:${postponedUntil ?? "none"}`,
       kind: "writing" as const,
@@ -59,6 +59,7 @@ describe("Studio contracts", () => {
       postponedUntil
     };
 
+    expect(reason).toBeTruthy();
     expect(() => studioTaskInputSchema.parse(input)).toThrow();
     expect(() =>
       studioTaskSchema.parse({

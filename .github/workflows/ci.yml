@@ -84,3 +84,36 @@ jobs:
 
       - name: Run contributor production browser suite
         run: npm run test:e2e --workspace @omnilede/contributor
+
+      - name: Validate Studio browser suite discovery
+        run: npm run test:e2e:studio -- --list
+
+      - name: Prepare authenticated Studio preview session
+        if: ${{ vars.STUDIO_E2E_BASE_URL != '' }}
+        env:
+          STORAGE_STATE_JSON: ${{ secrets.STUDIO_E2E_STORAGE_STATE_JSON }}
+        run: |
+          umask 077
+          printf '%s' "$STORAGE_STATE_JSON" > "$RUNNER_TEMP/studio-storage-state.json"
+          echo "STUDIO_E2E_STORAGE_STATE=$RUNNER_TEMP/studio-storage-state.json" >> "$GITHUB_ENV"
+
+      - name: Run live Studio preview browser suite
+        if: ${{ vars.STUDIO_E2E_BASE_URL != '' }}
+        env:
+          STUDIO_E2E_BASE_URL: ${{ vars.STUDIO_E2E_BASE_URL }}
+          STUDIO_E2E_OPERATOR_EMAIL: ${{ vars.STUDIO_E2E_OPERATOR_EMAIL }}
+          STUDIO_E2E_GITHUB_REPOSITORY: Rickysharan/blog
+          STUDIO_E2E_ALLOW_MUTATION: ${{ vars.STUDIO_E2E_ALLOW_MUTATION || 'false' }}
+          STUDIO_E2E_CONTROLLED_DRAFT_TITLE: ${{ vars.STUDIO_E2E_CONTROLLED_DRAFT_TITLE }}
+          STUDIO_E2E_CONTROLLED_DRAFT_CATEGORY: ${{ vars.STUDIO_E2E_CONTROLLED_DRAFT_CATEGORY }}
+        run: npm run test:e2e:studio
+
+  native-bridge:
+    name: Native Studio bridge
+    runs-on: macos-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Run Swift bridge tests
+        run: npm run test:studio-native

@@ -1,0 +1,36 @@
+[build]
+  command = "npm run build:ops"
+  publish = "apps/ops/.next"
+
+[build.environment]
+  NODE_VERSION = "22"
+  ADSENSE_ENABLED = "false"
+  COMMERCIAL_FEATURES_ENABLED = "false"
+
+[context.production.environment]
+  NEXT_PUBLIC_STUDIO_URL = "https://omnilede-studio.netlify.app"
+  AUTH_ALLOWED_ORIGINS = "https://omnilede-studio.netlify.app"
+  GOOGLE_OAUTH_REDIRECT_URI = "https://omnilede-studio.netlify.app/api/connections/google/callback"
+  ADSENSE_ENABLED = "false"
+  COMMERCIAL_FEATURES_ENABLED = "false"
+
+[context.deploy-preview.environment]
+  GITHUB_CONTENT_BRANCH = "studio-preview-content"
+  ADSENSE_ENABLED = "false"
+  COMMERCIAL_FEATURES_ENABLED = "false"
+
+[context.branch-deploy.environment]
+  GITHUB_CONTENT_BRANCH = "studio-preview-content"
+  ADSENSE_ENABLED = "false"
+  COMMERCIAL_FEATURES_ENABLED = "false"
+
+[[headers]]
+  for = "/api/*"
+  [headers.values]
+    Cache-Control = "private, no-store, max-age=0"
+    X-Content-Type-Options = "nosniff"
+
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
