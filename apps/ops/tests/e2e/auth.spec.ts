@@ -6,6 +6,7 @@ test("anonymous access fails closed at the Google operator sign-in", async ({ br
   await page.goto("/overview");
   await expect(page).toHaveURL(/\/login$/);
   await expect(page.getByRole("heading", { name: "OmniLede Studio" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Continue with Google" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Email me a sign-in link" })).toBeVisible();
   await context.close();
 });

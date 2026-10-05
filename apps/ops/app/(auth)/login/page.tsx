@@ -7,6 +7,29 @@ import { createServerSupabaseClient } from "../../../lib/supabase/server";
 
 export const metadata = { title: "Sign in | OmniLede Studio" };
 
+async function signInWithGoogle() {
+  "use server";
+
+  let studioOrigin: string;
+  try {
+    studioOrigin = parseStudioOriginEnv({
+      NEXT_PUBLIC_STUDIO_URL: process.env.NEXT_PUBLIC_STUDIO_URL,
+      AUTH_ALLOWED_ORIGINS: process.env.AUTH_ALLOWED_ORIGINS
+    }).NEXT_PUBLIC_STUDIO_URL;
+  } catch {
+    redirect("/login?error=unavailable");
+  }
+
+  const { data, error } = await (await createServerSupabaseClient()).auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo: new URL("/auth/callback?next=%2Foverview", studioOrigin).toString()
+    }
+  });
+  if (error || !data.url) redirect("/login?error=unavailable");
+  redirect(data.url);
+}
+
 async function sendSignInLink() {
   "use server";
 
@@ -42,10 +65,14 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
       <section className="login-card" aria-labelledby="login-heading">
         <p className="eyebrow">Private newsroom control plane</p>
         <h1 id="login-heading">OmniLede Studio</h1>
-        <p>Use a secure sign-in link sent to the configured operator email.</p>
+        <p>Sign in with Google, or use a secure email link as a backup.</p>
         {query.sent === "1" ? <p role="status">Sign-in link sent. Open the email on this device to continue.</p> : null}
         {query.error === "cooldown" ? <p role="alert">A link was requested recently. Check your email or wait one minute before trying again.</p> : null}
         {query.error && query.error !== "cooldown" ? <p role="alert">Sign-in is temporarily unavailable. Try again.</p> : null}
+        <form action={signInWithGoogle}>
+          <SignInSubmit idleLabel="Continue with Google" pendingLabel="Opening Google…" />
+        </form>
+        <p className="login-divider">or</p>
         <form action={sendSignInLink}>
           <SignInSubmit />
         </form>
