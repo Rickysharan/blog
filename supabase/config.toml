@@ -13,3 +13,23 @@ sql_paths = ["./seed.sql"]
 
 [studio]
 enabled = true
+
+[auth]
+site_url = "https://omnilede-contributors.vercel.app"
+additional_redirect_urls = [
+  "https://omnilede-contributors.vercel.app/auth/callback",
+  "https://omnilede-studio.vercel.app/auth/callback",
+  "https://omnilede-studio.vercel.app/auth/native/relay",
+]
+
+[auth.mfa.totp]
+enroll_enabled = true
+verify_enabled = true
+
+[auth.email]
+enable_confirmations = true
+max_frequency = "1m"
+otp_length = 8
+
+[storage.vector]
+enabled = false
