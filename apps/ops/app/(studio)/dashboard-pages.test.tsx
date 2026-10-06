@@ -1,12 +1,15 @@
 import { render, screen } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
 
-const d = vi.hoisted(() => ({ auth: vi.fn(), inventory: vi.fn(), tasks: vi.fn(), history: vi.fn(), health: vi.fn() }));
+const d = vi.hoisted(() => ({ auth: vi.fn(), inventory: vi.fn(), tasks: vi.fn(), history: vi.fn(), health: vi.fn(), ga4: vi.fn(), search: vi.fn(), adsense: vi.fn() }));
 vi.mock("../../lib/auth/operator", () => ({ requireStudioOperator: d.auth }));
 vi.mock("../../lib/editorial/repository", () => ({ loadStudioEditorialInventory: d.inventory }));
 vi.mock("../../lib/tasks/repository", () => ({ listTodayTasks: d.tasks }));
 vi.mock("../../lib/publication/history", () => ({ listPublicationHistory: d.history }));
 vi.mock("../../lib/health/site-health", async (original) => ({ ...(await original()), collectSiteHealth: d.health }));
+vi.mock("../../lib/providers/ga4", () => ({ fetchGa4Report: d.ga4 }));
+vi.mock("../../lib/providers/search-console", () => ({ fetchSearchReport: d.search }));
+vi.mock("../../lib/providers/adsense", () => ({ fetchAdsenseReport: d.adsense }));
 
 import CategoriesPage from "./categories/page";
 import HealthPage from "./health/page";
@@ -21,6 +24,9 @@ const inventory = { source: "github", version: "a".repeat(40), items: [
 beforeEach(() => {
   vi.resetAllMocks(); d.auth.mockResolvedValue({ userId: "operator" }); d.inventory.mockResolvedValue(inventory);
   d.tasks.mockResolvedValue([]); d.history.mockResolvedValue([]); d.health.mockResolvedValue([]);
+  d.ga4.mockResolvedValue({ source: "Google Analytics Data API", fetchedAt: null, state: "unavailable", data: null });
+  d.search.mockResolvedValue({ source: "Google Search Console API", fetchedAt: null, state: "unavailable", data: null });
+  d.adsense.mockResolvedValue({ source: "Google AdSense Management API", fetchedAt: null, state: "unavailable", data: null });
 });
 
 it("keeps Overview source-backed and labels disconnected provider metrics unavailable", async () => {
@@ -28,6 +34,7 @@ it("keeps Overview source-backed and labels disconnected provider metrics unavai
   expect(screen.getByRole("heading", { name: "Overview" })).toBeInTheDocument();
   expect(screen.getByText("Published articles").nextElementSibling).toHaveTextContent("1");
   expect(screen.getAllByText("Unavailable").length).toBeGreaterThanOrEqual(3);
+  expect(screen.getByText(/Google AdSense Management API · unavailable/)).toBeInTheDocument();
 });
 
 it("renders Today separately from category inventory", async () => {

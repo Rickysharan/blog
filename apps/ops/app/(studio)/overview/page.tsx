@@ -4,6 +4,7 @@ import { SourceCard } from "../../../components/overview/source-card";
 import { requireStudioOperator } from "../../../lib/auth/operator";
 import { loadStudioEditorialInventory } from "../../../lib/editorial/repository";
 import { listPublicationHistory } from "../../../lib/publication/history";
+import { fetchAdsenseReport } from "../../../lib/providers/adsense";
 import { fetchGa4Report } from "../../../lib/providers/ga4";
 import { fetchSearchReport } from "../../../lib/providers/search-console";
 import { listTodayTasks } from "../../../lib/tasks/repository";
@@ -15,9 +16,10 @@ export default async function OverviewPage() {
   let data: Awaited<ReturnType<typeof loadStudioEditorialInventory>> | undefined;
   let tasks: Awaited<ReturnType<typeof listTodayTasks>> | undefined;
   let history: Awaited<ReturnType<typeof listPublicationHistory>> | undefined;
-  const [analytics, search] = await Promise.all([
+  const [analytics, search, adsense] = await Promise.all([
     fetchGa4Report("28d").catch(() => undefined),
-    fetchSearchReport("28d").catch(() => undefined)
+    fetchSearchReport("28d").catch(() => undefined),
+    fetchAdsenseReport("28d").catch(() => undefined)
   ]);
   try {
     [data, tasks, history] = await Promise.all([
@@ -31,6 +33,10 @@ export default async function OverviewPage() {
   const drafts = data.items.filter(({ kind }) => kind === "draft").length;
   const openTasks = tasks.filter(({ state }) => state === "open").length;
   const latestPublication = history.find(({ action }) => action === "publish")?.created_at ?? null;
+  const earnings = adsense?.data?.metrics.estimatedEarnings ?? null;
+  const earningsValue = earnings === null ? null : adsense?.data?.metrics.currency
+    ? new Intl.NumberFormat("en-GB", { style: "currency", currency: adsense.data.metrics.currency }).format(earnings)
+    : earnings;
   return (
     <div className="studio-page">
       <p className="eyebrow">Verified newsroom status</p><h1>Overview</h1>
@@ -42,7 +48,7 @@ export default async function OverviewPage() {
         <SourceCard label="Latest publication" value={latestPublication ? new Date(latestPublication).toLocaleDateString() : "No recorded publication"} state="available" source="Publication history" refreshedAt={latestPublication} />
         <SourceCard label="Active users" value={analytics?.data?.summary?.activeUsers ?? null} state={analytics?.state ?? "unavailable"} source={analytics?.source ?? "Google Analytics"} refreshedAt={analytics?.fetchedAt ?? null} />
         <SourceCard label="Search clicks" value={search?.data?.summary?.clicks ?? null} state={search?.state ?? "unavailable"} source={search?.source ?? "Google Search Console"} refreshedAt={search?.fetchedAt ?? null} />
-        <SourceCard label="AdSense earnings" value={null} state="disconnected" source="Google AdSense" refreshedAt={null} />
+        <SourceCard label="AdSense earnings" value={earningsValue} state={adsense?.state ?? "unavailable"} source={adsense?.source ?? "Google AdSense Management API"} refreshedAt={adsense?.fetchedAt ?? null} />
       </div>
       <div className="overview-links"><Link href="/today">Open today’s work</Link><Link href="/health">Review site health</Link></div>
     </div>
