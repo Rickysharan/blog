@@ -49,6 +49,12 @@ final class StudioWindowController: NSWindowController, WKNavigationDelegate, WK
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
         guard let url = navigationAction.request.url else { decisionHandler(.cancel); return }
         let isMainFrame = navigationAction.targetFrame?.isMainFrame ?? true
+        if studioConfiguration.allowsExternalGoogleOAuth(url: url, isMainFrame: isMainFrame) {
+            NSWorkspace.shared.open(url)
+            webView.load(URLRequest(url: studioConfiguration.externalSignInWaitURL, cachePolicy: .reloadRevalidatingCacheData))
+            decisionHandler(.cancel)
+            return
+        }
         if navigationPolicy.allows(url: url, isMainFrame: isMainFrame) {
             if navigationAction.targetFrame == nil { webView.load(navigationAction.request); decisionHandler(.cancel) }
             else { decisionHandler(.allow) }
@@ -58,6 +64,16 @@ final class StudioWindowController: NSWindowController, WKNavigationDelegate, WK
             NSWorkspace.shared.open(url)
         }
         decisionHandler(.cancel)
+    }
+
+    @discardableResult
+    func handleAuthenticationCallback(_ url: URL) -> Bool {
+        guard let callback = studioConfiguration.studioCallbackURL(from: url) else { return false }
+        webView.load(URLRequest(url: callback, cachePolicy: .reloadRevalidatingCacheData))
+        showWindow(nil)
+        window?.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+        return true
     }
 
     func webView(_ webView: WKWebView, decidePolicyFor navigationResponse: WKNavigationResponse, decisionHandler: @escaping (WKNavigationResponsePolicy) -> Void) {

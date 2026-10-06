@@ -13,11 +13,14 @@ enum StudioConfigurationError: Error, CustomStringConvertible {
 }
 
 struct StudioConfiguration {
+    static let callbackScheme = "com.rickysharan.omnilede"
+
     let studioURL: URL
     let origin: URL
+    let supabaseAuthOrigin: URL?
     let projectPath: String
 
-    init(studioURL rawURL: String?, projectPath: String) throws {
+    init(studioURL rawURL: String?, supabaseAuthURL rawSupabaseURL: String? = nil, projectPath: String) throws {
         guard let rawURL, !rawURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             throw StudioConfigurationError.missing("OmniLedeStudioURL")
         }
@@ -39,15 +42,39 @@ struct StudioConfiguration {
         guard let origin = originComponents.url else { throw StudioConfigurationError.unsafeURL }
         self.studioURL = url
         self.origin = origin
+        if let rawSupabaseURL {
+            guard
+                let authComponents = URLComponents(string: rawSupabaseURL),
+                authComponents.scheme?.lowercased() == "https",
+                authComponents.user == nil,
+                authComponents.password == nil,
+                let authHost = authComponents.host?.lowercased(),
+                authHost.hasSuffix(".supabase.co"),
+                authComponents.port == nil || authComponents.port == 443,
+                authComponents.path.isEmpty || authComponents.path == "/",
+                authComponents.query == nil,
+                authComponents.fragment == nil
+            else { throw StudioConfigurationError.unsafeURL }
+            var authOriginComponents = URLComponents()
+            authOriginComponents.scheme = "https"
+            authOriginComponents.host = authHost
+            guard let authOrigin = authOriginComponents.url else { throw StudioConfigurationError.unsafeURL }
+            self.supabaseAuthOrigin = authOrigin
+        } else {
+            self.supabaseAuthOrigin = nil
+        }
         self.projectPath = projectPath
     }
 
     init(bundle: Bundle = .main) throws {
         let studioURL = bundle.object(forInfoDictionaryKey: "OmniLedeStudioURL") as? String
+        guard let supabaseAuthURL = bundle.object(forInfoDictionaryKey: "OmniLedeSupabaseAuthURL") as? String else {
+            throw StudioConfigurationError.missing("OmniLedeSupabaseAuthURL")
+        }
         guard let projectPath = bundle.object(forInfoDictionaryKey: "OmniLedeProjectPath") as? String else {
             throw StudioConfigurationError.missing("OmniLedeProjectPath")
         }
-        try self.init(studioURL: studioURL, projectPath: projectPath)
+        try self.init(studioURL: studioURL, supabaseAuthURL: supabaseAuthURL, projectPath: projectPath)
     }
 
     func allows(url: URL) -> Bool {
@@ -59,6 +86,55 @@ struct StudioConfiguration {
 
     func allowsRedirect(from: URL, to: URL) -> Bool {
         allows(url: from) && allows(url: to)
+    }
+
+    func allowsExternalGoogleOAuth(url: URL, isMainFrame: Bool) -> Bool {
+        guard isMainFrame, let authOrigin = supabaseAuthOrigin,
+              url.scheme?.lowercased() == "https",
+              url.user == nil, url.password == nil,
+              url.host?.lowercased() == authOrigin.host?.lowercased(),
+              (url.port ?? 443) == 443,
+              url.path == "/auth/v1/authorize",
+              url.fragment == nil,
+              let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+              let queryItems = components.queryItems else { return false }
+        let providers = queryItems.filter { $0.name == "provider" }.compactMap(\.value)
+        let redirects = queryItems.filter { $0.name == "redirect_to" }.compactMap(\.value)
+        guard providers == ["google"], redirects.count == 1,
+              let redirect = URL(string: redirects[0]),
+              redirect.scheme?.lowercased() == "https",
+              redirect.user == nil, redirect.password == nil,
+              redirect.host?.lowercased() == origin.host?.lowercased(),
+              (redirect.port ?? 443) == 443,
+              redirect.path == "/auth/native/relay",
+              redirect.query == nil, redirect.fragment == nil else { return false }
+        return true
+    }
+
+    func studioCallbackURL(from nativeURL: URL) -> URL? {
+        guard nativeURL.scheme?.lowercased() == Self.callbackScheme,
+              nativeURL.host?.lowercased() == "auth-callback",
+              nativeURL.user == nil, nativeURL.password == nil, nativeURL.port == nil,
+              nativeURL.path.isEmpty, nativeURL.fragment == nil,
+              let nativeComponents = URLComponents(url: nativeURL, resolvingAgainstBaseURL: false),
+              let queryItems = nativeComponents.queryItems else { return nil }
+        let codes = queryItems.filter { $0.name == "code" }.compactMap(\.value)
+        guard queryItems.count == 1, codes.count == 1,
+              !codes[0].isEmpty, codes[0].count <= 2_048 else { return nil }
+        var callback = URLComponents(url: origin, resolvingAgainstBaseURL: false)
+        callback?.path = "/auth/callback"
+        callback?.queryItems = [
+            URLQueryItem(name: "code", value: codes[0]),
+            URLQueryItem(name: "next", value: "/overview")
+        ]
+        return callback?.url
+    }
+
+    var externalSignInWaitURL: URL {
+        var components = URLComponents(url: origin, resolvingAgainstBaseURL: false)!
+        components.path = "/login"
+        components.queryItems = [URLQueryItem(name: "external", value: "1")]
+        return components.url!
     }
 
     private static func isUnsafeHost(_ host: String) -> Bool {

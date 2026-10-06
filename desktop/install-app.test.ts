@@ -17,6 +17,8 @@ it("installs a setup-state app without a public-reader fallback when Studio is u
   const environment: NodeJS.ProcessEnv = { ...process.env, HOME: home };
   delete environment.OMNILEDE_STUDIO_URL;
   delete environment.NEXT_PUBLIC_STUDIO_URL;
+  delete environment.OMNILEDE_SUPABASE_AUTH_URL;
+  delete environment.NEXT_PUBLIC_SUPABASE_URL;
   await execFileAsync("python3", ["desktop/install-app.py"], { cwd: process.cwd(), env: environment, timeout: 30_000 });
   const info = await readFile(path.join(home, "Applications/OmniLede.app/Contents/Info.plist"));
   expect(info.toString("utf8")).not.toContain("omnilede-news.netlify.app");
@@ -24,9 +26,17 @@ it("installs a setup-state app without a public-reader fallback when Studio is u
   const launched = await execFileAsync(path.join(home, "Applications/OmniLede.app/Contents/MacOS/OmniLede"), ["--smoke-test"], { timeout: 10_000 });
   expect(launched.stdout).toMatch(/setup state.*no native bridge/i);
 
-  const configuredEnvironment = { ...environment, OMNILEDE_STUDIO_URL: "https://studio.omnilede-news.netlify.app" };
+  const configuredEnvironment = {
+    ...environment,
+    OMNILEDE_STUDIO_URL: "https://studio.omnilede-news.netlify.app",
+    NEXT_PUBLIC_SUPABASE_URL: "https://project-ref.supabase.co"
+  };
   await execFileAsync("python3", ["desktop/install-app.py"], { cwd: process.cwd(), env: configuredEnvironment, timeout: 30_000 });
   const configuredInfo = await readFile(path.join(home, "Applications/OmniLede.app/Contents/Info.plist"), "utf8");
   expect(configuredInfo).toContain("<key>OmniLedeStudioURL</key>");
   expect(configuredInfo).toContain("https://studio.omnilede-news.netlify.app");
+  expect(configuredInfo).toContain("<key>OmniLedeSupabaseAuthURL</key>");
+  expect(configuredInfo).toContain("https://project-ref.supabase.co");
+  expect(configuredInfo).toContain("<key>CFBundleURLTypes</key>");
+  expect(configuredInfo).toContain("com.rickysharan.omnilede");
 }, 30_000);

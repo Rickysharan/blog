@@ -3,12 +3,16 @@ import AppKit
 final class OmniLedeAppDelegate: NSObject, NSApplicationDelegate {
     private var studioWindow: StudioWindowController?
     private var setupWindow: NSWindow?
+    private var pendingAuthenticationCallback: URL?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         do {
             let configuration = try StudioConfiguration()
             let controller = StudioWindowController(configuration: configuration)
             studioWindow = controller
+            if let callback = pendingAuthenticationCallback, controller.handleAuthenticationCallback(callback) {
+                pendingAuthenticationCallback = nil
+            }
             controller.showWindow(nil)
             controller.window?.makeKeyAndOrderFront(nil)
             NSApp.activate(ignoringOtherApps: true)
@@ -64,6 +68,12 @@ final class OmniLedeAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) { studioWindow?.shutdown() }
+    func application(_ application: NSApplication, open urls: [URL]) {
+        guard let callback = urls.first(where: { $0.scheme?.lowercased() == StudioConfiguration.callbackScheme }) else { return }
+        if studioWindow?.handleAuthenticationCallback(callback) != true {
+            pendingAuthenticationCallback = callback
+        }
+    }
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
         studioWindow?.showWindow(nil)

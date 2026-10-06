@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 
+import { GoogleSignInForm } from "../../../components/auth/google-sign-in-form";
 import { SignInSubmit } from "../../../components/auth/sign-in-submit";
 import { classifyOtpError } from "../../../lib/auth/otp-errors";
 import { parseStudioOperatorEnv, parseStudioOriginEnv } from "../../../lib/env";
@@ -7,7 +8,7 @@ import { createServerSupabaseClient } from "../../../lib/supabase/server";
 
 export const metadata = { title: "Sign in | OmniLede Studio" };
 
-async function signInWithGoogle() {
+async function signInWithGoogle(formData: FormData) {
   "use server";
 
   let studioOrigin: string;
@@ -23,7 +24,7 @@ async function signInWithGoogle() {
   const { data, error } = await (await createServerSupabaseClient()).auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: new URL("/auth/callback", studioOrigin).toString()
+      redirectTo: new URL(formData.get("native") === "1" ? "/auth/native/relay" : "/auth/callback", studioOrigin).toString()
     }
   });
   if (error || !data.url) redirect("/login?error=unavailable");
@@ -58,7 +59,7 @@ async function sendSignInLink() {
   redirect("/login?sent=1");
 }
 
-export default async function LoginPage({ searchParams }: { searchParams: Promise<{ sent?: string; error?: string }> }) {
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ sent?: string; error?: string; external?: string }> }) {
   const query = await searchParams;
   return (
     <main className="login-page" id="main-content">
@@ -67,11 +68,10 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
         <h1 id="login-heading">OmniLede Studio</h1>
         <p>Sign in with Google, or use a secure email link as a backup.</p>
         {query.sent === "1" ? <p role="status">Sign-in link sent. Open the email on this device to continue.</p> : null}
+        {query.external === "1" ? <p role="status">Finish signing in in your browser. OmniLede will return here automatically.</p> : null}
         {query.error === "cooldown" ? <p role="alert">A link was requested recently. Check your email or wait one minute before trying again.</p> : null}
         {query.error && query.error !== "cooldown" ? <p role="alert">Sign-in is temporarily unavailable. Try again.</p> : null}
-        <form action={signInWithGoogle}>
-          <SignInSubmit idleLabel="Continue with Google" pendingLabel="Opening Google…" />
-        </form>
+        <GoogleSignInForm action={signInWithGoogle} />
         <p className="login-divider">or</p>
         <form action={sendSignInLink}>
           <SignInSubmit />

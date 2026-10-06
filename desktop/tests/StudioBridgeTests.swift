@@ -27,6 +27,7 @@ struct StudioBridgeTests {
         } catch StudioConfigurationError.missing("OmniLedeStudioURL") { }
         let configuration = try StudioConfiguration(
             studioURL: "https://studio.example.com/categories",
+            supabaseAuthURL: "https://project-ref.supabase.co",
             projectPath: "/tmp/omnilede"
         )
         try expect(configuration.origin.absoluteString == "https://studio.example.com", "normalizes the configured origin")
@@ -36,6 +37,27 @@ struct StudioBridgeTests {
         try expect(!configuration.allows(url: URL(string: "https://user:pass@studio.example.com/today")!), "rejects URL credentials")
         try expect(!configuration.allows(url: URL(string: "https://studio.example.com:444/today")!), "rejects a different effective port")
         try expect(configuration.allows(url: URL(string: "https://studio.example.com:443/today")!), "accepts the equivalent HTTPS default port")
+        let googleAuthorize = URL(string: "https://project-ref.supabase.co/auth/v1/authorize?provider=google&redirect_to=https%3A%2F%2Fstudio.example.com%2Fauth%2Fnative%2Frelay&code_challenge=challenge&code_challenge_method=s256")!
+        try expect(configuration.allowsExternalGoogleOAuth(url: googleAuthorize, isMainFrame: true), "opens the exact Supabase Google authorization request externally")
+        try expect(!configuration.allowsExternalGoogleOAuth(url: googleAuthorize, isMainFrame: false), "blocks an OAuth request from an iframe")
+        for hostile in [
+            "https://project-ref.supabase.co.evil.test/auth/v1/authorize?provider=google&redirect_to=https%3A%2F%2Fstudio.example.com%2Fauth%2Fnative%2Frelay",
+            "https://project-ref.supabase.co/auth/v1/token?provider=google&redirect_to=https%3A%2F%2Fstudio.example.com%2Fauth%2Fnative%2Frelay",
+            "https://project-ref.supabase.co/auth/v1/authorize?provider=github&redirect_to=https%3A%2F%2Fstudio.example.com%2Fauth%2Fnative%2Frelay",
+            "https://project-ref.supabase.co/auth/v1/authorize?provider=google&redirect_to=https%3A%2F%2Fevil.example%2Fsteal"
+        ] {
+            try expect(!configuration.allowsExternalGoogleOAuth(url: URL(string: hostile)!, isMainFrame: true), "rejects a forged external OAuth request")
+        }
+        let nativeCallback = URL(string: "com.rickysharan.omnilede://auth-callback?code=one-time-code")!
+        try expect(configuration.studioCallbackURL(from: nativeCallback)?.absoluteString == "https://studio.example.com/auth/callback?code=one-time-code&next=/overview", "returns a native callback to the Studio PKCE exchange")
+        for hostile in [
+            "com.rickysharan.omnilede://evil?code=one-time-code",
+            "com.rickysharan.omnilede://auth-callback?code=one&code=two",
+            "com.rickysharan.omnilede://auth-callback?code=",
+            "https://studio.example.com/auth-callback?code=one-time-code"
+        ] {
+            try expect(configuration.studioCallbackURL(from: URL(string: hostile)!) == nil, "rejects a malformed native callback")
+        }
 
         for unsafe in [
             "http://studio.example.com",

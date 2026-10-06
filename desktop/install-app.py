@@ -38,8 +38,20 @@ def validate_studio_url(value: str) -> str:
         pass
     return value
 
+def validate_supabase_auth_url(value: str) -> str:
+    parsed = urlsplit(value)
+    host = (parsed.hostname or "").lower()
+    if (parsed.scheme != "https" or not host.endswith(".supabase.co") or parsed.username or parsed.password
+            or parsed.port not in (None, 443) or parsed.path not in ("", "/") or parsed.query or parsed.fragment):
+        raise SystemExit("OmniLede Supabase auth URL must be an HTTPS Supabase project origin.")
+    return f"https://{host}"
+
 studio_url_value = env_value("OMNILEDE_STUDIO_URL") or env_value("NEXT_PUBLIC_STUDIO_URL")
 studio_url = validate_studio_url(studio_url_value) if studio_url_value else None
+supabase_url_value = env_value("OMNILEDE_SUPABASE_AUTH_URL") or env_value("NEXT_PUBLIC_SUPABASE_URL")
+supabase_auth_url = validate_supabase_auth_url(supabase_url_value) if supabase_url_value else None
+if studio_url and not supabase_auth_url:
+    raise SystemExit("OmniLede Supabase auth URL is required when Studio is configured.")
 for required in (
     repo / "Start OmniLede.command",
     repo / "package.json",
@@ -86,6 +98,11 @@ with tempfile.TemporaryDirectory(prefix="omnilede-app-") as temp:
                 NSHighResolutionCapable=True, OmniLedeProjectPath=str(repo))
     if studio_url:
         info["OmniLedeStudioURL"] = studio_url
+        info["OmniLedeSupabaseAuthURL"] = supabase_auth_url
+        info["CFBundleURLTypes"] = [{
+            "CFBundleURLName": "com.rickysharan.omnilede.oauth",
+            "CFBundleURLSchemes": ["com.rickysharan.omnilede"],
+        }]
     with (bundle / "Contents/Info.plist").open("wb") as file:
         plistlib.dump(info, file)
     subprocess.run(["/usr/bin/codesign", "--force", "--sign", "-", str(bundle)], check=True)
