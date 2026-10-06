@@ -6,6 +6,7 @@ import { parseGoogleProviderEnv } from "../env";
 import { readGoogleRefreshToken, readGoogleResourceId } from "../google/connections";
 import { markReportFailure, readReport, writeSuccessfulReport } from "./cache";
 import { createGoogleHttpClient } from "./google-http";
+import { logProviderFailure } from "./provider-error";
 import { resolveReportRange, type ReportPreset } from "./report-range";
 
 export type SearchMetric = { clicks: number; impressions: number; ctr: number; position: number };
@@ -132,6 +133,7 @@ type Dependencies = {
     success(provider: "google-search-console", key: string, report: { source: string; range: ReportRange; fetchedAt: string; data: SearchReport }): Promise<void>;
     failure(provider: "google-search-console", key: string, fallback: { source: string; range: ReportRange }): Promise<void>;
   };
+  onFailure?: (error: unknown) => void;
   now?: () => Date;
 };
 
@@ -168,7 +170,8 @@ export function createSearchProvider(dependencies: Dependencies) {
       }) })));
       const data = transformSearchReports({ summary, trend, queries, pages, previousPages, countries, devices, sitemaps, inspections }, dependencies.blogOrigin);
       await dependencies.cache.success("google-search-console", key, { source: "Google Search Console API", range, fetchedAt: now.toISOString(), data });
-    } catch {
+    } catch (error) {
+      dependencies.onFailure?.(error);
       await dependencies.cache.failure("google-search-console", key, { source: "Google Search Console API", range });
     }
     return dependencies.cache.read<SearchReport>("google-search-console", key);
@@ -184,5 +187,5 @@ export async function fetchSearchReport(preset: ReportPreset): Promise<ReportEnv
     return readReport("google-search-console", `search:${preset}`);
   }
   const request = createGoogleHttpClient({ clientId: config.clientId, clientSecret: config.clientSecret, readRefreshToken: () => readGoogleRefreshToken("google-search-console", config.encryptionKey) });
-  return createSearchProvider({ request, siteUrl, blogOrigin: config.blogOrigin, cache: { read: readReport, success: writeSuccessfulReport, failure: markReportFailure } })(preset);
+  return createSearchProvider({ request, siteUrl, blogOrigin: config.blogOrigin, cache: { read: readReport, success: writeSuccessfulReport, failure: markReportFailure }, onFailure: (error) => logProviderFailure("google-search-console", error) })(preset);
 }

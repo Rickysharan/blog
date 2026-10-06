@@ -8,10 +8,11 @@ export function SourceCard({ label, value, state, source, refreshedAt }: {
   refreshedAt: string | null;
 }) {
   const status = state === "available" || state === "connected" ? (refreshedAt ? `Updated ${new Date(refreshedAt).toLocaleString()}` : "Current repository data") : state === "disconnected" ? "Not connected" : state;
+  const displayValue = value ?? (state === "connected" ? "Awaiting data" : "Unavailable");
   return (
     <article className="source-card">
       <p>{label}</p>
-      <strong>{value ?? "Unavailable"}</strong>
+      <strong>{displayValue}</strong>
       <small>{source} · {status}</small>
     </article>
   );

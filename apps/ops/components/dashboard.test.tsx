@@ -12,6 +12,12 @@ it("renders unavailable source values explicitly", () => {
   expect(screen.getByText(/Google Analytics · Not connected/)).toBeInTheDocument();
 });
 
+it("distinguishes a connected source that is still awaiting its first data", () => {
+  render(<SourceCard label="Active users" value={null} state="connected" source="Google Analytics" refreshedAt="2026-10-06T17:46:33.000Z" />);
+  expect(screen.getByText("Awaiting data")).toBeInTheDocument();
+  expect(screen.getByText(/Google Analytics · Updated/)).toBeInTheDocument();
+});
+
 it("renders all category facts with review links and Mac-only writing guidance", () => {
   const summaries = ["anime", "movies", "politics", "sports", "finance", "share-market"].map((category, index) => ({
     category, label: category, publishedCount: index, draftCount: 0, latestPublication: null, coverageAgeDays: null, taskState: null,

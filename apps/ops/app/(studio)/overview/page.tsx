@@ -34,13 +34,13 @@ export default async function OverviewPage() {
   return (
     <div className="studio-page">
       <p className="eyebrow">Verified newsroom status</p><h1>Overview</h1>
-      <p className="studio-page-intro">Repository facts are live. Audience, search, and revenue remain unavailable until their read-only sources are connected.</p>
+      <p className="studio-page-intro">Repository facts are live. Connected providers show verified data as it arrives; missing values are never replaced with zero.</p>
       <div className="source-grid">
         <SourceCard label="Published articles" value={published} state="available" source={`GitHub content · ${data.version?.slice(0, 8) ?? "version unavailable"}`} refreshedAt={null} />
         <SourceCard label="Waiting drafts" value={drafts} state="available" source="GitHub content" refreshedAt={null} />
         <SourceCard label="Open Today tasks" value={openTasks} state="available" source="Studio tasks" refreshedAt={null} />
         <SourceCard label="Latest publication" value={latestPublication ? new Date(latestPublication).toLocaleDateString() : "No recorded publication"} state="available" source="Publication history" refreshedAt={latestPublication} />
-        <SourceCard label="Active users" value={analytics?.data?.summary.activeUsers ?? null} state={analytics?.state ?? "unavailable"} source={analytics?.source ?? "Google Analytics"} refreshedAt={analytics?.fetchedAt ?? null} />
+        <SourceCard label="Active users" value={analytics?.data?.summary?.activeUsers ?? null} state={analytics?.state ?? "unavailable"} source={analytics?.source ?? "Google Analytics"} refreshedAt={analytics?.fetchedAt ?? null} />
         <SourceCard label="Search clicks" value={search?.data?.summary?.clicks ?? null} state={search?.state ?? "unavailable"} source={search?.source ?? "Google Search Console"} refreshedAt={search?.fetchedAt ?? null} />
         <SourceCard label="AdSense earnings" value={null} state="disconnected" source="Google AdSense" refreshedAt={null} />
       </div>

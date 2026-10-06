@@ -6,6 +6,7 @@ import { parseGoogleProviderEnv } from "../env";
 import { readGoogleRefreshToken, readGoogleResourceId } from "../google/connections";
 import { markReportFailure, readReport, writeSuccessfulReport } from "./cache";
 import { createGoogleHttpClient } from "./google-http";
+import { logProviderFailure } from "./provider-error";
 import { resolveReportRange, type ReportPreset } from "./report-range";
 
 const PUBLISHER_PATTERN = /^pub-\d{16}$/;
@@ -233,6 +234,7 @@ type AdsenseDependencies = AdsenseConfig & {
     success(provider: "google-adsense", key: string, report: { source: string; range: ReportRange; fetchedAt: string; data: AdsenseReport }): Promise<void>;
     failure(provider: "google-adsense", key: string, fallback: { source: string; range: ReportRange }): Promise<void>;
   };
+  onFailure?: (error: unknown) => void;
   now?: () => Date;
 };
 
@@ -260,7 +262,8 @@ export function createAdsenseProvider(dependencies: AdsenseDependencies) {
       ]);
       const data = transformAdsenseResponses({ accounts, sites, policyIssues, alerts, report, adsTxt }, dependencies);
       await dependencies.cache.success("google-adsense", key, { source: "Google AdSense Management API", range, fetchedAt: now.toISOString(), data });
-    } catch {
+    } catch (error) {
+      dependencies.onFailure?.(error);
       await dependencies.cache.failure("google-adsense", key, { source: "Google AdSense Management API", range });
     }
     return dependencies.cache.read<AdsenseReport>("google-adsense", key);
@@ -281,6 +284,7 @@ export async function fetchAdsenseReport(preset: ReportPreset): Promise<ReportEn
     blogOrigin: config.blogOrigin,
     request,
     fetchAdsTxt: createAdsTxtFetcher(config.blogOrigin),
-    cache: { read: readReport, success: writeSuccessfulReport, failure: markReportFailure }
+    cache: { read: readReport, success: writeSuccessfulReport, failure: markReportFailure },
+    onFailure: (error) => logProviderFailure("google-adsense", error)
   })(preset);
 }
