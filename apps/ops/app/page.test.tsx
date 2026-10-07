@@ -10,6 +10,11 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("../lib/auth/operator", () => ({ requireStudioOperator: mocks.requireStudioOperator }));
 vi.mock("next/navigation", () => ({ redirect: mocks.redirect, notFound: vi.fn() }));
+vi.mock("next/link", () => ({
+  default: ({ prefetch, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { prefetch?: boolean }) => (
+    <a data-prefetch={String(prefetch)} {...props} />
+  ),
+}));
 
 import StudioLayout from "./(studio)/layout";
 import manifest from "./manifest";
@@ -67,7 +72,9 @@ describe("OmniLede Studio entry and shell", () => {
     const phone = screen.getByRole("navigation", { name: "Studio phone navigation" });
     for (const [name, href] of destinations) {
       expect(within(desktop).getByRole("link", { name })).toHaveAttribute("href", href);
+      expect(within(desktop).getByRole("link", { name })).toHaveAttribute("data-prefetch", "true");
       expect(within(phone).getByRole("link", { name })).toHaveAttribute("href", href);
+      expect(within(phone).getByRole("link", { name })).toHaveAttribute("data-prefetch", "true");
     }
     expect(screen.getByText("Workspace")).toBeInTheDocument();
   });

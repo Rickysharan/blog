@@ -199,6 +199,34 @@ textarea {
   background: #e8e2d4;
 }
 
+.studio-route-progress {
+  width: min(24rem, 100%);
+  height: 0.35rem;
+  margin-top: 1rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--studio-accent, #5b6cff) 16%, transparent);
+}
+
+.studio-route-progress::after {
+  display: block;
+  width: 45%;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--studio-accent, #5b6cff);
+  content: "";
+  animation: studio-route-progress 0.75s ease-in-out infinite alternate;
+}
+
+@keyframes studio-route-progress {
+  from { transform: translateX(-20%); }
+  to { transform: translateX(145%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .studio-route-progress::after { animation: none; }
+}
+
 .studio-nav-mark,
 .studio-brand-mark {
   display: grid;

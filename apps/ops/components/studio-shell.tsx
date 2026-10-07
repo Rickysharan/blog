@@ -19,6 +19,7 @@ function NavigationLinks({ compact = false }: { compact?: boolean }) {
       className="studio-nav-link"
       href={destination.href}
       key={destination.href}
+      prefetch={true}
     >
       <span className="studio-nav-mark" aria-hidden="true">{destination.mark}</span>
       <span>{compact ? destination.shortLabel : destination.label}</span>

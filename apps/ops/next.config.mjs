@@ -20,6 +20,12 @@ const nextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
   outputFileTracingRoot: monorepoRoot,
+  experimental: {
+    staleTimes: {
+      dynamic: 30,
+      static: 60,
+    },
+  },
 };
 
 export default withSerwist(nextConfig);
