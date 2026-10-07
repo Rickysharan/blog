@@ -88,6 +88,15 @@ export const FEEDS: readonly FeedDefinition[] = [
     source: "Yahoo Finance",
     category: "finance",
     url: "https://finance.yahoo.com/news/rssindex",
+    status: "unavailable",
+    unavailableReason:
+      "Yahoo Finance currently returns HTTP 404 for its former public RSS index endpoint.",
+  },
+  {
+    id: "bbc-business",
+    source: "BBC Business",
+    category: "finance",
+    url: "https://feeds.bbci.co.uk/news/business/rss.xml",
     status: "active",
   },
   {

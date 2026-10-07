@@ -69,11 +69,12 @@ describe("FEEDS", () => {
         "ESPN",
         "Reuters Business",
         "Yahoo Finance",
+        "BBC Business",
         "Moneycontrol",
         "CNBC Markets",
       ]),
     );
-    expect(FEEDS).toHaveLength(13);
+    expect(FEEDS).toHaveLength(14);
     expect(FEEDS.every(({ url }) => new URL(url).protocol === "https:")).toBe(true);
   });
 
