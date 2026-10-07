@@ -87,7 +87,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   }
   const [body, related] = await Promise.all([
     renderArticleMdx(article.body),
-    Promise.resolve(getRelatedArticles(article, allArticles, 3)),
+    Promise.resolve(getRelatedArticles(article, allArticles, 4)),
   ]);
   const jsonLd = buildNewsArticleJsonLd(article, SITE_CONFIG);
   const authorProfile = getAuthorProfile(article.author);

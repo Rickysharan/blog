@@ -12,9 +12,9 @@ export function RelatedArticles({ articles }: { articles: readonly ArticleSummar
         id="related-heading"
         className="border-b-2 border-ink pb-3 font-serif text-3xl font-semibold tracking-[-0.03em]"
       >
-        Related reading
+        You may also like
       </h2>
-      <div className="mt-6 grid gap-8 md:grid-cols-3">
+      <div className="mt-6 grid gap-8 md:grid-cols-2 xl:grid-cols-4">
         {articles.map((article) => (
           <ArticleCard key={article.slug} article={article} />
         ))}

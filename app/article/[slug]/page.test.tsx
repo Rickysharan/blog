@@ -51,11 +51,13 @@ describe("article page canonical title and source", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("renders the headline and canonical source exactly once", async () => {
+    const content = await import("@/lib/content/articles");
     const { default: ArticlePage } = await import("@/app/article/[slug]/page");
     render(await ArticlePage({ params: Promise.resolve({ slug: article.slug }) }));
 
     expect(screen.getAllByRole("heading", { level: 1, name: article.title })).toHaveLength(1);
     expect(screen.getAllByRole("link", { name: article.sourceName })).toHaveLength(1);
     expect(screen.getByText("Ricky Sharan")).toHaveAttribute("data-author-href", "/author/ricky-sharan");
+    expect(content.getRelatedArticles).toHaveBeenCalledWith(article, [article], 4);
   });
 });

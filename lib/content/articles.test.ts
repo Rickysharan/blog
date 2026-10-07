@@ -179,6 +179,30 @@ describe("article collection helpers", () => {
     ).toEqual(["two-shared-tags", "one-shared-tag-newer"]);
   });
 
+  it("fills four recommendations through tag, same-desk, and recent global tiers without duplicates", () => {
+    const candidates: ArticleSummary[] = [
+      { ...baseArticle, slug: "subject", title: "Duplicate subject" },
+      { ...baseArticle, slug: "tag-two", date: "2026-08-10", tags: ["policy", "trade"] },
+      { ...baseArticle, slug: "tag-one", date: "2026-08-19", tags: ["policy"] },
+      { ...baseArticle, slug: "same-desk", date: "2026-08-18", tags: ["elections"] },
+      { ...baseArticle, slug: "tag-two", date: "2026-08-25", tags: [] },
+      { ...baseArticle, slug: "global-new", category: "movies", date: "2026-08-21", tags: ["cinema"] },
+      { ...baseArticle, slug: "global-old", category: "sports", date: "2026-08-01", tags: ["teams"] },
+    ];
+
+    expect(getRelatedArticles(baseArticle, candidates).map(({ slug }) => slug)).toEqual([
+      "tag-two", "tag-one", "same-desk", "global-new",
+    ]);
+  });
+
+  it("uses title as a deterministic tie-break and returns every candidate when fewer than four exist", () => {
+    const candidates: ArticleSummary[] = [
+      { ...baseArticle, slug: "zulu", title: "Zulu", tags: [], date: "2026-08-21" },
+      { ...baseArticle, slug: "alpha", title: "Alpha", tags: [], date: "2026-08-21" },
+    ];
+    expect(getRelatedArticles(baseArticle, candidates).map(({ slug }) => slug)).toEqual(["alpha", "zulu"]);
+  });
+
   it("clamps invalid page numbers and preserves an empty collection", () => {
     expect(paginateArticles(["a", "b", "c"], 0, 2)).toEqual({
       items: ["a", "b"],

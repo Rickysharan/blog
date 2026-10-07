@@ -142,11 +142,17 @@ export function paginateArticles<T>(
 export function getRelatedArticles(
   subject: ArticleSummary,
   candidates: readonly ArticleSummary[],
-  limit = 3,
+  limit = 4,
 ): ArticleSummary[] {
   const subjectTags = new Set(subject.tags.map((tag) => tag.toLocaleLowerCase()));
+  const seenSlugs = new Set<string>();
+  const uniqueCandidates = candidates.filter((candidate) => {
+    if (seenSlugs.has(candidate.slug)) return false;
+    seenSlugs.add(candidate.slug);
+    return true;
+  });
 
-  return candidates
+  return uniqueCandidates
     .filter((candidate) => candidate.slug !== subject.slug)
     .map((candidate) => ({
       article: candidate,
@@ -155,13 +161,17 @@ export function getRelatedArticles(
           total + Number(subjectTags.has(tag.toLocaleLowerCase())),
         0,
       ),
+      tier: candidate.tags.some((tag) => subjectTags.has(tag.toLocaleLowerCase()))
+        ? 0
+        : candidate.category === subject.category ? 1 : 2,
     }))
-    .filter(({ sharedTags }) => sharedTags > 0)
     .sort(
       (left, right) =>
-        right.sharedTags - left.sharedTags ||
+        left.tier - right.tier ||
+        (left.tier === 0 ? right.sharedTags - left.sharedTags : 0) ||
         right.article.date.localeCompare(left.article.date) ||
-        left.article.title.localeCompare(right.article.title),
+        left.article.title.localeCompare(right.article.title) ||
+        left.article.slug.localeCompare(right.article.slug),
     )
     .slice(0, Math.max(0, limit))
     .map(({ article }) => article);

@@ -209,25 +209,25 @@ The implementer and reviewer must explicitly test these five failure modes:
 - Change `getRelatedArticles(subject, candidates, limit = 4)` to rank by tier: shared tags, same category, then recent global articles.
 - Deduplicate candidates by slug before ranking; exclude the subject; use recency and title as deterministic tie-breakers.
 
-- [ ] **Step 1: Write failing ranking and rendering tests**
+- [x] **Step 1: Write failing ranking and rendering tests**
 
   Cover tag priority, shared-tag count, same-desk fallback, global recent fallback, duplicate removal, subject exclusion, deterministic ties, a maximum of four, and fewer than four available. Assert the heading is `You may also like` and wide layout supports four cards.
 
-- [ ] **Step 2: Run focused tests and confirm failures**
+- [x] **Step 2: Run focused tests and confirm failures**
 
   Run: `npx vitest run lib/content/articles.test.ts components/articles/related-articles.test.tsx app/article/'[slug]'/page.test.tsx`
 
-- [ ] **Step 3: Implement tiered ranking and four-card rendering**
+- [x] **Step 3: Implement tiered ranking and four-card rendering**
 
   Compute all rank keys before sorting, preserve card content and styling, request four from the article page, and render nothing only when no other articles exist.
 
-- [ ] **Step 4: Re-run focused tests**
+- [x] **Step 4: Re-run focused tests**
 
   Run: `npx vitest run lib/content/articles.test.ts components/articles/related-articles.test.tsx app/article/'[slug]'/page.test.tsx`
 
   Expected: PASS.
 
-- [ ] **Step 5: Commit discovery changes**
+- [x] **Step 5: Commit discovery changes**
 
   Commit: `feat: add resilient article recommendations`
 
