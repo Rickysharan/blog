@@ -13,21 +13,14 @@ export const dynamic = "force-dynamic";
 
 export default async function OverviewPage() {
   await requireStudioOperator();
-  let data: Awaited<ReturnType<typeof loadStudioEditorialInventory>> | undefined;
-  let tasks: Awaited<ReturnType<typeof listTodayTasks>> | undefined;
-  let history: Awaited<ReturnType<typeof listPublicationHistory>> | undefined;
-  const [analytics, search, adsense] = await Promise.all([
+  const [analytics, search, adsense, data, tasks, history] = await Promise.all([
     fetchGa4Report("28d").catch(() => undefined),
     fetchSearchReport("28d").catch(() => undefined),
-    fetchAdsenseReport("28d").catch(() => undefined)
+    fetchAdsenseReport("28d").catch(() => undefined),
+    loadStudioEditorialInventory().catch(() => undefined),
+    listTodayTasks().catch(() => undefined),
+    listPublicationHistory().catch(() => undefined),
   ]);
-  try {
-    [data, tasks, history] = await Promise.all([
-      loadStudioEditorialInventory(), listTodayTasks(), listPublicationHistory()
-    ]);
-  } catch {
-    // Render a truthful unavailable state below.
-  }
   if (!data || !tasks || !history) return <div className="studio-page"><h1>Overview</h1><div className="studio-empty-state" role="alert"><p>Overview is temporarily unavailable.</p><span>No source value has been replaced with a guessed zero. Check Studio connections and reload.</span></div></div>;
   const published = data.items.filter(({ kind }) => kind === "published").length;
   const drafts = data.items.filter(({ kind }) => kind === "draft").length;

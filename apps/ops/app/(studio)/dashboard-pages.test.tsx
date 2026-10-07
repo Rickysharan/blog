@@ -37,6 +37,21 @@ it("keeps Overview source-backed and labels disconnected provider metrics unavai
   expect(screen.getByText(/Google AdSense Management API · unavailable/)).toBeInTheDocument();
 });
 
+it("starts repository and provider reads together so a slow connector does not serialize Overview", async () => {
+  let releaseAnalytics!: () => void;
+  d.ga4.mockImplementationOnce(() => new Promise((resolve) => {
+    releaseAnalytics = () => resolve(undefined);
+  }));
+
+  const page = OverviewPage();
+  await vi.waitFor(() => expect(d.ga4).toHaveBeenCalledOnce());
+  expect(d.inventory).toHaveBeenCalledOnce();
+  expect(d.tasks).toHaveBeenCalledOnce();
+  expect(d.history).toHaveBeenCalledOnce();
+  releaseAnalytics();
+  await page;
+});
+
 it("renders Today separately from category inventory", async () => {
   render(await TodayPage());
   expect(screen.getByRole("heading", { name: "Today" })).toBeInTheDocument();
