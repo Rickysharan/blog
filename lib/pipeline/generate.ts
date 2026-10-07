@@ -361,7 +361,7 @@ export async function requestOllamaDraft(
       stream: false,
       format: "json",
       keep_alive: "30m",
-      options: { temperature: 0.2, num_predict: 1200, num_ctx: 4096 },
+      options: { temperature: 0.2, num_predict: 768, num_ctx: 4096 },
     }),
     signal: config.signal
       ? AbortSignal.any([config.signal, AbortSignal.timeout(180_000)])

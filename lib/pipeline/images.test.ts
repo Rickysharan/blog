@@ -71,6 +71,29 @@ const namedStory = {
 };
 
 describe("required article photo policy", () => {
+  it("verifies candidate images concurrently instead of waiting on each network check", async () => {
+    const pendingHeads: Array<() => void> = [];
+    const fetcher = vi.fn(async (_input: string | URL | Request, init?: RequestInit) => {
+      if (init?.method === "HEAD") {
+        return new Promise<Response>((resolve) => {
+          pendingHeads.push(() => resolve(new Response(null, {
+            status: 200,
+            headers: { "content-type": "image/jpeg" },
+          })));
+        });
+      }
+      return Response.json({ query: { pages: {
+        a: relevantPage(1), b: relevantPage(2), c: relevantPage(3),
+      } } });
+    });
+
+    const resultPromise = findRequiredArticlePhotos(namedStory, ["Baker Mayfield"], { fetchImpl: fetcher });
+    await vi.waitFor(() => expect(pendingHeads).toHaveLength(3));
+    pendingHeads.forEach((resolve) => resolve());
+
+    await expect(resultPromise).resolves.toMatchObject({ ok: true, attempts: 1 });
+  });
+
   it("returns three relevant unique credited photos", async () => {
     const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
       if (init?.method === "HEAD") {

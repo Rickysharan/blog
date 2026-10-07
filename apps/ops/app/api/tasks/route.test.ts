@@ -6,7 +6,8 @@ const d = vi.hoisted(() => ({ auth: vi.fn(), inventory: vi.fn(), providers: vi.f
 vi.mock("../../../lib/auth/operator", () => ({ requireStudioOperator: d.auth }));
 vi.mock("../../../lib/editorial/repository", () => ({ loadStudioEditorialInventory: d.inventory }));
 vi.mock("../../../lib/tasks/repository", () => ({ listProviderConnections: d.providers, listTodayTasks: d.list, reconcileTodayTasks: d.reconcile }));
-vi.mock("../../../../../lib/seo/audit", () => ({ auditPublicSite: d.audit, siteFindingsToSeoWarnings: d.warnings }));
+vi.mock("../../../lib/seo/cached-audit", () => ({ auditPublicSiteCached: d.audit }));
+vi.mock("../../../../../lib/seo/audit", () => ({ siteFindingsToSeoWarnings: d.warnings }));
 
 import { GET, POST } from "./route";
 

@@ -3,6 +3,7 @@ import { isIP } from "node:net";
 import type { ProviderState } from "@omnilede/contracts";
 import { auditPublicSite, type SiteFinding } from "../../../../lib/seo/audit";
 
+import { auditPublicSiteCached } from "../seo/cached-audit";
 import { listProviderConnections } from "../tasks/repository";
 
 export type HealthState = "healthy" | "warning" | "critical" | "unavailable";
@@ -216,7 +217,9 @@ export async function collectSiteHealth(options: {
       ? { siteId: process.env.BLOG_NETLIFY_SITE_ID, token: process.env.NETLIFY_READ_TOKEN }
       : undefined
   );
-  const auditImpl = options.auditImpl ?? ((origin: string) => auditPublicSite(origin, options.fetchImpl ? { fetchImpl } : {}));
+  const auditImpl = options.auditImpl ?? (options.fetchImpl
+    ? ((origin: string) => auditPublicSite(origin, { fetchImpl }))
+    : auditPublicSiteCached);
   const [publicOrigin, sitemap, robots, connections, siteFindings] = await Promise.all([
     probe(publicUrl, fetchImpl),
     probe(`${publicUrl}/sitemap.xml`, fetchImpl),

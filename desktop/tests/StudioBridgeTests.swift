@@ -223,11 +223,12 @@ struct StudioBridgeTests {
         #!/bin/bash
         trap 'touch "$PWD/cancelled"; exit 130' TERM
         touch "$PWD/started"
-        while :; do sleep 0.1; done
+        for ((i=0; i<600; i++)); do sleep 0.1; done
         """.write(to: launcher, atomically: true, encoding: .utf8)
         let writerConfiguration = try StudioConfiguration(studioURL: "https://studio.example.com", projectPath: writerRoot.path)
         var writerStatuses: [[String: Any]] = []
         let writer = LocalWriterController(configuration: writerConfiguration) { writerStatuses.append($0) }
+        defer { writer.shutdown() }
         writer.perform(.write(category: "sports", requestId: "writer-one-12345"))
         try expect(waitUntil { FileManager.default.fileExists(atPath: writerRoot.appendingPathComponent("started").path) }, "starts the explicit writer process")
         writer.perform(.write(category: "anime", requestId: "writer-two-12345"))

@@ -220,6 +220,8 @@ async function remoteImageIsUsable(photo: ArticlePhoto, fetchImpl: FetchLike): P
   }
 }
 
+const IMAGE_VERIFICATION_BATCH_SIZE = 6;
+
 export async function findRequiredArticlePhotos(
   story: QueueStory,
   tags: string[],
@@ -235,12 +237,21 @@ export async function findRequiredArticlePhotos(
   for (const query of queries) {
     attempts += 1;
     const candidates = await searchCommonsForSubject(query, fetchImpl);
-    for (const candidate of candidates) {
-      if (seenPages.has(candidate.photo.page)) continue;
+    const unseen = candidates.filter((candidate) => {
+      if (seenPages.has(candidate.photo.page)) return false;
       seenPages.add(candidate.photo.page);
-      if (!(await remoteImageIsUsable(candidate.photo, fetchImpl))) continue;
-      photos.push(candidate.photo);
-      if (photos.length === 3) break;
+      return true;
+    });
+    for (let offset = 0; offset < unseen.length && photos.length < 3; offset += IMAGE_VERIFICATION_BATCH_SIZE) {
+      const batch = unseen.slice(offset, offset + IMAGE_VERIFICATION_BATCH_SIZE);
+      const verified = await Promise.all(batch.map(async (candidate) => ({
+        candidate,
+        usable: await remoteImageIsUsable(candidate.photo, fetchImpl),
+      })));
+      for (const { candidate, usable } of verified) {
+        if (usable) photos.push(candidate.photo);
+        if (photos.length === 3) break;
+      }
     }
     if (photos.length >= 2) break;
   }

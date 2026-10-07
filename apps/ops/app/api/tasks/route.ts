@@ -6,7 +6,8 @@ import { loadStudioEditorialInventory } from "../../../lib/editorial/repository"
 import { ContentRequestError, readBoundedJson, requireSameOrigin } from "../../../lib/http/same-origin";
 import { deriveTodayTasks } from "../../../lib/tasks/derive";
 import { listProviderConnections, listTodayTasks, reconcileTodayTasks } from "../../../lib/tasks/repository";
-import { auditPublicSite, siteFindingsToSeoWarnings } from "../../../../../lib/seo/audit";
+import { auditPublicSiteCached } from "../../../lib/seo/cached-audit";
+import { siteFindingsToSeoWarnings } from "../../../../../lib/seo/audit";
 
 export const dynamic = "force-dynamic";
 const refreshSchema = z.object({ action: z.literal("refresh") }).strict();
@@ -29,7 +30,7 @@ export async function POST(request: Request) {
     const [inventory, connections, siteFindings] = await Promise.all([
       loadStudioEditorialInventory(),
       listProviderConnections(),
-      auditPublicSite(process.env.NEXT_PUBLIC_BLOG_URL ?? "https://omnilede-news.netlify.app"),
+      auditPublicSiteCached(process.env.NEXT_PUBLIC_BLOG_URL ?? "https://omnilede-news.netlify.app"),
     ]);
     const tasks = deriveTodayTasks({
       inventory,

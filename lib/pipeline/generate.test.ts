@@ -257,6 +257,7 @@ describe("local Ollama drafting", () => {
       expect(init?.redirect).toBe("error");
       const request = JSON.parse(String(init?.body));
       expect(request).toMatchObject({ model: "local-test", stream: false, format: "json" });
+      expect(request.options).toMatchObject({ num_predict: 768, num_ctx: 4096 });
       expect(request.prompt).toContain("Central banks");
       return Response.json({ done: true, done_reason: "stop", response: JSON.stringify(generatedDraft()) });
     });
