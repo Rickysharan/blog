@@ -7,7 +7,7 @@ Add the requested editorial and discovery features without redesigning OmniLede.
 The finished experience must:
 
 - add a `Top 10` category to the public blog, web Studio, native Mac bridge, daily plan, draft review, search, feeds, sitemap, and publishing pipeline;
-- keep the full category list out of the permanent desktop header and reveal the existing category navigation from the existing menu control on pointer hover, keyboard focus, or click;
+- keep the full category list out of the permanent desktop header and slide the existing horizontal category bar down when the pointer enters the top masthead area, when keyboard focus enters the navigation region, or when the menu control is clicked;
 - use `Ricky Sharan` as the author of new locally generated OmniLede drafts and provide a real public author page;
 - show three or four useful recommendations after every article under the heading `You may also like`;
 - preserve the final human Publish action and all existing editorial safety checks.
@@ -24,9 +24,9 @@ The Top 10 writer does not invent ten factual recommendations from one headline.
 
 ## Navigation behaviour
 
-The desktop masthead keeps its present logo, tagline, theme, install, search, and menu controls. The always-visible horizontal category strip is removed from normal flow.
+The desktop masthead keeps its present logo, tagline, theme, install, search, and menu controls. The existing horizontal category strip keeps its current full-width appearance, colours, numbered labels, and position beneath the masthead, but it is collapsed outside normal view when inactive. No sidebar, vertical list, or replacement dropdown is introduced.
 
-The existing menu control reveals the existing `CategoryNav` in an overlay directly below the masthead. It opens when the pointer enters the menu/navigation region, when the control receives keyboard focus, or when the control is clicked. It stays open while focus or the pointer remains inside. Escape, outside click, or choosing a category closes it. The control exposes `aria-expanded` and `aria-controls`.
+When the pointer enters the top masthead area, the horizontal `CategoryNav` slides down beneath the masthead. It stays visible while the pointer remains over either the masthead or category bar, then slides closed after the pointer leaves that combined region. Keyboard users reveal the same horizontal bar when focus enters the masthead navigation controls and can move through every category without it closing. Clicking the existing menu control pins or unpins the bar for pointer and touch users. Escape, outside click, choosing a category, or moving focus beyond the navigation closes it. The menu control exposes `aria-expanded` and `aria-controls`. Reduced-motion preferences disable the sliding animation and show or hide the bar immediately.
 
 Touch and narrow screens keep the current click-to-open mobile menu. The menu includes all seven categories. The footer may continue listing desks because it is a discovery area at the end of the page, rather than persistent navigation competing with the article.
 
@@ -71,7 +71,7 @@ Implementation follows test-first development.
 - Shared category tests fail before `top-10` is added and pass after it is available to all TypeScript consumers.
 - Native bridge tests fail at six categories and pass at seven, including `top-10`.
 - Related-article tests prove tag priority, same-desk fallback, recent global fallback, deduplication, exclusion of the current article, deterministic ordering, and a maximum of four.
-- Header component tests prove the permanent desktop category strip is absent and the accessible menu trigger exposes the category overlay.
+- Header component tests prove the horizontal category strip is collapsed by default, slides down from the masthead on pointer hover, stays available during keyboard navigation, can be pinned with the existing menu control, and never changes into a sidebar or vertical desktop list.
 - Author tests prove generated drafts use `Ricky Sharan`, contributor authors remain unchanged, bylines link to the author page, and JSON-LD matches the visible author.
 - Top 10 validation tests prove exactly ten sequential entries are required for publish-ready content.
 - Studio tests prove all seven categories render without hard-coded counts.
