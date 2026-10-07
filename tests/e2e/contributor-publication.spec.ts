@@ -57,10 +57,12 @@ test("legacy editorial articles retain their rendered source attribution", async
   await settleConsent(page);
 
   await expect(page.getByRole("heading", { name: "How central-bank signals move markets before rate changes" })).toBeVisible();
-  await expect(page.getByText("Source:", { exact: true })).toBeVisible();
-  await expect(
-    page.locator('aside[aria-label="Article source"]').getByRole("link", { name: "Bank for International Settlements" }),
-  ).toHaveAttribute("href", "https://www.bis.org/statistics/index.htm");
+  const source = page.locator("article p").filter({ hasText: /^Source:/ }).filter({
+    has: page.getByRole("link", { name: "Bank for International Settlements" }),
+  });
+  await expect(source).toBeVisible();
+  await expect(source.getByRole("link", { name: "Bank for International Settlements" }))
+    .toHaveAttribute("href", "https://www.bis.org/statistics/index.htm");
   await expect(page.getByText(/Contributor article by/i)).toHaveCount(0);
 });
 
@@ -72,10 +74,11 @@ test("contributor publications show author, licence, finance warning, and source
   await expect(page.getByText("Contributor article by Publication Fixture Contributor")).toBeVisible();
   await expect(page.getByText(/non-exclusive contributor licence/i)).toBeVisible();
   await expect(page.getByText(/not verified professional financial advice/i)).toBeVisible();
-  await expect(page.getByText("Source:", { exact: true })).toBeVisible();
-  await expect(
-    page.locator('aside[aria-label="Article source"]').getByRole("link", { name: "E2E Publication Source" }),
-  ).toHaveAttribute(
+  const source = page.locator("article p").filter({ hasText: /^Source:/ }).filter({
+    has: page.getByRole("link", { name: "E2E Publication Source" }),
+  });
+  await expect(source).toBeVisible();
+  await expect(source.getByRole("link", { name: "E2E Publication Source" })).toHaveAttribute(
     "href",
     "https://example.com/e2e-publication-source",
   );

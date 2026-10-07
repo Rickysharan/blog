@@ -23,7 +23,7 @@ test("reader can browse every desk and open an attributed article", async ({ pag
   await page.locator("h1 a").click();
   await expect(page).toHaveURL(/\/article\//);
   await expect(page.getByRole("heading", { name: /.+/ }).first()).toBeVisible();
-  await expect(page.getByText("Source:", { exact: true })).toBeVisible();
+  await expect(page.locator("article p").filter({ hasText: /^Source:/ })).toBeVisible();
 });
 
 test("category archives keep the global desk navigation available", async ({ page }) => {
