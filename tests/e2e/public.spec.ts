@@ -6,6 +6,7 @@ test("reader can browse every desk and open an attributed article", async ({ pag
 
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Today", exact: true })).toBeVisible();
+  await page.getByRole("banner").hover();
 
   for (const desk of [
     { label: "Anime", href: "/category/anime" },
@@ -14,6 +15,7 @@ test("reader can browse every desk and open an attributed article", async ({ pag
     { label: "Sports", href: "/category/sports" },
     { label: "Finance", href: "/category/finance" },
     { label: "Share Market", href: "/category/share-market" },
+    { label: "Top 10", href: "/category/top-10" },
   ]) {
     await expect(
       page.getByRole("link", { name: desk.label, exact: true }).first(),
@@ -30,5 +32,24 @@ test("category archives keep the global desk navigation available", async ({ pag
   await page.goto("/category/politics");
   await settleConsent(page);
   await expect(page.getByRole("heading", { name: "Politics", exact: true })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Anime", exact: true }).first()).toBeVisible();
+  await page.getByRole("banner").hover();
+  await expect(page.locator("#desktop-news-desks")).toHaveAttribute("aria-hidden", "false");
+  await expect(page.locator("#desktop-news-desks").getByRole("link", { name: "Anime", exact: true })).toBeVisible();
+});
+
+test("desktop desk strip reveals without shifting content and can be pinned", async ({ page }) => {
+  await page.goto("/");
+  await settleConsent(page);
+  const desks = page.locator("#desktop-news-desks");
+  const firstHeading = page.getByRole("main").getByRole("heading").first();
+  const before = await firstHeading.boundingBox();
+  await expect(desks).toHaveAttribute("aria-hidden", "true");
+  await page.getByRole("banner").hover();
+  await expect(desks).toHaveAttribute("aria-hidden", "false");
+  expect((await firstHeading.boundingBox())?.y).toBe(before?.y);
+  await page.locator('button[aria-controls="desktop-news-desks"]').click();
+  await page.getByRole("main").hover();
+  await expect(desks).toHaveAttribute("aria-hidden", "false");
+  await page.keyboard.press("Escape");
+  await expect(desks).toHaveAttribute("aria-hidden", "true");
 });

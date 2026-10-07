@@ -10,7 +10,7 @@ export function MobileMenu() {
   const [open, setOpen] = useState(false);
 
   return (
-    <div>
+    <div className="md:hidden">
       <button
         type="button"
         aria-expanded={open}

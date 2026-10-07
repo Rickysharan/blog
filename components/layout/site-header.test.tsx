@@ -14,7 +14,7 @@ describe("SiteHeader", () => {
     ).toBeInTheDocument();
     expect(screen.queryByText("Global edition · Vol. 01")).toBeNull();
     expect(screen.queryByText("World wide signal · 24/7")).toBeNull();
-    expect(screen.getByRole("navigation", { name: "News desks" }).closest(".bg-signal")).not.toBeNull();
+    expect(document.getElementById("desktop-news-desks")).toHaveAttribute("aria-hidden", "true");
     expect(screen.getByRole("button", { name: /theme:/i })).toHaveClass("border-ink/20", "text-ink");
     expect(screen.queryByRole("link", { name: /^advertise$/i })).toBeNull();
   });

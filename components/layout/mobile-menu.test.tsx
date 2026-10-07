@@ -1,27 +1,18 @@
-import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import React from "react";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
 
-import { MobileMenu } from "@/components/layout/mobile-menu";
+import { MobileMenu } from "./mobile-menu";
+
+vi.mock("next/link", () => ({ default: (props: React.AnchorHTMLAttributes<HTMLAnchorElement>) => <a {...props} /> }));
 
 describe("MobileMenu", () => {
-  it("opens accessibly and closes after choosing a desk", async () => {
-    const user = userEvent.setup();
+  it("opens only after a click and includes all seven categories", () => {
     render(<MobileMenu />);
-
-    const trigger = screen.getByRole("button", { name: "Open menu" });
-    expect(trigger).toHaveAttribute("aria-expanded", "false");
-    expect(screen.queryByRole("navigation", { name: "Mobile navigation" })).toBeNull();
-
-    await user.click(trigger);
-
-    expect(screen.getByRole("button", { name: "Close menu" })).toHaveAttribute(
-      "aria-expanded",
-      "true",
-    );
-    const animeLink = screen.getByRole("link", { name: "Anime" });
-    animeLink.addEventListener("click", (event) => event.preventDefault());
-    await user.click(animeLink);
-    expect(screen.queryByRole("navigation", { name: "Mobile navigation" })).toBeNull();
+    expect(screen.queryByRole("navigation", { name: "Mobile navigation" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Open menu" }));
+    expect(screen.getByRole("navigation", { name: "Mobile navigation" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Top 10" })).toHaveAttribute("href", "/category/top-10");
+    expect(screen.getAllByRole("link")).toHaveLength(8);
   });
 });

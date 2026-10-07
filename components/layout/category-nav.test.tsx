@@ -23,5 +23,6 @@ describe("CategoryNav", () => {
     expect(screen.getByRole("link", { name: "Anime" })).toHaveTextContent("01Anime");
     expect(screen.getByRole("link", { name: "Share Market" })).toHaveTextContent("06Share Market");
     expect(screen.getByRole("link", { name: "Top 10" })).toHaveTextContent("07Top 10");
+    expect(screen.getByRole("navigation", { name: "News desks" }).querySelector("ul")).toHaveClass("grid-cols-7");
   });
 });

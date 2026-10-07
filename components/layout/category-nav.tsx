@@ -2,15 +2,23 @@ import Link from "next/link";
 
 import { CATEGORIES } from "@/lib/config/categories";
 
-export function CategoryNav({ className = "" }: { className?: string }) {
+export function CategoryNav({ className = "", id, ariaHidden, focusable = true, onNavigate }: {
+  className?: string;
+  id?: string;
+  ariaHidden?: boolean;
+  focusable?: boolean;
+  onNavigate?: () => void;
+}) {
   return (
-    <nav aria-label="News desks" className={className}>
-      <ul className="grid grid-cols-6 items-stretch gap-0">
+    <nav id={id} aria-label="News desks" aria-hidden={ariaHidden} className={className}>
+      <ul className="grid grid-cols-7 items-stretch gap-0">
         {CATEGORIES.map((category, index) => (
           <li className="retro-nav-item" data-accent={category.accent} key={category.slug}>
             <Link
               aria-label={category.label}
               href={`/category/${category.slug}`}
+              tabIndex={focusable ? undefined : -1}
+              onClick={onNavigate}
               className="retro-nav-link text-xs font-black uppercase tracking-[0.12em]"
             >
               <span aria-hidden="true" className="retro-nav-number">

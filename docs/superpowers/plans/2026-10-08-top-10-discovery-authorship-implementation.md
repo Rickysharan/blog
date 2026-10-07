@@ -250,23 +250,23 @@ The implementer and reviewer must explicitly test these five failure modes:
 - `CategoryNav` accepts `id`, an optional selection callback, and layout classes without changing its card/colour treatment.
 - `MobileMenu` remains click-operated below the desktop breakpoint and contains all seven categories.
 
-- [ ] **Step 1: Write failing interaction tests**
+- [x] **Step 1: Write failing interaction tests**
 
   Assert collapsed-by-default state; pointer entry reveals; moving between masthead and strip keeps it open; leaving the combined region closes it when unpinned; focus entry reveals; tabbing through links does not close it; the existing menu control pins/unpins; Escape, outside click, link selection, and focus exit close it; desktop list remains a horizontal grid; mobile menu works by click and includes Top 10.
 
-- [ ] **Step 2: Run focused tests and confirm failure**
+- [x] **Step 2: Run focused tests and confirm failure**
 
   Run: `npx vitest run components/layout/desktop-category-reveal.test.tsx components/layout/site-header.test.tsx components/layout/mobile-menu.test.tsx`
 
-- [ ] **Step 3: Implement accessible reveal state**
+- [x] **Step 3: Implement accessible reveal state**
 
   Keep the masthead server-rendered where practical and place only the interaction wrapper in a client component. Use pointer and focus containment across one wrapper, a document outside-pointer listener only while pinned, and Escape handling. Do not delay navigation or wait on network requests.
 
-- [ ] **Step 4: Add non-shifting slide CSS**
+- [x] **Step 4: Add non-shifting slide CSS**
 
   Position the existing full-width category strip under the masthead as an overlay so opening it does not move the page. Animate transform/opacity only; disable meaningful duration under `prefers-reduced-motion`. Update the category grid for seven columns at desktop without turning it into a sidebar or vertical desktop menu.
 
-- [ ] **Step 5: Re-run component tests and add desktop/mobile E2E coverage**
+- [x] **Step 5: Re-run component tests and add desktop/mobile E2E coverage**
 
   Run: `npx vitest run components/layout/desktop-category-reveal.test.tsx components/layout/site-header.test.tsx components/layout/mobile-menu.test.tsx`
 
@@ -274,7 +274,7 @@ The implementer and reviewer must explicitly test these five failure modes:
 
   Expected: PASS, with the strip present but collapsed until explicitly revealed.
 
-- [ ] **Step 6: Commit public navigation**
+- [x] **Step 6: Commit public navigation**
 
   Commit: `feat: reveal category navigation from masthead`
 
