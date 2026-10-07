@@ -51,12 +51,12 @@ export function assessSiteHealth(input: SiteHealthInput): SiteHealthFinding[] {
     httpFinding("public-origin", "Public site reachability", input.publicOrigin, base, input.checkedAt),
     input.deployment
       ? {
-          check: "deployment", title: "Latest deployment", state: input.deployment.state === "ready" ? "healthy" : input.deployment.state === "failed" ? "critical" : input.deployment.state === "unavailable" ? "unavailable" : "warning",
+          check: "deployment", title: "Deployment status", state: input.deployment.state === "ready" ? "healthy" : input.deployment.state === "failed" ? "critical" : input.deployment.state === "unavailable" ? "unavailable" : "warning",
           evidence: `${input.deployment.detail}${input.deployment.deployId ? ` Deploy ${input.deployment.deployId}.` : ""}`, affectedUrl: input.deployment.url,
           checkedAt: input.checkedAt, severity: input.deployment.state === "ready" ? "ok" : input.deployment.state === "failed" ? "critical" : input.deployment.state === "unavailable" ? "info" : "warning",
-          recoveryAction: input.deployment.state === "ready" ? "No action is required; monitor the next deployment." : "Open the latest Netlify deploy log, resolve the reported failure, and deploy again."
+          recoveryAction: input.deployment.state === "ready" ? "No action is required; monitor the next deployment." : "Open the current hosting provider's deployment log, resolve the reported failure, and deploy again."
         }
-      : unavailable("deployment", "Latest deployment", base, input.checkedAt, "Connect the read-only Netlify deployment source and refresh health."),
+      : unavailable("deployment", "Deployment status", base, input.checkedAt, "Connect a read-only deployment source and refresh health."),
     httpFinding("sitemap", "Sitemap response", input.sitemap, `${base}/sitemap.xml`, input.checkedAt),
     httpFinding("robots", "Robots response", input.robots, `${base}/robots.txt`, input.checkedAt),
     input.publication
@@ -214,13 +214,21 @@ export async function collectSiteHealth(options: {
       ? { siteId: process.env.BLOG_NETLIFY_SITE_ID, token: process.env.NETLIFY_READ_TOKEN }
       : undefined
   );
-  const [publicOrigin, sitemap, robots, deployment, connections] = await Promise.all([
+  const [publicOrigin, sitemap, robots, connections] = await Promise.all([
     probe(publicUrl, fetchImpl),
     probe(`${publicUrl}/sitemap.xml`, fetchImpl),
     probe(`${publicUrl}/robots.txt`, fetchImpl),
-    latestNetlifyDeployment(configuredNetlify, publicUrl, fetchImpl),
     listProviderConnections(),
   ]);
+  const deployment: SiteHealthInput["deployment"] = new URL(publicUrl).hostname.endsWith(".vercel.app")
+    ? {
+        state: publicOrigin.state === "reachable" ? "ready" : "failed",
+        url: publicUrl,
+        detail: publicOrigin.state === "reachable"
+          ? `The active Vercel deployment is serving HTTP ${publicOrigin.status ?? 200}.`
+          : "The active Vercel deployment is not serving the public site.",
+      }
+    : await latestNetlifyDeployment(configuredNetlify, publicUrl, fetchImpl);
   return assessSiteHealth({
     checkedAt: (options.now ?? new Date()).toISOString(),
     publicUrl,

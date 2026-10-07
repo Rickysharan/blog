@@ -12,6 +12,34 @@ import { auditPublicSite } from "./audit";
 afterEach(() => vi.restoreAllMocks());
 
 describe("pinned audit transport", () => {
+  it("returns the pinned address in Node's all-address lookup format", async () => {
+    let lookupError: Error | null | undefined;
+    let lookupAddresses: unknown;
+    requestMock.mockImplementation((options, callback) => {
+      options.lookup("news.example", { all: true }, (error: Error | null, addresses: unknown) => {
+        lookupError = error;
+        lookupAddresses = addresses;
+      });
+      const request = new EventEmitter() as EventEmitter & { end: () => void; destroy: (error: Error) => void };
+      request.destroy = (error) => { request.emit("error", error); request.emit("close"); };
+      request.end = () => {
+        const response = Object.assign(new PassThrough(), { headers: {}, statusCode: 200 });
+        callback(response);
+        response.end("missing");
+        request.emit("close");
+      };
+      return request;
+    });
+
+    const findings = await auditPublicSite("https://news.example", {
+      resolveHostname: async () => [{ address: "93.184.216.34", family: 4 }],
+    });
+
+    expect(findings).toHaveLength(7);
+    expect(lookupError).toBeNull();
+    expect(lookupAddresses).toEqual([{ address: "93.184.216.34", family: 4 }]);
+  });
+
   it.each(["oversized", "interrupted", "error"])("settles a %s response stream and preserves TLS hostname and pinned lookup", async (scenario) => {
     requestMock.mockImplementation((options, callback) => {
       expect(options.hostname).toBe("news.example");

@@ -60,6 +60,28 @@ describe("assessSiteHealth", () => {
     expect(JSON.stringify(findings)).not.toContain("test-only-token");
   });
 
+  it("reports the active Vercel deployment without querying an unrelated saved Netlify project", async () => {
+    const vercelUrl = "https://omnilede-news.vercel.app";
+    const calls: string[] = [];
+    const findings = await collectSiteHealth({
+      publicUrl: vercelUrl,
+      studioUrl: "https://omnilede-studio.vercel.app",
+      now: new Date(checkedAt),
+      netlify: { siteId: "old-netlify-site", token: "old-token" },
+      fetchImpl: async (input) => {
+        calls.push(String(input));
+        return new Response("ok", { status: 200, headers: { server: "Vercel" } });
+      },
+    });
+
+    expect(calls.some((requested) => requested.includes("api.netlify.com"))).toBe(false);
+    expect(findings.find(({ check }) => check === "deployment")).toMatchObject({
+      state: "healthy",
+      affectedUrl: vercelUrl,
+      evidence: expect.stringMatching(/active Vercel deployment.*HTTP 200/i),
+    });
+  });
+
   it("treats connected provider evidence as unavailable, stale, or healthy by freshness", () => {
     const findings = assessSiteHealth({ checkedAt, publicUrl: url, providers: [
       { provider: "missing-time", state: "connected", url: "https://studio.example/growth", lastCheckedAt: null },

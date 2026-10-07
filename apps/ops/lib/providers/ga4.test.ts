@@ -15,9 +15,11 @@ function fixture() { return {
 describe("GA4 transforms", () => {
   it("parses official-shaped reports without inventing rows", () => expect(transformGa4Reports(fixture())).toMatchObject({ summary: { activeUsers: 10, sessions: 12, views: 30, engagementRate: .5 }, trend: [{ date: "2026-10-04" }], channels: [{ name: "Organic Search", views: 20, sessions: 8 }] }));
   it("accepts a valid empty property without inventing zero metrics", () => {
-    const empty = (_dimensions: string[], _metrics: string[]) => ({
-      kind: "analyticsData#runReport",
-    });
+    const empty = (dimensions: string[], metrics: string[]) => {
+      void dimensions;
+      void metrics;
+      return { kind: "analyticsData#runReport" };
+    };
     expect(transformGa4Reports({
       summary: empty([], summaryMetrics),
       trend: empty(["date"], summaryMetrics),

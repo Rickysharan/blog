@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const db = vi.hoisted(() => ({
-  from: vi.fn(), select: vi.fn(), order: vi.fn(), eq: vi.fn(), lte: vi.fn(), in: vi.fn(), insert: vi.fn(), update: vi.fn(), single: vi.fn()
+  from: vi.fn(), select: vi.fn(), order: vi.fn(), eq: vi.fn(), lte: vi.fn(), in: vi.fn(), insert: vi.fn(), update: vi.fn(), delete: vi.fn(), single: vi.fn()
 }));
 vi.mock("../supabase/server", () => ({ createServiceSupabaseClient: () => ({ from: db.from }) }));
 
-import { completeTask, listTodayTasks, postponeTask, refreshTodayTasks } from "./repository";
+import { completeTask, listTodayTasks, postponeTask, reconcileTodayTasks, refreshTodayTasks } from "./repository";
 
 const derived = {
   evidenceKey: "coverage:anime:none", kind: "writing" as const, title: "Write Anime", detail: "No article yet.",
@@ -15,7 +15,7 @@ const derived = {
 beforeEach(() => {
   vi.resetAllMocks();
   db.from.mockReturnValue(db); db.select.mockReturnValue(db); db.order.mockReturnValue(db); db.eq.mockReturnValue(db); db.lte.mockResolvedValue({ error: null }); db.single.mockResolvedValue({ data: null, error: null });
-  db.in.mockResolvedValue({ data: [], error: null }); db.insert.mockResolvedValue({ error: null }); db.update.mockReturnValue(db);
+  db.in.mockResolvedValue({ data: [], error: null }); db.insert.mockResolvedValue({ error: null }); db.update.mockReturnValue(db); db.delete.mockReturnValue(db);
 });
 
 describe("Today task repository", () => {
@@ -38,6 +38,26 @@ describe("Today task repository", () => {
 
     expect(db.update).toHaveBeenCalledTimes(2);
     expect(db.insert).toHaveBeenCalledWith([expect.objectContaining({ evidence_key: "draft:anime:new.mdx", state: "open" })]);
+  });
+
+  it("removes obsolete open derived evidence while preserving copied search and decided tasks", async () => {
+    db.in
+      .mockResolvedValueOnce({ data: [
+        { id: "00000000-0000-4000-8000-000000000001", evidence_key: "seo:site-audit%3Arobots:https%3A%2F%2Fnews.example%2Frobots.txt", state: "open" },
+        { id: "00000000-0000-4000-8000-000000000002", evidence_key: "search:weak-ctr", state: "open" },
+        { id: "00000000-0000-4000-8000-000000000003", evidence_key: "provider:google-analytics", state: "completed" },
+      ], error: null })
+      .mockResolvedValueOnce({ error: null })
+      .mockResolvedValueOnce({ data: [], error: null });
+
+    await reconcileTodayTasks([derived]);
+
+    expect(db.delete).toHaveBeenCalledOnce();
+    expect(db.in).toHaveBeenCalledWith("id", ["00000000-0000-4000-8000-000000000001"]);
+    expect(db.in).not.toHaveBeenCalledWith("id", expect.arrayContaining([
+      "00000000-0000-4000-8000-000000000002",
+      "00000000-0000-4000-8000-000000000003",
+    ]));
   });
 
   it("lists active tasks and writes valid complete and postpone state transitions", async () => {

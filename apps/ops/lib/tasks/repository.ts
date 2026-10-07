@@ -11,6 +11,8 @@ type DbTask = {
 };
 
 const columns = "id,evidence_key,kind,title,detail,category,state,priority,source,postponed_until,completed_at,created_at,updated_at";
+const derivedEvidencePrefixes = ["draft:", "writer:", "daily-plan:", "coverage:", "provider:", "seo:", "adsense:", "deployment:"] as const;
+const derivedTaskKinds = ["writing", "review", "provider", "seo", "maintenance"] as const;
 
 function fromDb(row: DbTask): StudioTask {
   return studioTaskSchema.parse({
@@ -90,6 +92,26 @@ export async function refreshTodayTasks(tasks: StudioTaskInput[]): Promise<Studi
     if (insertError) throw unavailable();
   }
   return listTodayTasks();
+}
+
+export async function reconcileTodayTasks(tasks: StudioTaskInput[]): Promise<StudioTask[]> {
+  const parsed = tasks.map((item) => studioTaskInputSchema.parse(item));
+  const currentKeys = new Set(parsed.map(({ evidenceKey }) => evidenceKey));
+  const client = createServiceSupabaseClient();
+  const { data, error } = await client.from("studio_tasks")
+    .select("id,evidence_key,state")
+    .in("kind", [...derivedTaskKinds]);
+  if (error) throw unavailable();
+  const obsoleteIds = (data ?? [])
+    .filter((row: { id: string; evidence_key: string; state: string }) => row.state === "open"
+      && derivedEvidencePrefixes.some((prefix) => row.evidence_key.startsWith(prefix))
+      && !currentKeys.has(row.evidence_key))
+    .map((row: { id: string }) => row.id);
+  if (obsoleteIds.length > 0) {
+    const { error: deleteError } = await client.from("studio_tasks").delete().in("id", obsoleteIds);
+    if (deleteError) throw unavailable();
+  }
+  return refreshTodayTasks(parsed);
 }
 
 async function changeState(id: string, values: Record<string, string | null>): Promise<StudioTask> {

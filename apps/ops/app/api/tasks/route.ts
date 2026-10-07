@@ -5,7 +5,7 @@ import { contentError, privateJson } from "../../../lib/content/repository";
 import { loadStudioEditorialInventory } from "../../../lib/editorial/repository";
 import { ContentRequestError, readBoundedJson, requireSameOrigin } from "../../../lib/http/same-origin";
 import { deriveTodayTasks } from "../../../lib/tasks/derive";
-import { listProviderConnections, listTodayTasks, refreshTodayTasks } from "../../../lib/tasks/repository";
+import { listProviderConnections, listTodayTasks, reconcileTodayTasks } from "../../../lib/tasks/repository";
 import { auditPublicSite, siteFindingsToSeoWarnings } from "../../../../../lib/seo/audit";
 
 export const dynamic = "force-dynamic";
@@ -39,7 +39,7 @@ export async function POST(request: Request) {
         ? null
         : { state: "setup-required", detail: "AdSense is not connected. Complete setup only when the site is ready; ads remain disabled." },
     });
-    return privateJson({ tasks: await refreshTodayTasks(tasks) });
+    return privateJson({ tasks: await reconcileTodayTasks(tasks) });
   } catch (error) {
     return contentError(error);
   }

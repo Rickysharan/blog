@@ -91,7 +91,10 @@ async function defaultPinnedRequest(url: URL, pinned: ResolvedAddress, signal: A
       method: "GET",
       servername: url.hostname,
       headers: { Host: url.host, Accept: "text/html,application/xml,text/plain;q=0.9,*/*;q=0.1" },
-      lookup: (_hostname, _options, callback) => callback(null, pinned.address, pinned.family),
+      lookup: (_hostname, options, callback) => {
+        if (options.all) callback(null, [pinned]);
+        else callback(null, pinned.address, pinned.family);
+      },
     }, (response) => {
       response.once("error", reject);
       response.once("aborted", () => reject(new Error("Site audit response was interrupted.")));
