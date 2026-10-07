@@ -231,6 +231,7 @@ export async function findRequiredArticlePhotos(
   const maximumQueries = 1 + (options.maxAlternativeRounds ?? 2);
   const queries = namedEntityQueries(story, tags).slice(0, maximumQueries);
   const photos: ArticlePhoto[] = [];
+  const fallbackPhotos: ArticlePhoto[] = [];
   const seenPages = new Set<string>();
   let attempts = 0;
 
@@ -242,18 +243,34 @@ export async function findRequiredArticlePhotos(
       seenPages.add(candidate.photo.page);
       return true;
     });
-    for (let offset = 0; offset < unseen.length && photos.length < 3; offset += IMAGE_VERIFICATION_BATCH_SIZE) {
+
+    const usableForSubject: ArticlePhoto[] = [];
+    for (let offset = 0; offset < unseen.length; offset += IMAGE_VERIFICATION_BATCH_SIZE) {
       const batch = unseen.slice(offset, offset + IMAGE_VERIFICATION_BATCH_SIZE);
       const verified = await Promise.all(batch.map(async (candidate) => ({
         candidate,
         usable: await remoteImageIsUsable(candidate.photo, fetchImpl),
       })));
       for (const { candidate, usable } of verified) {
-        if (usable) photos.push(candidate.photo);
-        if (photos.length === 3) break;
+        if (usable) usableForSubject.push(candidate.photo);
       }
+      if (usableForSubject.length > 0) break;
     }
-    if (photos.length >= 2) break;
+
+    const [primary, ...alternatives] = usableForSubject;
+    if (primary) photos.push(primary);
+    fallbackPhotos.push(...alternatives);
+
+    // Prefer one verified picture from each named subject before reusing
+    // additional pictures from a subject already represented.
+    if (photos.length === 3) break;
+  }
+
+  for (const photo of fallbackPhotos) {
+    if (photos.length === 3) break;
+    if (!photos.some((candidate) => candidate.page === photo.page)) {
+      photos.push(photo);
+    }
   }
 
   if (photos.length >= 2) return { ok: true, photos, attempts };

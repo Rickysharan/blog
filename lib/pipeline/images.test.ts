@@ -111,6 +111,68 @@ describe("required article photo policy", () => {
     expect(new Set(result.photos.map((photo) => photo.page)).size).toBe(3);
   });
 
+  it("prefers pictures from different named subjects before filling from one subject", async () => {
+    const searches: string[] = [];
+    const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+      if (init?.method === "HEAD") {
+        return new Response(null, {
+          status: 200,
+          headers: { "content-type": "image/jpeg" },
+        });
+      }
+
+      const query =
+        new URL(String(input)).searchParams
+          .get("gsrsearch")
+          ?.match(/^"([^"]+)"/)?.[1] ?? "";
+
+      searches.push(query);
+
+      const makeCandidate = (id: number) => {
+        const candidate = relevantPage(id);
+        candidate.title = `File:${query} ${id}.jpg`;
+        candidate.imageinfo[0].descriptionurl =
+          `https://commons.wikimedia.org/wiki/File:${encodeURIComponent(query)}_${id}.jpg`;
+        (candidate.imageinfo[0].extmetadata as Record<string, { value: string }>).ImageDescription = {
+          value: `${query} at an event`,
+        };
+        return candidate;
+      };
+
+      return Response.json({
+        query: {
+          pages: {
+            a: makeCandidate(searches.length * 10 + 1),
+            b: makeCandidate(searches.length * 10 + 2),
+            c: makeCandidate(searches.length * 10 + 3),
+          },
+        },
+      });
+    });
+
+    const story = {
+      ...namedStory,
+      title: "NFL injuries involving Saquon Barkley and Lamar Jackson",
+      snippet:
+        "Saquon Barkley and Lamar Jackson are among the NFL players being monitored.",
+    };
+
+    const result = await findRequiredArticlePhotos(
+      story,
+      ["Saquon Barkley", "Lamar Jackson", "NFL"],
+      { fetchImpl: fetcher },
+    );
+
+    expect(result.ok).toBe(true);
+    expect(result.photos).toHaveLength(3);
+    expect(searches).toContain("Saquon Barkley");
+    expect(searches).toContain("Lamar Jackson");
+
+    const titles = result.photos.map((photo) => photo.title);
+    expect(titles.some((title) => title.includes("Saquon Barkley"))).toBe(true);
+    expect(titles.some((title) => title.includes("Lamar Jackson"))).toBe(true);
+  });
+
   it("accepts two photos found across bounded alternative queries", async () => {
     let search = 0;
     const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
