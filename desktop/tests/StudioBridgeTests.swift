@@ -487,13 +487,13 @@ struct StudioBridgeTests {
             at: URL(fileURLWithPath: FileManager.default.currentDirectoryPath).appendingPathComponent("Start OmniLede.command"),
             to: cancelRoot.appendingPathComponent("Start OmniLede.command")
         )
-        let slowPlanner = cancelRoot.appendingPathComponent("slow-planner.py")
+        let slowPlanner = cancelRoot.appendingPathComponent("slow-planner.sh")
         try """
-        #!/usr/bin/python3
-        import pathlib, time
-        pathlib.Path("planner-started").touch()
-        time.sleep(1.0)
-        pathlib.Path("planner-wrote-after-shutdown").touch()
+        #!/bin/bash
+        trap 'exit 0' TERM
+        touch planner-started
+        sleep 1
+        touch planner-wrote-after-shutdown
         """.write(to: slowPlanner, atomically: true, encoding: .utf8)
         try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: slowPlanner.path)
         setenv("OMNILEDE_PLANNER_EXECUTABLE", slowPlanner.path, 1)
