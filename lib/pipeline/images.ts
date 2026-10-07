@@ -23,6 +23,8 @@ export interface RequiredPhotoSearchOptions {
   fetchImpl?: FetchLike;
   /** Initial named subject plus at most this many alternative named subjects. */
   maxAlternativeRounds?: number;
+  /** Bounded source-page text used only to disambiguate named image subjects. */
+  sourceContext?: string;
 }
 
 // Metadata is untrusted prose, never MDX or HTML.
@@ -101,14 +103,32 @@ type CommonsPage = {
   }>;
 };
 
-const genericSubject = /^(?:news|sports?|politics|finance|movies?|anime|share market|team update|club update)$/i;
+const genericSubject = /^(?:news|sports?|politics|finance|movies?|anime|share market|team update|club update|high street)$/i;
 const genericPlaceToken = new Set([
   "los", "angeles", "san", "new", "york", "city", "united", "states", "north", "south",
 ]);
 
-function namedEntityQueries(story: QueueStory, tags: string[]): string[] {
-  const context = `${story.title} ${story.snippet}`;
+const sourceEntityDescriptors: Array<{
+  sourceTerm: string;
+  queryTerms: string[];
+}> = [
+  { sourceTerm: "pharmacy", queryTerms: ["pharmacy", "chemist"] },
+  { sourceTerm: "retail", queryTerms: ["retail", "shop"] },
+];
+
+function namedEntityQueries(
+  story: QueueStory,
+  tags: string[],
+  sourceContext?: string,
+): string[] {
+  const context = `${story.title} ${story.snippet} ${sourceContext ?? ""}`;
   const lowerContext = context.toLocaleLowerCase();
+  const contextTokens = new Set(
+    lowerContext
+      .split(/[^\p{L}\p{N}'’-]+/u)
+      .filter(Boolean),
+  );
+
   let sourcePathTokens = new Set<string>();
   try {
     sourcePathTokens = new Set(
@@ -120,23 +140,92 @@ function namedEntityQueries(story: QueueStory, tags: string[]): string[] {
   } catch {
     // Queue validation reports malformed source URLs before image selection.
   }
-  const extracted = [...context.matchAll(/\b[A-Z][\p{L}'’-]+(?:\s+[A-Z][\p{L}'’-]+){1,4}\b/gu)]
-    .map((match) => match[0]);
-  const acronyms = context.match(/\b[A-Z]{3,6}\b/g) ?? [];
-  return [...new Set([...tags, ...extracted, ...acronyms]
-    .map((subject) => subject.replace(/[^\p{L}\p{N}\s'’-]/gu, " ").replace(/\s+/g, " ").trim())
-    .filter((subject) => {
-      if (!subject || genericSubject.test(subject)) return false;
-      const looksNamed = subject.split(" ").length >= 2 || /^[A-Z]{3,6}$/.test(subject);
-      const subjectTokens = subject.toLocaleLowerCase().split(/\s+/);
-      const appearsInSourcePath = subjectTokens.some(
-        (token) => (/[0-9]/.test(token) || token.length >= 5) &&
-          !genericPlaceToken.has(token) && sourcePathTokens.has(token),
-      );
-      return looksNamed && (
-        lowerContext.includes(subject.toLocaleLowerCase()) || appearsInSourcePath
-      );
-    }))];
+
+  const cleanedTags = tags
+    .map((subject) =>
+      subject
+        .replace(/[^\p{L}\p{N}\s'’-]/gu, " ")
+        .replace(/\s+/g, " ")
+        .trim(),
+    )
+    .filter(Boolean);
+
+  const descriptors = sourceEntityDescriptors
+    .filter(({ sourceTerm }) => contextTokens.has(sourceTerm))
+    .flatMap(({ queryTerms }) => queryTerms);
+
+  const qualifiedSingleWordTags = cleanedTags.flatMap((subject) => {
+    if (!/^[A-Z][\p{L}'’-]{2,}$/u.test(subject)) return [];
+    if (!contextTokens.has(subject.toLocaleLowerCase())) return [];
+
+    return descriptors.map(
+      (descriptor) => `${subject} ${descriptor}`,
+    );
+  });
+
+  const extracted = [
+    ...context.matchAll(
+      /\b[A-Z][\p{L}'’-]+(?:\s+[A-Z][\p{L}'’-]+){1,4}\b/gu,
+    ),
+  ].map((match) => match[0]);
+
+  const acronyms =
+    context.match(/\b[A-Z]{3,6}\b/g) ?? [];
+
+  const qualifiedSet =
+    new Set(qualifiedSingleWordTags);
+
+  return [
+    ...new Set([
+      ...qualifiedSingleWordTags,
+      ...cleanedTags,
+      ...extracted,
+      ...acronyms,
+    ]
+      .map((subject) =>
+        subject
+          .replace(/[^\p{L}\p{N}\s'’-]/gu, " ")
+          .replace(/\s+/g, " ")
+          .trim(),
+      )
+      .filter((subject) => {
+        if (!subject || genericSubject.test(subject)) return false;
+
+        const subjectTokens =
+          subject
+            .toLocaleLowerCase()
+            .split(/\s+/)
+            .filter(Boolean);
+
+        const looksNamed =
+          qualifiedSet.has(subject) ||
+          subject.split(" ").length >= 2 ||
+          /^[A-Z]{3,6}$/.test(subject);
+
+        const appearsInContext =
+          subjectTokens.length > 0 &&
+          subjectTokens.every(
+            (token) =>
+              contextTokens.has(token) ||
+              descriptors.includes(token),
+          );
+
+        const appearsInSourcePath =
+          subjectTokens.some(
+            (token) =>
+              (/[0-9]/.test(token) ||
+                token.length >= 5) &&
+              !genericPlaceToken.has(token) &&
+              sourcePathTokens.has(token),
+          );
+
+        return looksNamed && (
+          qualifiedSet.has(subject) ||
+          appearsInContext ||
+          appearsInSourcePath
+        );
+      })),
+  ];
 }
 
 async function searchCommonsForSubject(
@@ -229,7 +318,11 @@ export async function findRequiredArticlePhotos(
 ): Promise<PhotoSearchResult> {
   const fetchImpl = options.fetchImpl ?? fetch;
   const maximumQueries = 1 + (options.maxAlternativeRounds ?? 2);
-  const queries = namedEntityQueries(story, tags).slice(0, maximumQueries);
+  const queries = namedEntityQueries(
+    story,
+    tags,
+    options.sourceContext,
+  ).slice(0, maximumQueries);
   const photos: ArticlePhoto[] = [];
   const fallbackPhotos: ArticlePhoto[] = [];
   const seenPages = new Set<string>();

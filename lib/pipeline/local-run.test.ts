@@ -199,16 +199,22 @@ describe("resumable local writer controller", () => {
     ]);
   });
 
-  it("passes bounded source-page context into every generation attempt", async () => {
+  it("passes bounded source-page context into generation and image selection", async () => {
     const root = await temporaryRoot();
-    const enrichSource = vi.fn(async () =>
-      "Confirmed source reporting contains enough detailed factual context for drafting."
-    );
+    const sourceContext =
+      "Confirmed source reporting contains enough detailed factual context for drafting.";
+    const enrichSource = vi.fn(async () => sourceContext);
     const generate = vi.fn(async () => generated);
+    const findPhotos = vi.fn(async () => ({
+      ok: true as const,
+      photos,
+      attempts: 1,
+    }));
 
     const result = await run(root, dependencies({
       enrichSource,
       generate,
+      findPhotos,
     }));
 
     expect(result.status).toBe("completed");
@@ -219,10 +225,12 @@ describe("resumable local writer controller", () => {
     );
     expect(generate).toHaveBeenCalledWith(
       story,
-      expect.objectContaining({
-        sourceContext:
-          "Confirmed source reporting contains enough detailed factual context for drafting.",
-      }),
+      expect.objectContaining({ sourceContext }),
+    );
+    expect(findPhotos).toHaveBeenCalledWith(
+      story,
+      generated.tags,
+      { sourceContext },
     );
   });
 

@@ -68,7 +68,11 @@ export interface LocalRunDependencies {
       signal?: AbortSignal;
     },
   ): Promise<GeneratedDraftContent>;
-  findPhotos(story: QueueStory, tags: string[]): Promise<PhotoSearchResult>;
+  findPhotos(
+    story: QueueStory,
+    tags: string[],
+    options: { sourceContext?: string },
+  ): Promise<PhotoSearchResult>;
   deliver(
     contentRoot: string,
     ref: DraftRef,
@@ -114,7 +118,12 @@ const defaultDependencies: LocalRunDependencies = {
     sourceContext: options.sourceContext,
     signal: options.signal,
   }),
-  findPhotos: (story, tags) => findRequiredArticlePhotos(story, tags),
+  findPhotos: (story, tags, options) =>
+    findRequiredArticlePhotos(
+      story,
+      tags,
+      { sourceContext: options.sourceContext },
+    ),
   async deliver(_contentRoot, ref, env, validatedMdx) {
     const targetConfig = await resolveLocalGitHubTarget(env);
     const article = parseArticleFile(validatedMdx, ref.filename);
@@ -480,6 +489,7 @@ export async function runLocalWriter(
 
     let resumableMdx: string | undefined;
     let pictureRepairDraft: GeneratedDraftContent | undefined;
+    let sourceContext: string | undefined;
     if (draftRef && previous?.deliveryStatus !== "delivered") {
       try {
         resumableMdx = await readFile(
@@ -560,7 +570,7 @@ export async function runLocalWriter(
         await persistAndEmit("discovery", "progress", "Selected a recent source story.");
         if (options.signal?.aborted) return await cancelled("discovery");
 
-        const sourceContext = await deps.enrichSource(selectedStory, {
+        sourceContext = await deps.enrichSource(selectedStory, {
           signal: options.signal,
         });
         if (options.signal?.aborted) return await cancelled("discovery");
@@ -613,7 +623,18 @@ export async function runLocalWriter(
       await persistAndEmit("article-normalization", "progress", "Article formatting was checked and corrected.");
       if (options.signal?.aborted) return await cancelled("article-normalization");
 
-      const photoResult = await deps.findPhotos(selectedStory, generated.tags);
+      if (!sourceContext) {
+        sourceContext = await deps.enrichSource(selectedStory, {
+          signal: options.signal,
+        });
+      }
+      if (options.signal?.aborted) return await cancelled("image-selection");
+
+      const photoResult = await deps.findPhotos(
+        selectedStory,
+        generated.tags,
+        { sourceContext },
+      );
       imageCount = photoResult.photos.length;
       if (options.signal?.aborted) return await cancelled("image-selection");
 

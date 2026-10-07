@@ -227,6 +227,139 @@ describe("required article photo policy", () => {
     expect(result.photos).toHaveLength(1);
   });
 
+  it("qualifies a single-word brand with source context instead of generic High Street pictures", async () => {
+    const searches: string[] = [];
+
+    const fetcher = vi.fn(async (
+      input: string | URL | Request,
+      init?: RequestInit,
+    ) => {
+      if (init?.method === "HEAD") {
+        return new Response(null, {
+          status: 200,
+          headers: {
+            "content-type": "image/jpeg",
+          },
+        });
+      }
+
+      const query =
+        new URL(String(input))
+          .searchParams
+          .get("gsrsearch")
+          ?.match(/^"([^"]+)"/)?.[1] ?? "";
+
+      searches.push(query);
+
+      const makeCandidate = (
+        id: number,
+        descriptor: string,
+      ) => {
+        const candidate =
+          relevantPage(id);
+
+        candidate.title =
+          `File:Boots ${descriptor} ${id}.jpg`;
+
+        candidate.imageinfo[0].descriptionurl =
+          `https://commons.wikimedia.org/wiki/File:Boots_${descriptor}_${id}.jpg`;
+
+        (
+          candidate.imageinfo[0].extmetadata as
+            Record<string, { value: string }>
+        ).ImageDescription = {
+          value:
+            `Boots ${descriptor} shop ${id}`,
+        };
+
+        return candidate;
+      };
+
+      if (query === "Boots pharmacy") {
+        return Response.json({
+          query: {
+            pages: {
+              a: makeCandidate(
+                401,
+                "pharmacy",
+              ),
+            },
+          },
+        });
+      }
+
+      if (query === "Boots chemist") {
+        return Response.json({
+          query: {
+            pages: {
+              b: makeCandidate(
+                402,
+                "chemist",
+              ),
+              c: makeCandidate(
+                403,
+                "chemist",
+              ),
+            },
+          },
+        });
+      }
+
+      return Response.json({
+        query: { pages: {} },
+      });
+    });
+
+    const bootsStory = {
+      title:
+        "Boots sold in £7bn deal to Canadian billionaire family",
+      source: "BBC Business",
+      sourceUrl:
+        "https://www.bbc.co.uk/news/articles/cwly0jyk2vl5o",
+      date: "2026-10-07T14:24:20.000Z",
+      snippet:
+        "The sale of the High Street chain was announced on Wednesday.",
+      category: "finance" as const,
+    };
+
+    const result =
+      await findRequiredArticlePhotos(
+        bootsStory,
+        [
+          "Boots",
+          "Wittington Investments",
+          "Weston family",
+        ],
+        {
+          fetchImpl: fetcher,
+          sourceContext:
+            "Boots, the High Street pharmacy and retail chain, has been sold. Wittington Investments agreed to buy the company.",
+        },
+      );
+
+    expect(result.ok).toBe(true);
+    expect(result.photos).toHaveLength(3);
+
+    expect(searches[0]).toBe(
+      "Boots pharmacy",
+    );
+
+    expect(searches[1]).toBe(
+      "Boots chemist",
+    );
+
+    expect(searches).not.toContain(
+      "High Street",
+    );
+
+    expect(
+      result.photos.every(
+        (photo) =>
+          photo.title.includes("Boots"),
+      ),
+    ).toBe(true);
+  });
+
   it("does not search a generic category that is not a named source entity", async () => {
     const fetcher = vi.fn();
     const result = await findRequiredArticlePhotos(
