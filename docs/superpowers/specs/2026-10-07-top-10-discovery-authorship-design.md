@@ -8,6 +8,7 @@ The finished experience must:
 
 - add a `Top 10` category to the public blog, web Studio, native Mac bridge, daily plan, draft review, search, feeds, sitemap, and publishing pipeline;
 - keep the full category list out of the permanent desktop header and slide the existing horizontal category bar down when the pointer enters the top masthead area, when keyboard focus enters the navigation region, or when the menu control is clicked;
+- apply the same space-saving rule to navigation and optional controls across the public blog and private Studio while keeping primary content, status, progress, errors, Today tasks, review, and Publish actions continuously visible;
 - use `Ricky Sharan` as the author of new locally generated OmniLede drafts and provide a real public author page;
 - show three or four useful recommendations after every article under the heading `You may also like`;
 - preserve the final human Publish action and all existing editorial safety checks.
@@ -29,6 +30,20 @@ The desktop masthead keeps its present logo, tagline, theme, install, search, an
 When the pointer enters the top masthead area, the horizontal `CategoryNav` slides down beneath the masthead. It stays visible while the pointer remains over either the masthead or category bar, then slides closed after the pointer leaves that combined region. Keyboard users reveal the same horizontal bar when focus enters the masthead navigation controls and can move through every category without it closing. Clicking the existing menu control pins or unpins the bar for pointer and touch users. Escape, outside click, choosing a category, or moving focus beyond the navigation closes it. The menu control exposes `aria-expanded` and `aria-controls`. Reduced-motion preferences disable the sliding animation and show or hide the bar immediately.
 
 Touch and narrow screens keep the current click-to-open mobile menu. The menu includes all seven categories. The footer may continue listing desks because it is a discovery area at the end of the page, rather than persistent navigation competing with the article.
+
+## Space-saving interaction rule
+
+OmniLede uses progressive disclosure for navigation and optional controls. A control may collapse when it is secondary and its current state remains understandable. Reading content and the next primary action never disappear merely to make a screen look smaller.
+
+On the public blog, the horizontal category bar follows the slide-down behaviour above. Search, theme, install, and menu remain compact icon controls in the masthead. The article body, title, byline, source, share actions, and `You may also like` section remain part of the page. The footer remains fully available at the natural end of the page and does not need hover behaviour.
+
+On desktop Studio, the existing left navigation becomes a narrow rail when inactive. Its destination marks and the current destination remain visible. Hovering the rail or moving keyboard focus into it expands the existing labels over the page without shifting the working content. A clear control pins or unpins the expanded state. Escape and outside interaction return an unpinned rail to compact mode. The signed-in identity remains accessible from the rail and fully visible when expanded.
+
+On phone Studio, hover is unavailable, so the persistent navigation shows only the most frequent destinations: Today, Categories, Content, and Overview. A `More` control opens the remaining Growth, Search, Revenue, Health, and Connections destinations. The current destination and primary actions stay reachable with one tap, focus is contained while the menu is open, and Escape or choosing a destination closes it.
+
+Optional filter groups and history panels may use an explicit labelled disclosure when collapsed, but the interface must show the active filter count or current selection. Status, progress, delivery confirmation, validation problems, unavailable-data messages, Today tasks, draft review, Cancel, Retry, Save, and Publish must never be hidden behind hover-only behaviour.
+
+All reveal interactions work with pointer, keyboard, and touch. Hover-only discovery is prohibited. Reduced-motion preferences disable sliding and expansion animations.
 
 ## Authorship
 
@@ -72,6 +87,8 @@ Implementation follows test-first development.
 - Native bridge tests fail at six categories and pass at seven, including `top-10`.
 - Related-article tests prove tag priority, same-desk fallback, recent global fallback, deduplication, exclusion of the current article, deterministic ordering, and a maximum of four.
 - Header component tests prove the horizontal category strip is collapsed by default, slides down from the masthead on pointer hover, stays available during keyboard navigation, can be pinned with the existing menu control, and never changes into a sidebar or vertical desktop list.
+- Studio shell tests prove the desktop rail expands on hover or focus without moving the main workspace, supports pinning, and keeps the current destination visible; phone tests prove the four primary destinations and accessible `More` menu expose every remaining route.
+- Disclosure tests prove active filters remain visible and primary status, error, review, and Publish actions are never placed inside hover-only or collapsed containers.
 - Author tests prove generated drafts use `Ricky Sharan`, contributor authors remain unchanged, bylines link to the author page, and JSON-LD matches the visible author.
 - Top 10 validation tests prove exactly ten sequential entries are required for publish-ready content.
 - Studio tests prove all seven categories render without hard-coded counts.
