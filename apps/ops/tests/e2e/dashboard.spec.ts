@@ -18,7 +18,7 @@ test("shows source-backed overview cards and separate Today and Categories pages
 
   await page.goto("/categories");
   await expect(page.getByRole("heading", { name: "Categories" })).toBeVisible();
-  await expect(page.getByRole("row")).toHaveCount(7);
+  await expect(page.getByRole("row")).toHaveCount(8);
 });
 
 test("keeps unavailable provider data explicit across insight pages", async ({ page }) => {
@@ -33,7 +33,28 @@ test("@phone keeps all newsroom destinations reachable on a phone viewport", asy
   await page.goto("/overview");
   const navigation = page.getByRole("navigation", { name: "Studio phone navigation" });
   await expect(navigation).toBeVisible();
-  for (const name of ["Overview", "Today", "Categories", "Content", "Growth", "Google Search", "Revenue", "Site health", "Connections"]) {
+  for (const name of ["Today", "Categories", "Content", "Overview"]) {
     await expect(navigation.getByRole("link", { name })).toBeVisible();
+  }
+  await navigation.getByRole("button", { name: "More" }).click();
+  const more = page.getByRole("dialog", { name: "More destinations" });
+  for (const name of ["Growth", "Google Search", "Revenue", "Site health", "Connections"]) {
+    await expect(more.getByRole("link", { name })).toBeVisible();
+  }
+});
+
+test("desktop navigation keeps the workspace stable while switching routes", async ({ page }) => {
+  await page.goto("/today");
+  const main = page.locator("#main-content");
+  const initialX = (await main.boundingBox())?.x;
+  const sidebar = page.getByRole("complementary");
+  await sidebar.hover();
+  expect((await main.boundingBox())?.x).toBe(initialX);
+  const navigation = page.getByRole("navigation", { name: "Studio navigation" });
+  for (const [name, path] of [["Categories", "/categories"], ["Content", "/content"], ["Today", "/today"]] as const) {
+    await navigation.getByRole("link", { name }).click();
+    await expect(page).toHaveURL(new RegExp(`${path}$`));
+    expect((await main.boundingBox())?.x).toBe(initialX);
+    await sidebar.hover();
   }
 });

@@ -9,7 +9,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("../lib/auth/operator", () => ({ requireStudioOperator: mocks.requireStudioOperator }));
-vi.mock("next/navigation", () => ({ redirect: mocks.redirect, notFound: vi.fn() }));
+vi.mock("next/navigation", () => ({ redirect: mocks.redirect, notFound: vi.fn(), usePathname: () => "/today" }));
 vi.mock("next/link", () => ({
   default: ({ prefetch, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { prefetch?: boolean }) => (
     <a data-prefetch={String(prefetch)} {...props} />
@@ -65,7 +65,7 @@ describe("OmniLede Studio entry and shell", () => {
     expect(screen.queryByText("Private report")).not.toBeInTheDocument();
   });
 
-  test("renders every Studio destination in desktop and phone navigation", () => {
+  test("renders every Studio destination on desktop and the primary phone destinations", () => {
     render(<StudioShell operatorEmail={identity.email}><p>Workspace</p></StudioShell>);
 
     const desktop = screen.getByRole("navigation", { name: "Studio navigation" });
@@ -73,8 +73,10 @@ describe("OmniLede Studio entry and shell", () => {
     for (const [name, href] of destinations) {
       expect(within(desktop).getByRole("link", { name })).toHaveAttribute("href", href);
       expect(within(desktop).getByRole("link", { name })).toHaveAttribute("data-prefetch", "true");
-      expect(within(phone).getByRole("link", { name })).toHaveAttribute("href", href);
-      expect(within(phone).getByRole("link", { name })).toHaveAttribute("data-prefetch", "true");
+      if (["Overview", "Today", "Categories", "Content"].includes(name)) {
+        expect(within(phone).getByRole("link", { name })).toHaveAttribute("href", href);
+        expect(within(phone).getByRole("link", { name })).toHaveAttribute("data-prefetch", "true");
+      }
     }
     expect(screen.getByText("Workspace")).toBeInTheDocument();
   });
