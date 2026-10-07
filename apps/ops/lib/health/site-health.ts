@@ -1,6 +1,7 @@
 import { isIP } from "node:net";
 
 import type { ProviderState } from "@omnilede/contracts";
+import { auditPublicSite, type SiteFinding } from "../../../../lib/seo/audit";
 
 import { listProviderConnections } from "../tasks/repository";
 
@@ -201,6 +202,7 @@ async function latestNetlifyDeployment(
 
 export async function collectSiteHealth(options: {
   fetchImpl?: FetchLike;
+  auditImpl?: (origin: string) => Promise<SiteFinding[]>;
   now?: Date;
   publicUrl?: string;
   studioUrl?: string;
@@ -214,11 +216,13 @@ export async function collectSiteHealth(options: {
       ? { siteId: process.env.BLOG_NETLIFY_SITE_ID, token: process.env.NETLIFY_READ_TOKEN }
       : undefined
   );
-  const [publicOrigin, sitemap, robots, connections] = await Promise.all([
+  const auditImpl = options.auditImpl ?? ((origin: string) => auditPublicSite(origin, options.fetchImpl ? { fetchImpl } : {}));
+  const [publicOrigin, sitemap, robots, connections, siteFindings] = await Promise.all([
     probe(publicUrl, fetchImpl),
     probe(`${publicUrl}/sitemap.xml`, fetchImpl),
     probe(`${publicUrl}/robots.txt`, fetchImpl),
     listProviderConnections(),
+    auditImpl(publicUrl).catch(() => [] as SiteFinding[]),
   ]);
   const deployment: SiteHealthInput["deployment"] = new URL(publicUrl).hostname.endsWith(".vercel.app")
     ? {
@@ -229,6 +233,8 @@ export async function collectSiteHealth(options: {
           : "The active Vercel deployment is not serving the public site.",
       }
     : await latestNetlifyDeployment(configuredNetlify, publicUrl, fetchImpl);
+  const structuredFinding = siteFindings.find(({ check }) => check === "structured-data");
+  const internalLinkFinding = siteFindings.find(({ check }) => check === "internal-links");
   return assessSiteHealth({
     checkedAt: (options.now ?? new Date()).toISOString(),
     publicUrl,
@@ -237,5 +243,19 @@ export async function collectSiteHealth(options: {
     sitemap,
     robots,
     providers: connections.map((connection) => ({ ...connection, url: `${studioUrl}/${connection.provider === "google-analytics" ? "growth" : connection.provider === "google-search-console" ? "search" : "revenue"}` })),
+    structuredData: structuredFinding
+      ? {
+          state: structuredFinding.state === "pass" ? "valid" : "invalid",
+          url: structuredFinding.affectedUrl,
+          detail: structuredFinding.evidence,
+        }
+      : undefined,
+    internalLinks: internalLinkFinding
+      ? {
+          state: internalLinkFinding.state === "pass" ? "valid" : "broken",
+          url: internalLinkFinding.affectedUrl,
+          detail: internalLinkFinding.evidence,
+        }
+      : undefined,
   });
 }

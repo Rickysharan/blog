@@ -82,6 +82,22 @@ describe("assessSiteHealth", () => {
     });
   });
 
+  it("uses the public site audit as structured-data and internal-link health evidence", async () => {
+    const findings = await collectSiteHealth({
+      publicUrl: url,
+      studioUrl: "https://studio.example",
+      now: new Date(checkedAt),
+      fetchImpl: async () => new Response("ok", { status: 200 }),
+      auditImpl: async () => [
+        { check: "structured-data", state: "pass", evidence: "Article schema is valid.", affectedUrl: `${url}/article/story`, checkedAt, recoveryAction: "No action required." },
+        { check: "internal-links", state: "pass", evidence: "Internal links resolve.", affectedUrl: url, checkedAt, recoveryAction: "No action required." },
+      ],
+    });
+
+    expect(findings.find(({ check }) => check === "structured-data")).toMatchObject({ state: "healthy", evidence: "Article schema is valid." });
+    expect(findings.find(({ check }) => check === "internal-links")).toMatchObject({ state: "healthy", evidence: "Internal links resolve." });
+  });
+
   it("treats connected provider evidence as unavailable, stale, or healthy by freshness", () => {
     const findings = assessSiteHealth({ checkedAt, publicUrl: url, providers: [
       { provider: "missing-time", state: "connected", url: "https://studio.example/growth", lastCheckedAt: null },
