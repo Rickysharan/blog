@@ -59,6 +59,7 @@ function dependencies(overrides: Partial<LocalRunDependencies> = {}): LocalRunDe
     discover: vi.fn(async () => ({
       stories: [story], summaries: [], successCount: 1, failureCount: 0, skippedCount: 0,
     })),
+    enrichSource: vi.fn(async () => undefined),
     generate: vi.fn(async () => generated),
     findPhotos: vi.fn(async () => ({ ok: true as const, photos, attempts: 1 })),
     deliver: vi.fn(async (_contentRoot, ref) => ({ status: "created" as const, ref, attempts: 1 })),
@@ -196,6 +197,33 @@ describe("resumable local writer controller", () => {
       "preflight", "discovery", "generation", "article-normalization",
       "image-selection", "local-validation", "dashboard-delivery", "delivery-verification",
     ]);
+  });
+
+  it("passes bounded source-page context into every generation attempt", async () => {
+    const root = await temporaryRoot();
+    const enrichSource = vi.fn(async () =>
+      "Confirmed source reporting contains enough detailed factual context for drafting."
+    );
+    const generate = vi.fn(async () => generated);
+
+    const result = await run(root, dependencies({
+      enrichSource,
+      generate,
+    }));
+
+    expect(result.status).toBe("completed");
+    expect(enrichSource).toHaveBeenCalledTimes(1);
+    expect(enrichSource).toHaveBeenCalledWith(
+      story,
+      expect.objectContaining({ signal: undefined }),
+    );
+    expect(generate).toHaveBeenCalledWith(
+      story,
+      expect.objectContaining({
+        sourceContext:
+          "Confirmed source reporting contains enough detailed factual context for drafting.",
+      }),
+    );
   });
 
   it("corrects generation on the second attempt from the original story", async () => {

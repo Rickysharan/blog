@@ -11,6 +11,7 @@ import type { DraftDocument, DraftRef } from "@/lib/drafts/types";
 import { parseArticleFile } from "@/lib/content/schema";
 import { validateDeliverable } from "@/lib/pipeline/deliverable";
 import { fetchTrendingStories, writeTrendingQueue } from "@/lib/pipeline/fetch";
+import { fetchSourceContext } from "@/lib/pipeline/source-context";
 import {
   buildDraftMdx,
   GenerationValidationError,
@@ -53,9 +54,19 @@ export interface LocalRunDependencies {
   acquireLock(options: { lockPath: string }): Promise<WriterLock>;
   ensureModel(options: { model: string }): Promise<RuntimeCheckResult>;
   discover(options: { contentRoot: string }): Promise<FetchTrendingResult>;
+  enrichSource(
+    story: QueueStory,
+    options: { signal?: AbortSignal },
+  ): Promise<string | undefined>;
   generate(
     story: QueueStory,
-    options: { model: string; attempt: number; validationReason?: string; signal?: AbortSignal },
+    options: {
+      model: string;
+      attempt: number;
+      validationReason?: string;
+      sourceContext?: string;
+      signal?: AbortSignal;
+    },
   ): Promise<GeneratedDraftContent>;
   findPhotos(story: QueueStory, tags: string[]): Promise<PhotoSearchResult>;
   deliver(
@@ -94,9 +105,13 @@ const defaultDependencies: LocalRunDependencies = {
   acquireLock: (options) => acquireWriterLock(options),
   ensureModel: (options) => ensureLocalModel(options),
   discover: (options) => fetchTrendingStories(options),
+  enrichSource: (story, options) => fetchSourceContext(story, {
+    signal: options.signal,
+  }),
   generate: (story, options) => requestOllamaDraft(story, {
     model: options.model,
     validationReason: options.validationReason,
+    sourceContext: options.sourceContext,
     signal: options.signal,
   }),
   findPhotos: (story, tags) => findRequiredArticlePhotos(story, tags),
@@ -545,6 +560,11 @@ export async function runLocalWriter(
         await persistAndEmit("discovery", "progress", "Selected a recent source story.");
         if (options.signal?.aborted) return await cancelled("discovery");
 
+        const sourceContext = await deps.enrichSource(selectedStory, {
+          signal: options.signal,
+        });
+        if (options.signal?.aborted) return await cancelled("discovery");
+
         let validationReason: string | undefined;
         for (let attempt = 1; attempt <= 3; attempt += 1) {
           try {
@@ -552,6 +572,7 @@ export async function runLocalWriter(
               model: env.OLLAMA_MODEL?.trim() ?? "",
               attempt,
               validationReason,
+              sourceContext,
               signal: options.signal,
             });
             generatedDraft = generated;
