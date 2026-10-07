@@ -5,7 +5,7 @@ import type { EditorialInventory } from "@omnilede/editorial";
 import { buildCategorySummaries } from "./category-summary";
 
 describe("buildCategorySummaries", () => {
-  it("always returns all six ordered categories and treats absent content as real zero counts", () => {
+  it("always returns all seven ordered categories and treats absent content as real zero counts", () => {
     const inventory: EditorialInventory = {
       source: "github",
       version: "a".repeat(40),
@@ -18,7 +18,7 @@ describe("buildCategorySummaries", () => {
     const summaries = buildCategorySummaries(inventory, { now: new Date("2026-10-03T12:00:00.000Z") });
 
     expect(summaries.map(({ category }) => category)).toEqual([
-      "anime", "movies", "politics", "sports", "finance", "share-market"
+      "anime", "movies", "politics", "sports", "finance", "share-market", "top-10"
     ]);
     expect(summaries.find(({ category }) => category === "sports")).toMatchObject({
       publishedCount: 1,
