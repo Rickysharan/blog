@@ -363,7 +363,7 @@ export function buildDraftMdx(
     date: safeStory.date.slice(0, 10),
     category: safeStory.category,
     tags: safeGenerated.tags,
-    author: "OmniLede Editorial",
+    author: "Ricky Sharan",
     excerpt: safeGenerated.excerpt,
     coverImage: safeStory.category === "top-10" && photos[0]
       ? photos[0].url

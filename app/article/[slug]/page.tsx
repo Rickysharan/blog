@@ -25,6 +25,7 @@ import { buildNewsArticleJsonLd, serializeJsonLd } from "@/lib/seo/json-ld";
 import { buildBreadcrumbListJsonLd } from "@/lib/seo/site-json-ld";
 import { getQualifiedTopics } from "@/lib/content/topics";
 import { getCategory } from "@/lib/config/categories";
+import { getAuthorProfile } from "@/lib/config/authors";
 
 type ArticlePageProps = { params: Promise<{ slug: string }> };
 
@@ -47,13 +48,14 @@ export async function generateMetadata({
     notFound();
   }
   const canonical = `${SITE_CONFIG.url}/article/${article.slug}`;
+  const authorProfile = getAuthorProfile(article.author);
 
   return {
     title: article.title,
     description: article.excerpt,
     alternates: { canonical },
     other: { "content-language": article.language ?? "en" },
-    authors: [{ name: article.author }],
+    authors: [{ name: article.author, ...(authorProfile ? { url: `${SITE_CONFIG.url}${authorProfile.path}` } : {}) }],
     openGraph: {
       type: "article",
       title: article.title,
@@ -88,6 +90,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     Promise.resolve(getRelatedArticles(article, allArticles, 3)),
   ]);
   const jsonLd = buildNewsArticleJsonLd(article, SITE_CONFIG);
+  const authorProfile = getAuthorProfile(article.author);
   const breadcrumbs = buildBreadcrumbListJsonLd(SITE_CONFIG, [
     { name: "Home", path: "/" },
     { name: getCategory(article.category)?.label ?? article.category, path: `/category/${article.category}` },
@@ -123,6 +126,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
             <div className="mt-5">
               <ArticleMeta
                 author={article.author}
+                authorHref={authorProfile?.path}
                 date={article.date}
                 modifiedDate={article.modifiedDate}
                 readTime={article.readTime}

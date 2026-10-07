@@ -8,7 +8,7 @@ const article = {
   date: "2026-09-30",
   category: "world",
   tags: ["Organisation", "Place"],
-  author: "OmniLede Editorial",
+  author: "Ricky Sharan",
   excerpt: "A short explanation.",
   coverImage: "/images/articles/world.svg",
   readTime: 2,
@@ -34,7 +34,7 @@ vi.mock("@/lib/content/mdx", () => ({
   )),
 }));
 vi.mock("@/components/articles/article-body", () => ({ ArticleBody: ({ children }: { children: React.ReactNode }) => <div>{children}</div> }));
-vi.mock("@/components/articles/article-meta", () => ({ ArticleMeta: () => <div /> }));
+vi.mock("@/components/articles/article-meta", () => ({ ArticleMeta: (props: { author: string; authorHref?: string }) => <div data-author-href={props.authorHref}>{props.author}</div> }));
 vi.mock("@/components/articles/category-label", () => ({ CategoryLabel: () => <div /> }));
 vi.mock("@/components/articles/contributor-attribution", () => ({ ContributorAttribution: () => null }));
 vi.mock("@/components/articles/related-articles", () => ({ RelatedArticles: () => null }));
@@ -56,5 +56,6 @@ describe("article page canonical title and source", () => {
 
     expect(screen.getAllByRole("heading", { level: 1, name: article.title })).toHaveLength(1);
     expect(screen.getAllByRole("link", { name: article.sourceName })).toHaveLength(1);
+    expect(screen.getByText("Ricky Sharan")).toHaveAttribute("data-author-href", "/author/ricky-sharan");
   });
 });

@@ -1,4 +1,5 @@
 import type { ArticleSummary } from "@/lib/content/schema";
+import { getAuthorProfile } from "@/lib/config/authors";
 
 interface JsonLdSite {
   name: string;
@@ -11,6 +12,7 @@ export function buildNewsArticleJsonLd(
   site: JsonLdSite,
 ): Record<string, unknown> {
   const canonical = `${site.url}/article/${article.slug}`;
+  const authorProfile = getAuthorProfile(article.author);
   return {
     "@context": "https://schema.org",
     "@type": "NewsArticle",
@@ -29,6 +31,7 @@ export function buildNewsArticleJsonLd(
       "@type": article.author === site.publisher ? "Organization" : "Person",
       ...(article.author === site.publisher ? { "@id": `${site.url}/#organization` } : {}),
       name: article.author,
+      ...(authorProfile ? { url: `${site.url}${authorProfile.path}` } : {}),
     },
     publisher: {
       "@type": "Organization",

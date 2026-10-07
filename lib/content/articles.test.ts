@@ -135,6 +135,17 @@ describe("article collection helpers", () => {
     expect(articles.every(({ language }) => language === "en")).toBe(true);
   });
 
+  it("uses Ricky Sharan for owned articles without overwriting contributor attribution", async () => {
+    const articles = await getAllArticles();
+    for (const article of articles) {
+      if (article.contributorName) {
+        expect(article.author).toBe(article.contributorName);
+      } else {
+        expect(article.author).toBe("Ricky Sharan");
+      }
+    }
+  });
+
   it("ranks related stories by shared tags and then recency", () => {
     const candidates: ArticleSummary[] = [
       {

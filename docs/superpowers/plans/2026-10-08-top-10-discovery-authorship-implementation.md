@@ -163,27 +163,27 @@ The implementer and reviewer must explicitly test these five failure modes:
 - Add `getAuthorProfile(name: string)` so contributor names can remain unlinked unless a real profile exists.
 - `ArticleMeta` accepts an optional `authorHref` and renders a normal byline when absent.
 
-- [ ] **Step 1: Write failing author registry, byline, page, JSON-LD, and generation tests**
+- [x] **Step 1: Write failing author registry, byline, page, JSON-LD, and generation tests**
 
   Assert that Ricky's byline links to `/author/ricky-sharan`; the page identifies him as editor and publisher, explains local AI draft assistance and human review, and contains no invented credentials; generated drafts use `Ricky Sharan`; JSON-LD emits `Person` with the absolute author URL; contributor fixtures keep their original authors.
 
-- [ ] **Step 2: Run the focused tests and confirm failure**
+- [x] **Step 2: Run the focused tests and confirm failure**
 
   Run: `npx vitest run lib/config/authors.test.ts components/articles/article-meta.test.tsx app/author/'[slug]'/page.test.tsx app/article/'[slug]'/page.test.tsx lib/seo/json-ld.test.ts lib/pipeline/generate.test.ts lib/content/articles.test.ts`
 
-- [ ] **Step 3: Implement the shared author profile and author route**
+- [x] **Step 3: Implement the shared author profile and author route**
 
   Generate metadata and static params from the registry. Keep the page text factual: Ricky Sharan is OmniLede's editor and publisher; local AI may assist with private drafts; Ricky reviews and decides whether to publish each article.
 
-- [ ] **Step 4: Connect visible byline, metadata, and structured data**
+- [x] **Step 4: Connect visible byline, metadata, and structured data**
 
   Resolve the profile once on the article page, pass the byline link to `ArticleMeta`, include the author URL in Next metadata, and generate matching NewsArticle JSON-LD. Preserve contributor attribution and organization publisher JSON-LD.
 
-- [ ] **Step 5: Migrate owned content narrowly**
+- [x] **Step 5: Migrate owned content narrowly**
 
   Replace only exact YAML lines `author: OmniLede Editorial` in OmniLede-owned article and draft files. Add a test that owned content now uses Ricky while any content with contributor fields retains its supplied author.
 
-- [ ] **Step 6: Re-run focused tests and content validation**
+- [x] **Step 6: Re-run focused tests and content validation**
 
   Run: `npx vitest run lib/config/authors.test.ts components/articles/article-meta.test.tsx app/author/'[slug]'/page.test.tsx app/article/'[slug]'/page.test.tsx lib/seo/json-ld.test.ts lib/pipeline/generate.test.ts lib/content/articles.test.ts`
 
@@ -191,7 +191,7 @@ The implementer and reviewer must explicitly test these five failure modes:
 
   Expected: PASS.
 
-- [ ] **Step 7: Commit truthful authorship**
+- [x] **Step 7: Commit truthful authorship**
 
   Commit: `feat: add ricky sharan author profile`
 

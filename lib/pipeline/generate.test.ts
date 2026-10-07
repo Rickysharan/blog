@@ -164,6 +164,7 @@ describe("buildDraftMdx", () => {
         .endsWith("Source: [Example Outlet](https://example.com/story)"),
     ).toBe(true);
     expect(() => parseArticleFile(mdx, expectedPath)).not.toThrow();
+    expect(parseArticleFile(mdx, expectedPath).author).toBe("Ricky Sharan");
   });
 
   it("rejects unsafe MDX emitted by the model", () => {

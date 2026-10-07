@@ -27,6 +27,12 @@ const site = {
 };
 
 describe("buildNewsArticleJsonLd", () => {
+  it("uses Ricky Sharan's visible author identity and absolute profile URL", () => {
+    expect(buildNewsArticleJsonLd({ ...article, author: "Ricky Sharan" }, site)).toMatchObject({
+      author: { "@type": "Person", name: "Ricky Sharan", url: "https://news.example/author/ricky-sharan" },
+    });
+  });
+
   it("emits a canonical NewsArticle object with publisher and source URL", () => {
     expect(buildNewsArticleJsonLd({ ...article, language: "en-IN" }, site)).toMatchObject({
       "@context": "https://schema.org",

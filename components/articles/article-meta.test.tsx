@@ -11,4 +11,12 @@ describe("ArticleMeta", () => {
     expect(document.querySelector('time[datetime="2026-09-01"]')).not.toBeNull();
     expect(document.querySelector('time[datetime="2026-10-04"]')).not.toBeNull();
   });
+
+  it("links a registered author while leaving an unregistered contributor as text", () => {
+    const { rerender } = render(<ArticleMeta author="Ricky Sharan" authorHref="/author/ricky-sharan" date="2026-10-08" readTime={4} />);
+    expect(screen.getByRole("link", { name: "Ricky Sharan" })).toHaveAttribute("href", "/author/ricky-sharan");
+    rerender(<ArticleMeta author="Ada Contributor" date="2026-10-08" readTime={4} />);
+    expect(screen.queryByRole("link", { name: "Ada Contributor" })).not.toBeInTheDocument();
+    expect(screen.getByText("Ada Contributor")).toBeInTheDocument();
+  });
 });
