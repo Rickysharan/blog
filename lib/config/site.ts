@@ -12,6 +12,7 @@ const normalizeSiteUrl = (value: string | undefined): string => {
 export const SITE_CONFIG = {
   name: "OmniLede",
   shortName: "OmniLede",
+  homeTitle: "OmniLede | Global News Explainers and Verified Updates",
   description:
     "A global newsroom for anime, movies, politics, sports, finance and share markets.",
   url: normalizeSiteUrl(process.env.NEXT_PUBLIC_SITE_URL),

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { buildBreadcrumbListJsonLd, buildOrganizationJsonLd } from "./site-json-ld";
+import { buildBreadcrumbListJsonLd, buildOrganizationJsonLd, buildWebsiteJsonLd } from "./site-json-ld";
 import { serializeJsonLd } from "./json-ld";
 
 const site = { name: "OmniLede", url: "https://news.example", publisher: "OmniLede Editorial" };
@@ -10,6 +10,12 @@ describe("site JSON-LD", () => {
     expect(buildOrganizationJsonLd(site)).toMatchObject({
       "@context": "https://schema.org", "@type": "Organization", "@id": "https://news.example/#organization",
       name: "OmniLede Editorial", url: "https://news.example", logo: { "@type": "ImageObject", url: "https://news.example/icons/icon-512.png" },
+    });
+    expect(buildWebsiteJsonLd({ ...site, description: "Global explainers", locale: "en_GB" })).toMatchObject({
+      "@context": "https://schema.org", "@type": "WebSite", "@id": "https://news.example/#website",
+      name: "OmniLede", alternateName: "OmniLede Editorial", url: "https://news.example",
+      description: "Global explainers", inLanguage: "en-GB",
+      publisher: { "@id": "https://news.example/#organization" },
     });
     expect(buildBreadcrumbListJsonLd(site, [
       { name: "Home", path: "/" }, { name: "Politics", path: "/category/politics" }, { name: "Story", path: "/article/story" },

@@ -58,5 +58,9 @@ describe("public discovery metadata", () => {
     const rules = Array.isArray(metadata.rules) ? metadata.rules : [metadata.rules];
 
     expect(rules[0]?.disallow).toEqual(expect.arrayContaining(["/admin/", "/api/"]));
+    expect(metadata.sitemap).toEqual(expect.arrayContaining([
+      expect.stringMatching(/\/sitemap\.xml$/),
+      expect.stringMatching(/\/news-sitemap\.xml$/),
+    ]));
   });
 });

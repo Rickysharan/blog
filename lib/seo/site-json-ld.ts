@@ -1,4 +1,5 @@
 type SiteIdentity = { name: string; url: string; publisher: string };
+type WebsiteIdentity = SiteIdentity & { description: string; locale: string };
 
 export type Breadcrumb = { name: string; path: string };
 
@@ -14,6 +15,20 @@ export function buildOrganizationJsonLd(site: SiteIdentity): Record<string, unkn
       "@type": "ImageObject",
       url: `${site.url}/icons/icon-512.png`,
     },
+  };
+}
+
+export function buildWebsiteJsonLd(site: WebsiteIdentity): Record<string, unknown> {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "@id": `${site.url}/#website`,
+    name: site.name,
+    alternateName: site.publisher,
+    url: site.url,
+    description: site.description,
+    inLanguage: site.locale.replace("_", "-"),
+    publisher: { "@id": `${site.url}/#organization` },
   };
 }
 

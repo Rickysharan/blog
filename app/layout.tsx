@@ -11,7 +11,7 @@ import { THEME_BOOTSTRAP } from "@/components/theme/theme-script";
 import { adsenseServingConfig, commercialFeaturesEnabled } from "@/lib/config/commercial";
 import { SITE_CONFIG } from "@/lib/config/site";
 import { serializeJsonLd } from "@/lib/seo/json-ld";
-import { buildOrganizationJsonLd } from "@/lib/seo/site-json-ld";
+import { buildOrganizationJsonLd, buildWebsiteJsonLd } from "@/lib/seo/site-json-ld";
 
 import "./globals.css";
 
@@ -30,7 +30,7 @@ const serif = Newsreader({
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_CONFIG.url),
   title: {
-    default: SITE_CONFIG.name,
+    default: SITE_CONFIG.homeTitle,
     template: `%s | ${SITE_CONFIG.name}`,
   },
   description: SITE_CONFIG.description,
@@ -45,7 +45,7 @@ export const metadata: Metadata = {
   },
   appleWebApp: {
     capable: true,
-    title: SITE_CONFIG.name,
+    title: SITE_CONFIG.homeTitle,
     statusBarStyle: "default",
     startupImage: [
       { url: "/splash/apple-splash-1170-2532.png", media: "(device-width: 390px)" },
@@ -59,7 +59,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     siteName: SITE_CONFIG.name,
-    title: SITE_CONFIG.name,
+    title: SITE_CONFIG.homeTitle,
     description: SITE_CONFIG.description,
     url: SITE_CONFIG.url,
     locale: SITE_CONFIG.locale,
@@ -94,6 +94,10 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: serializeJsonLd(buildOrganizationJsonLd(SITE_CONFIG)) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(buildWebsiteJsonLd(SITE_CONFIG)) }}
         />
         <Script id="omnilede-theme-bootstrap" strategy="beforeInteractive">
           {THEME_BOOTSTRAP}
