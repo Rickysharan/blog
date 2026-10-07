@@ -10,6 +10,7 @@ import {
   type PublishResult,
 } from "./types";
 import { validateDraftMdx, validateDraftRef } from "./validation";
+import { PublishReadinessError, validatePublishReadyArticle } from "../content/publish-readiness";
 import {
   GitDataClient,
   GitDataClientError,
@@ -217,7 +218,7 @@ export class GitHubDraftRepository implements DraftRepository {
     expectedVersion?: string,
   ): Promise<PublishResult> {
     const ref = validateDraftRef(refInput);
-    validateDraftMdx(ref, mdx);
+    const article = validateDraftMdx(ref, mdx);
     const snapshot = await this.snapshot();
     this.assertExpectedVersion(snapshot, expectedVersion);
     this.findDraft(snapshot, ref);
@@ -227,6 +228,14 @@ export class GitHubDraftRepository implements DraftRepository {
         "conflict",
         "A published article with this slug already exists",
       );
+    }
+    try {
+      validatePublishReadyArticle(article);
+    } catch (error) {
+      if (error instanceof PublishReadinessError) {
+        throw new DraftRepositoryError("invalid_input", error.message, { cause: error });
+      }
+      throw error;
     }
     const blobSha = await this.createBlob(mdx);
     const commit = await this.commitMutation(

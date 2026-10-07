@@ -240,6 +240,31 @@ it("does not expose Mac planner refresh in an ordinary browser", () => {
   expect(postMessage).not.toHaveBeenCalled();
 });
 
+it("shows Needs research as retryable and never delivered", async () => {
+  window.__OMNILEDE_NATIVE__ = { available: true };
+  window.webkit = { messageHandlers: { omnilede: { postMessage } } };
+  const ids = ["plan-refresh-1234", "top-ten-write-123"];
+  render(<TaskList initialTasks={[task]} fetcher={fetcher} nativeRequestId={() => ids.shift()!} />);
+  fireEvent.click(screen.getByRole("button", { name: /refresh from this mac/i }));
+  window.dispatchEvent(new CustomEvent(NATIVE_PLAN_EVENT, { detail: {
+    requestId: "plan-refresh-1234", date: "2026-10-03", completedCount: 0, totalTasks: 3,
+    draftCount: 0, publishedCount: 24,
+    tasks: [
+      { category: "top-10", label: "Top 10", reason: "Needs a sourced list", status: "todo" },
+      { category: "sports", label: "Sports", reason: "Recent coverage", status: "draft-ready" },
+      { category: "finance", label: "Finance", reason: "Recent coverage", status: "published" },
+    ],
+  } }));
+  fireEvent.click(await screen.findByRole("button", { name: /start writing top 10/i }));
+  window.dispatchEvent(new CustomEvent("omnilede:native-status", { detail: {
+    category: "top-10", requestId: "top-ten-write-123", phase: "needs-research", progress: 35,
+    etaSeconds: null, delivery: "not-delivered", error: "Needs research",
+  } }));
+  expect(await screen.findByRole("alert")).toHaveTextContent("Needs research");
+  expect(screen.getByRole("button", { name: /try again top 10/i })).toBeEnabled();
+  expect(screen.queryByText(/draft delivered/i)).not.toBeInTheDocument();
+});
+
 it("completes a task only after the server accepts the action", async () => {
   fetcher.mockResolvedValueOnce(Response.json({ task: { ...task, state: "completed", completedAt: "2026-10-03T12:00:00.000Z" } }));
   render(<TaskList initialTasks={[task]} fetcher={fetcher} />);

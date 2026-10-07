@@ -184,6 +184,7 @@ function safeTerminalMessage(category: RecoveryCategory): string {
   switch (category) {
     case "discovery-unavailable": return "No current or saved source story is available. Your existing queue was preserved.";
     case "generation-invalid": return "The local model could not produce a valid article after three attempts.";
+    case "needs-research": return "Needs research";
     case "generation-unavailable": return "The local model stopped responding after repair attempts.";
     case "insufficient-images": return "The article text was saved, but two suitable credited pictures could not be found.";
     case "local-model-missing": return "The configured local model is not installed. Install it in Ollama, then try again.";
@@ -591,6 +592,9 @@ export async function runLocalWriter(
           } catch (error) {
             if (options.signal?.aborted) return await cancelled("generation");
             const validation = error instanceof GenerationValidationError;
+            if (validation && error.category === "needs-research") {
+              return await humanRequired("generation", "needs-research", attempt);
+            }
             validationReason = validation ? error.category : "local-model-unavailable";
             if (attempt < 3) {
               if (!validation) {

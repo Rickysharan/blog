@@ -101,41 +101,41 @@ The implementer and reviewer must explicitly test these five failure modes:
 - Keep `validateDraftMdx` permissive enough to save an incomplete private Top 10 draft; call publish-readiness validation only inside `GitHubDraftRepository.publish` and generation's ready-draft path.
 - For `top-10`, generation must require an introduction, exactly ten sequential second-level headings matching `## 1. …` through `## 10. …`, a final `## Why it matters` section, visible source attribution, and two or three credited related images before reporting a ready draft.
 
-- [ ] **Step 1: Write failing shared publish-readiness tests**
+- [x] **Step 1: Write failing shared publish-readiness tests**
 
   Cover a valid Top 10 article and failures for nine entries, eleven entries, duplicated numbers, skipped numbers, reordered numbers, missing introduction, missing `Why it matters`, and missing visible source attribution. Prove that a non-Top-10 article is unaffected.
 
-- [ ] **Step 2: Write failing repository and writer tests**
+- [x] **Step 2: Write failing repository and writer tests**
 
   Prove that Save accepts an incomplete private Top 10 draft, Publish rejects it without mutating GitHub, a supported ten-entry result becomes a draft, and insufficient source/image material produces `Needs research` while preserving the queue and any safe work.
 
-- [ ] **Step 3: Run the focused tests and confirm they fail for missing behavior**
+- [x] **Step 3: Run the focused tests and confirm they fail for missing behavior**
 
   Run: `npx vitest run packages/editorial/src/content/publish-readiness.test.ts packages/editorial/src/drafts/github-repository.test.ts lib/pipeline/generate.test.ts lib/pipeline/local-run.test.ts apps/ops/components/today/task-list.test.tsx`
 
-- [ ] **Step 4: Implement shared publication validation**
+- [x] **Step 4: Implement shared publication validation**
 
   Parse numbered `##` headings deterministically, ignore `## Why it matters`, reject duplicates and gaps, and return a safe editorial validation error. Invoke it immediately before the GitHub publish mutation, after the expected-version and draft checks but before blob creation.
 
-- [ ] **Step 5: Implement the Top 10 writer contract**
+- [x] **Step 5: Implement the Top 10 writer contract**
 
   Add a category-specific prompt that forbids inventing list entries, requires exactly ten supported entries, and tells the model to return insufficient-research failure rather than padding. Validate the model response before MDX creation. Keep the final human Publish step unchanged.
 
-- [ ] **Step 6: Preserve the requested image behavior without a fake category asset**
+- [x] **Step 6: Preserve the requested image behavior without a fake category asset**
 
   Count the first verified reusable photo as the cover and place the remaining verified photos through the body, preserving Wikimedia credit text. Require at least two verified photos for a ready local Top 10 draft; allow a private Needs research state when this cannot be met. Do not add a handcrafted placeholder image.
 
-- [ ] **Step 7: Surface `Needs research` in Today and native status**
+- [x] **Step 7: Surface `Needs research` in Today and native status**
 
   Map the new validation outcome to a terminal human-required status. Show the message, keep Retry/Cancel and existing work visible, and never label the item delivered.
 
-- [ ] **Step 8: Re-run focused tests**
+- [x] **Step 8: Re-run focused tests**
 
   Run: `npx vitest run packages/editorial/src/content/publish-readiness.test.ts packages/editorial/src/drafts/github-repository.test.ts lib/pipeline/generate.test.ts lib/pipeline/local-run.test.ts apps/ops/components/today/task-list.test.tsx`
 
   Expected: PASS.
 
-- [ ] **Step 9: Commit publishing safeguards**
+- [x] **Step 9: Commit publishing safeguards**
 
   Commit: `feat: validate top 10 drafts before publishing`
 

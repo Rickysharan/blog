@@ -76,7 +76,7 @@ async function run(
   deps: LocalRunDependencies,
   events: LocalWriterEvent[] = [],
   signal?: AbortSignal,
-  category?: "anime" | "movies" | "politics" | "sports" | "finance" | "share-market",
+  category?: "anime" | "movies" | "politics" | "sports" | "finance" | "share-market" | "top-10",
 ) {
   return runLocalWriter({
     projectRoot: root,
@@ -360,6 +360,22 @@ describe("resumable local writer controller", () => {
     expect(generate).toHaveBeenCalledTimes(3);
     expect(JSON.stringify({ result, events })).not.toContain("github_pat_secretvalue");
     expect(await readFile(path.join(root, ".audit/desktop-writer.log"), "utf8")).not.toContain("github_pat_secretvalue");
+  });
+
+  it("reports Needs research for an unsupported Top 10 without consuming its queue item", async () => {
+    const root = await temporaryRoot();
+    const topStory = { ...story, category: "top-10" as const, sourceUrl: "https://example.com/top-ten" };
+    const queuePath = path.join(root, "content/queue/trending.json");
+    await writeFile(queuePath, JSON.stringify([topStory]), "utf8");
+    const generate = vi.fn(async () => {
+      throw new GenerationValidationError("needs-research", "The source does not support ten entries");
+    });
+
+    const result = await run(root, dependencies({ generate }), [], undefined, "top-10");
+
+    expect(result).toMatchObject({ status: "human-required", errorCategory: "needs-research", message: "Needs research" });
+    expect(generate).toHaveBeenCalledTimes(1);
+    expect(JSON.parse(await readFile(queuePath, "utf8"))).toEqual(expect.arrayContaining([topStory]));
   });
 
   it("cancels without starting discovery or generation", async () => {

@@ -22,6 +22,7 @@ export const RECOVERY_CATEGORIES = [
   "local-model-unavailable",
   "discovery-unavailable",
   "generation-invalid",
+  "needs-research",
   "generation-unavailable",
   "insufficient-images",
   "validation-failed",

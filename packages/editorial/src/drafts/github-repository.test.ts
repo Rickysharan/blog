@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createGitHubDraftRepository, DraftRepositoryError } from "../index";
 import { makeValidMdx } from "../test-fixtures";
+import matter from "gray-matter";
 
 const A = "a".repeat(40);
 const B = "b".repeat(40);
@@ -11,6 +12,25 @@ const COMMIT = "f".repeat(40);
 const ref = { category: "anime", filename: "story.mdx" } as const;
 const draftPath = "content/drafts/anime/story.mdx";
 const articlePath = "content/articles/anime/story.mdx";
+const topRef = { category: "top-10", filename: "top-story.mdx" } as const;
+const topDraftPath = "content/drafts/top-10/top-story.mdx";
+
+function topTenMdx(entryCount = 10): string {
+  const body = [
+    "A grounded introduction to the ten choices.",
+    ...Array.from({ length: entryCount }, (_, index) => `## ${index + 1}. Choice ${index + 1}\n\nSupported detail.`),
+    "## Why it matters\n\nThis comparison makes the source easier to use.",
+    "![First](https://upload.wikimedia.org/first.jpg)\n\nPhoto: One / [Source](https://commons.wikimedia.org/first).",
+    "![Second](https://upload.wikimedia.org/second.jpg)\n\nPhoto: Two / [Source](https://commons.wikimedia.org/second).",
+    "Source: [Example Outlet](https://example.com/story)",
+  ].join("\n\n");
+  return matter.stringify(body, {
+    title: "A Valid Top Ten Draft", slug: "top-story", date: "2026-10-08", category: "top-10",
+    tags: ["Lists", "Global"], author: "Ricky Sharan", excerpt: "A supported list.",
+    coverImage: "https://upload.wikimedia.org/first.jpg", readTime: 5,
+    sourceName: "Example Outlet", sourceUrl: "https://example.com/story",
+  });
+}
 
 function github(paths = [draftPath, "content/drafts/anime/other.mdx"]) {
   const calls: { url: string; method: string; body: Record<string, unknown> }[] = [];
@@ -66,6 +86,16 @@ describe("shared GitHub draft repository", () => {
     ] });
     expect(calls.find(call => call.url.endsWith("/git/commits"))?.body).toEqual({ message: "Publish article: story", tree: NEW_TREE, parents: [A] });
     expect(calls.find(call => call.method === "PATCH")?.body).toEqual({ sha: COMMIT, force: false });
+  });
+
+  it("saves an incomplete Top 10 privately but rejects publishing it before any mutation", async () => {
+    const incomplete = topTenMdx(9);
+    const saved = github([topDraftPath]);
+    await expect(saved.repository.save(topRef, incomplete, A)).resolves.toMatchObject({ mdx: incomplete });
+
+    const publishing = github([topDraftPath]);
+    await expect(publishing.repository.publish(topRef, incomplete, A)).rejects.toMatchObject({ code: "invalid_input" });
+    expect(publishing.calls.filter((call) => call.method !== "GET")).toEqual([]);
   });
 
   it("discards only the selected draft without creating a blob", async () => {
