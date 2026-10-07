@@ -216,11 +216,11 @@ describe("desktop daily plan", () => {
 
   it("creates a new local-date plan without changing yesterday's plan", async () => {
     const root = await temporaryRoot();
-    const yesterday = await getDailyPlanSnapshot(input(root, new Date("2026-10-02T23:55:00+01:00")));
+    const yesterday = await getDailyPlanSnapshot(input(root, new Date(2026, 9, 2, 23, 55)));
     const yesterdayPath = path.join(root, ".audit", "daily-plans", "2026-10-02.json");
     const yesterdayBytes = await readFile(yesterdayPath, "utf8");
 
-    const today = await getDailyPlanSnapshot(input(root, new Date("2026-10-03T00:05:00+01:00")));
+    const today = await getDailyPlanSnapshot(input(root, new Date(2026, 9, 3, 0, 5)));
 
     expect(yesterday.date).toBe("2026-10-02");
     expect(today.date).toBe("2026-10-03");
