@@ -21,6 +21,8 @@ export function ContentWorkspace({ initialDrafts, initialHistory = [], publicSit
   const [query, setQuery] = useState("");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [preview, setPreview] = useState(false);
   const [pending, setPending] = useState(false);
   const busy = useRef(false);
@@ -88,8 +90,18 @@ export function ContentWorkspace({ initialDrafts, initialHistory = [], publicSit
   }
   const visibleDrafts = drafts.filter(draft => (state === "all" || state === "private") && matches(draft.category, draft.date, `${draft.title} ${draft.excerpt} ${keyOf(draft.ref)}`));
   const visibleHistory = history.filter(event => (state === "all" || ({ save: "private", publish: "published", discard: "discarded" }[event.action]) === state) && matches(event.category, event.created_at, event.content_ref));
+  const activeFilterCount = [query.trim(), category !== "all", state !== "all", fromDate, toDate].filter(Boolean).length;
   return <div className="content-workspace">
-    <div className="content-filters">
+    <button
+      aria-controls="content-filters-panel"
+      aria-expanded={filtersOpen}
+      className="content-disclosure-button"
+      onClick={() => setFiltersOpen(value => !value)}
+      type="button"
+    >
+      Filters · {activeFilterCount} active
+    </button>
+    <div className="content-filters" hidden={!filtersOpen} id="content-filters-panel">
       <label>Search content<input value={query} onChange={event => setQuery(event.target.value)} placeholder="Title, excerpt or filename" /></label>
       <label>Category<select value={category} onChange={event => setCategory(event.target.value)}><option value="all">All categories</option>{CATEGORIES.map(item => <option key={item.slug} value={item.slug}>{item.label}</option>)}</select></label>
       <label>State<select value={state} onChange={event => setState(event.target.value)}><option value="all">All states</option><option value="private">Private</option><option value="published">Published</option><option value="discarded">Discarded</option></select></label>
@@ -117,6 +129,17 @@ export function ContentWorkspace({ initialDrafts, initialHistory = [], publicSit
         ))}</ol>
       </section>
     )}
-    <section className="content-history"><h2>Publication history</h2><p>Latest 100 actions. Metadata only; article contents stay in the content repository.</p>{visibleHistory.length ? <ol>{visibleHistory.map((event, index) => <li key={event.id ?? `${event.created_at}-${index}`}><strong>{event.action}</strong> <span>{event.content_ref}</span><p><time>{event.created_at}</time> · Actor: {event.actor_id}</p><p>Version <code>{event.prior_version}</code>{event.resulting_version && <> → <code>{event.resulting_version}</code></>}</p>{event.commit_url && <a target="_blank" rel="noreferrer" href={event.commit_url}>View commit</a>}</li>)}</ol> : <p>No recorded actions match these filters.</p>}</section>
+    <div className="content-history-disclosure">
+      <button
+        aria-controls="content-history-panel"
+        aria-expanded={historyOpen}
+        className="content-disclosure-button"
+        onClick={() => setHistoryOpen(value => !value)}
+        type="button"
+      >
+        Publication history · {visibleHistory.length} {visibleHistory.length === 1 ? "event" : "events"}
+      </button>
+      <section className="content-history" hidden={!historyOpen} id="content-history-panel"><h2>Publication history</h2><p>Latest 100 actions. Metadata only; article contents stay in the content repository.</p>{visibleHistory.length ? <ol>{visibleHistory.map((event, index) => <li key={event.id ?? `${event.created_at}-${index}`}><strong>{event.action}</strong> <span>{event.content_ref}</span><p><time>{event.created_at}</time> · Actor: {event.actor_id}</p><p>Version <code>{event.prior_version}</code>{event.resulting_version && <> → <code>{event.resulting_version}</code></>}</p>{event.commit_url && <a target="_blank" rel="noreferrer" href={event.commit_url}>View commit</a>}</li>)}</ol> : <p>No recorded actions match these filters.</p>}</section>
+    </div>
   </div>;
 }

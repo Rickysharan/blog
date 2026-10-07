@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { validateDraftMdx } from "@omnilede/editorial";
 import { makeValidMdx } from "../../../../packages/editorial/src/test-fixtures";
@@ -55,6 +56,52 @@ it("renders MDX expressions and HTML as inert preview text", async () => {
   expect(screen.getByRole("region", { name: "Article preview" }).querySelector("script")).toBeNull(); expect(fetcher).toHaveBeenCalledTimes(1);
 });
 
+it("collapses optional filters and history while preserving filter state and its active count", async () => {
+  const user = userEvent.setup();
+  render(<ContentWorkspace initialDrafts={[draft, second]} initialHistory={history} />);
+  const filters = screen.getByRole("button", { name: "Filters · 0 active" });
+  const publicationHistory = screen.getByRole("button", { name: "Publication history · 1 event" });
+  expect(filters).toHaveAttribute("aria-expanded", "false");
+  expect(publicationHistory).toHaveAttribute("aria-expanded", "false");
+  expect(document.getElementById("content-filters-panel")).not.toBeVisible();
+  expect(document.getElementById("content-history-panel")).not.toBeVisible();
+
+  await user.click(filters);
+  fireEvent.change(screen.getByLabelText("Category"), { target: { value: "movies" } });
+  fireEvent.change(screen.getByLabelText("Search content"), { target: { value: "update" } });
+  expect(screen.getByRole("button", { name: "Filters · 2 active" })).toHaveAttribute("aria-expanded", "true");
+  expect(screen.getByRole("button", { name: second.title })).toBeInTheDocument();
+
+  filters.focus();
+  await user.keyboard("{Enter}");
+  expect(filters).toHaveAttribute("aria-expanded", "false");
+  expect(screen.getByLabelText("Category")).toHaveValue("movies");
+  await user.click(filters);
+  expect(screen.getByLabelText("Search content")).toHaveValue("update");
+  expect(fetcher).not.toHaveBeenCalled();
+});
+
+it("keeps notices, editing, review, and publication controls outside collapsed regions", async () => {
+  const editor = await openEditor();
+  fireEvent.change(editor, { target: { value: `${mdx}\nchanged` } });
+  fetcher.mockResolvedValueOnce(Response.json({ message: "Could not save" }, { status: 500 }));
+  fireEvent.click(screen.getByRole("button", { name: "Save private draft" }));
+  const alert = await screen.findByRole("alert");
+  const filterPanel = document.getElementById("content-filters-panel")!;
+  const historyPanel = document.getElementById("content-history-panel")!;
+  for (const control of [
+    alert,
+    editor,
+    screen.getByRole("button", { name: "Save private draft" }),
+    screen.getByRole("button", { name: "Preview" }),
+    screen.getByRole("button", { name: "Publish…" }),
+    screen.getByRole("button", { name: "Discard…" })
+  ]) {
+    expect(filterPanel).not.toContainElement(control);
+    expect(historyPanel).not.toContainElement(control);
+  }
+});
+
 it("retains an actionable unrecorded discard receipt after a history failure and list refresh", async () => {
   await openEditor();
   const receipt = { actor_id: "operator", action: "discard", category: "anime", content_ref: "anime/story.mdx", prior_version: draft.version, resulting_version: "b".repeat(40), commit_url: `https://github.com/owner/repo/commit/${"b".repeat(40)}`, created_at: "2026-10-03T12:00:00Z" };
@@ -75,5 +122,6 @@ it("retains an actionable unrecorded discard receipt after a history failure and
   fireEvent.click(screen.getByRole("button", { name: "Refresh list" }));
   await waitFor(() => expect(screen.getByRole("button", { name: "Refresh list" })).not.toBeDisabled());
   expect(screen.getByRole("region", { name: "Action receipts awaiting history reconciliation" })).toHaveTextContent(receipt.resulting_version);
+  expect(document.getElementById("content-history-panel")).not.toContainElement(screen.getByRole("region", { name: "Action receipts awaiting history reconciliation" }));
   expect(fetcher.mock.calls.filter(([, init]) => init?.method === "POST")).toHaveLength(1);
 });
