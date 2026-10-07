@@ -18,12 +18,13 @@ it("keeps writing unavailable in Safari and retains review and publish guidance"
   expect(screen.getByText(/review and publish delivered drafts/i)).toBeInTheDocument();
 });
 
-it("offers all six categories in the native app without writing on mount or refresh", async () => {
+it("offers all seven categories in the native app without writing on mount or refresh", async () => {
   window.__OMNILEDE_NATIVE__ = { available: true };
   window.webkit = { messageHandlers: { omnilede: { postMessage } } };
   const { rerender } = render(<NativeWriterControls categories={CATEGORIES} />);
-  await waitFor(() => expect(screen.getAllByRole("button", { name: /start writing/i })).toHaveLength(6));
-  expect(CATEGORIES.map(({ label }) => screen.getByRole("group", { name: label }))).toHaveLength(6);
+  await waitFor(() => expect(screen.getAllByRole("button", { name: /start writing/i })).toHaveLength(7));
+  expect(CATEGORIES.map(({ label }) => screen.getByRole("group", { name: label }))).toHaveLength(7);
+  expect(screen.getByRole("group", { name: "Top 10" })).toBeInTheDocument();
   expect(postMessage).not.toHaveBeenCalled();
   rerender(<NativeWriterControls categories={CATEGORIES} refreshKey="new-inventory" />);
   expect(postMessage).not.toHaveBeenCalled();

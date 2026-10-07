@@ -116,11 +116,11 @@ describe("desktop daily plan", () => {
 
     const first = await getDailyPlanSnapshot(input(root));
     expect(first.date).toBe("2026-10-02");
-    expect(first.tasks.map((task) => task.category)).toEqual(["share-market", "sports", "movies"]);
+    expect(first.tasks.map((task) => task.category)).toEqual(["top-10", "share-market", "sports"]);
 
     await writeContent(contentRoot, "articles", "share-market", "shares-today", "2026-10-02");
     const second = await getDailyPlanSnapshot(input(root, new Date("2026-10-02T20:00:00+01:00")));
-    expect(second.tasks.map((task) => task.category)).toEqual(["share-market", "sports", "movies"]);
+    expect(second.tasks.map((task) => task.category)).toEqual(["top-10", "share-market", "sports"]);
   });
 
   it("assigns the newest existing draft and follows its exact filename through publication", async () => {

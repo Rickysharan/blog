@@ -6,7 +6,8 @@ export const CATEGORIES = [
   "politics",
   "sports",
   "finance",
-  "share-market"
+  "share-market",
+  "top-10"
 ] as const;
 
 export const SUBMISSION_STATUSES = [

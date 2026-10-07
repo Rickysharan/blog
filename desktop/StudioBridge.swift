@@ -5,6 +5,7 @@ import WebKit
 enum StudioWriterCategory: String, CaseIterable {
     case anime, movies, politics, sports, finance
     case shareMarket = "share-market"
+    case top10 = "top-10"
 }
 
 enum StudioWriteMode: Equatable {

@@ -126,7 +126,8 @@ struct StudioBridgeTests {
                 hasUserActivation: true
             ), "accepts the supported category \(category.rawValue)")
         }
-        try expect(starts.filter { if case .write = $0 { return true }; return false }.count == 6, "accepts exactly all six writer categories")
+        try expect(StudioWriterCategory.allCases.map(\.rawValue).contains("top-10"), "includes the Top 10 writer category")
+        try expect(starts.filter { if case .write = $0 { return true }; return false }.count == 7, "accepts exactly all seven writer categories")
         try expect(bridge.handle(body: ["action": "cancel", "requestId": "cancel-12345678"], sourceURL: URL(string: "https://studio.example.com/categories")!, isMainFrame: true, hasUserActivation: true), "accepts activated cancellation")
         try expect(bridge.handle(body: ["action": "refresh", "requestId": "refresh-12345678"], sourceURL: URL(string: "https://studio.example.com/categories")!, isMainFrame: true, hasUserActivation: true), "accepts activated status refresh")
 
@@ -205,7 +206,7 @@ struct StudioBridgeTests {
             redirectFrom: URL(string: "https://studio.example.com/login")!
         ), "blocks an origin-changing redirect after initial load")
         try expect(navigationRejections == ["rejected-navigation-frame", "rejected-navigation-redirect"], "records fixed audit-safe navigation reasons")
-        try expect(starts.filter { if case .write = $0 { return true }; return false }.count == 6, "hostile navigation does not create another writer command")
+        try expect(starts.filter { if case .write = $0 { return true }; return false }.count == 7, "hostile navigation does not create another writer command")
 
         let auditRoot = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("omnilede-audit-\(UUID().uuidString)")
         defer { try? FileManager.default.removeItem(at: auditRoot) }

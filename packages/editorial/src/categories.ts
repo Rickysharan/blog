@@ -35,6 +35,12 @@ export const CATEGORIES = [
     accent: "cyan",
     description: "Indices, equities and major market moves",
   },
+  {
+    slug: "top-10",
+    label: "Top 10",
+    accent: "rose",
+    description: "Carefully sourced lists of standout choices and ideas",
+  },
 ] as const;
 
 export type CategoryDefinition = (typeof CATEGORIES)[number];

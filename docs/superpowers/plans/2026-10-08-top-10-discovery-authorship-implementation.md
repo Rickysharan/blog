@@ -51,11 +51,11 @@ The implementer and reviewer must explicitly test these five failure modes:
 - `StudioWriterCategory` gains `case top10 = "top-10"`.
 - Existing category routes, filters, sitemap, RSS, search, inventory, Today planning, and writer controls continue consuming `CATEGORIES`/`CATEGORY_SLUGS`; do not add parallel lists.
 
-- [ ] **Step 1: Write failing registry and bridge tests**
+- [x] **Step 1: Write failing registry and bridge tests**
 
   Assert that the ordered slugs are `anime`, `movies`, `politics`, `sports`, `finance`, `share-market`, `top-10`; the new label is `Top 10`; `categorySchema` accepts `top-10`; all seven native categories are admitted; and an unknown category is denied.
 
-- [ ] **Step 2: Run the focused tests and confirm the expected failures**
+- [x] **Step 2: Run the focused tests and confirm the expected failures**
 
   Run: `npx vitest run lib/config/categories.test.ts packages/contracts/src/operations.test.ts apps/ops/components/native/writer-controls.test.tsx`
 
@@ -63,11 +63,11 @@ The implementer and reviewer must explicitly test these five failure modes:
 
   Expected: TypeScript tests fail because `top-10` is absent and Swift fails because only six cases exist.
 
-- [ ] **Step 3: Add the category once at the shared source**
+- [x] **Step 3: Add the category once at the shared source**
 
   Add `{ slug: "top-10", label: "Top 10", accent: <existing palette accent>, description: <plain editorial description> }` to `CATEGORIES`. Update hard-coded “six desks” copy to count-neutral wording. Add the Swift enum case and empty tracked directories. Do not publish a demonstration article.
 
-- [ ] **Step 4: Re-run focused tests and inventory checks**
+- [x] **Step 4: Re-run focused tests and inventory checks**
 
   Run: `npx vitest run lib/config/categories.test.ts packages/contracts/src/operations.test.ts apps/ops/components/native/writer-controls.test.tsx lib/desktop/daily-plan.test.ts`
 
@@ -75,7 +75,7 @@ The implementer and reviewer must explicitly test these five failure modes:
 
   Expected: PASS, including seven writer choices and unknown-category rejection.
 
-- [ ] **Step 5: Commit the category foundation**
+- [x] **Step 5: Commit the category foundation**
 
   Commit: `feat: add top 10 editorial category`
 

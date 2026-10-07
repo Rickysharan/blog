@@ -14,6 +14,11 @@ import {
 } from "./operations";
 
 describe("shared operation enums", () => {
+  test("includes the Top 10 editorial category", () => {
+    expect(CATEGORIES).toContain("top-10");
+    expect(categorySchema.parse("top-10")).toBe("top-10");
+  });
+
   test.each(CATEGORIES)("accepts category %s", (value) => {
     expect(categorySchema.parse(value)).toBe(value);
   });

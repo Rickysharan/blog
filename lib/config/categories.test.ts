@@ -7,7 +7,7 @@ import {
 } from "@/lib/config/categories";
 
 describe("category registry", () => {
-  it("defines the six publication desks in stable navigation order", () => {
+  it("defines all seven publication desks in stable navigation order", () => {
     expect(CATEGORY_SLUGS).toEqual([
       "anime",
       "movies",
@@ -15,6 +15,7 @@ describe("category registry", () => {
       "sports",
       "finance",
       "share-market",
+      "top-10",
     ]);
     expect(CATEGORIES.map(({ accent }) => accent)).toEqual([
       "violet",
@@ -23,11 +24,17 @@ describe("category registry", () => {
       "green",
       "amber",
       "cyan",
+      "rose",
     ]);
+    expect(CATEGORIES.at(-1)).toMatchObject({
+      slug: "top-10",
+      label: "Top 10",
+    });
   });
 
   it("recognizes only supported category slugs", () => {
     expect(isCategorySlug("share-market")).toBe(true);
+    expect(isCategorySlug("top-10")).toBe(true);
     expect(isCategorySlug("technology")).toBe(false);
   });
 });

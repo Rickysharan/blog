@@ -16,5 +16,5 @@ export default async function CategoriesPage() {
     // Render a truthful unavailable state below.
   }
   if (!summaries) return <div className="studio-page"><h1>Categories</h1><div className="studio-empty-state" role="alert"><p>Category inventory is temporarily unavailable.</p><span>Counts are hidden because the versioned GitHub source could not be verified.</span></div></div>;
-  return <div className="studio-page"><p className="eyebrow">All desks</p><h1>Categories</h1><p className="studio-page-intro">All six category desks remain visible, including desks with no content yet.</p><CategoryTable summaries={summaries} /></div>;
+  return <div className="studio-page"><p className="eyebrow">All desks</p><h1>Categories</h1><p className="studio-page-intro">Every category desk remains visible, including desks with no content yet.</p><CategoryTable summaries={summaries} /></div>;
 }
