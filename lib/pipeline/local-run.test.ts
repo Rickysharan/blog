@@ -35,6 +35,8 @@ const reporting = Array.from({ length: 45 }, (_, index) =>
   `reporting${index} describes the confirmed update from the supplied source`).join(" ");
 const analysis = Array.from({ length: 40 }, (_, index) =>
   `analysis${index} explains why the confirmed update matters to readers`).join(" ");
+const sourceContext = Array.from({ length: 24 }, (_, index) =>
+  `source${index} records a confirmed fact from the supplied article`).join(" ");
 const generated: GeneratedDraftContent = {
   title: "Baker Mayfield Provides Team Update",
   excerpt: "A source-grounded summary of the team update.",
@@ -59,7 +61,7 @@ function dependencies(overrides: Partial<LocalRunDependencies> = {}): LocalRunDe
     discover: vi.fn(async () => ({
       stories: [story], summaries: [], successCount: 1, failureCount: 0, skippedCount: 0,
     })),
-    enrichSource: vi.fn(async () => undefined),
+    enrichSource: vi.fn(async () => sourceContext),
     generate: vi.fn(async () => generated),
     findPhotos: vi.fn(async () => ({ ok: true as const, photos, attempts: 1 })),
     deliver: vi.fn(async (_contentRoot, ref) => ({ status: "created" as const, ref, attempts: 1 })),
@@ -201,9 +203,9 @@ describe("resumable local writer controller", () => {
 
   it("passes bounded source-page context into generation and image selection", async () => {
     const root = await temporaryRoot();
-    const sourceContext =
+    const boundedContext =
       "Confirmed source reporting contains enough detailed factual context for drafting.";
-    const enrichSource = vi.fn(async () => sourceContext);
+    const enrichSource = vi.fn(async () => boundedContext);
     const generate = vi.fn(async () => generated);
     const findPhotos = vi.fn(async () => ({
       ok: true as const,
@@ -225,13 +227,77 @@ describe("resumable local writer controller", () => {
     );
     expect(generate).toHaveBeenCalledWith(
       story,
-      expect.objectContaining({ sourceContext }),
+      expect.objectContaining({ sourceContext: boundedContext }),
     );
     expect(findPhotos).toHaveBeenCalledWith(
       story,
       generated.tags,
-      { sourceContext },
+      { sourceContext: boundedContext },
     );
+  });
+
+  it("skips a thin inaccessible story and drafts the next grounded story in the category", async () => {
+    const root = await temporaryRoot();
+    const thinStory: QueueStory = {
+      ...story,
+      title: "A headline with no usable article text",
+      sourceUrl: "https://example.com/thin-story",
+      snippet: "A very short teaser",
+    };
+    const groundedStory: QueueStory = {
+      ...story,
+      title: "A report with enough source material",
+      sourceUrl: "https://example.com/grounded-story",
+    };
+    const enrichSource = vi.fn(async (candidate: QueueStory) =>
+      candidate.sourceUrl === groundedStory.sourceUrl ? sourceContext : undefined,
+    );
+    const generate = vi.fn(async () => generated);
+
+    const result = await run(root, dependencies({
+      discover: vi.fn(async () => ({
+        stories: [thinStory, groundedStory], summaries: [], successCount: 1, failureCount: 0, skippedCount: 0,
+      })),
+      enrichSource,
+      generate,
+    }), [], undefined, "sports");
+
+    expect(result.status).toBe("completed");
+    expect(enrichSource).toHaveBeenNthCalledWith(1, thinStory, expect.anything());
+    expect(enrichSource).toHaveBeenNthCalledWith(2, groundedStory, expect.anything());
+    expect(generate).toHaveBeenCalledTimes(1);
+    expect(generate).toHaveBeenCalledWith(
+      groundedStory,
+      expect.objectContaining({ sourceContext }),
+    );
+  });
+
+  it("reports Needs research without invoking the model when every matching source is too thin", async () => {
+    const root = await temporaryRoot();
+    const thinStories: QueueStory[] = [1, 2].map((index) => ({
+      ...story,
+      title: `Thin source ${index}`,
+      sourceUrl: `https://example.com/thin-${index}`,
+      snippet: "A short teaser without enough facts",
+    }));
+    const queuePath = path.join(root, "content/queue/trending.json");
+    await writeFile(queuePath, JSON.stringify(thinStories), "utf8");
+    const deps = dependencies({
+      discover: vi.fn(async () => ({
+        stories: thinStories, summaries: [], successCount: 1, failureCount: 0, skippedCount: 0,
+      })),
+      enrichSource: vi.fn(async () => undefined),
+    });
+
+    const result = await run(root, deps, [], undefined, "sports");
+
+    expect(result).toMatchObject({
+      status: "human-required",
+      errorCategory: "needs-research",
+      message: "Needs research",
+    });
+    expect(deps.generate).not.toHaveBeenCalled();
+    expect(JSON.parse(await readFile(queuePath, "utf8"))).toEqual(thinStories);
   });
 
   it("corrects generation on the second attempt from the original story", async () => {

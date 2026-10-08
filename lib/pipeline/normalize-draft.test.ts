@@ -29,6 +29,20 @@ describe("normalizeGeneratedBody", () => {
     ]);
   });
 
+  it("moves an inline Why it matters marker onto its own Markdown line", () => {
+    const result = normalizeGeneratedBody(
+      "A Clear News Headline",
+      "The report was released. ## WHY IT MATTERS The timetable is now public.",
+    );
+
+    expect(result.body).toBe(
+      "The report was released.\n\n## Why it matters\n\nThe timetable is now public.",
+    );
+    expect(result.repairs).toContain(
+      "Normalized the Why it matters heading",
+    );
+  });
+
   it("retains a different legitimate leading heading", () => {
     const result = normalizeGeneratedBody(
       "A Clear News Headline",

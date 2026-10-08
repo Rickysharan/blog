@@ -50,6 +50,8 @@ const queueStorySchema = z.object({
   category: z.string().refine(isCategorySlug),
 }).strict();
 
+const MIN_STANDALONE_SNIPPET_WORDS = 40;
+
 export interface LocalRunDependencies {
   acquireLock(options: { lockPath: string }): Promise<WriterLock>;
   ensureModel(options: { model: string }): Promise<RuntimeCheckResult>;
@@ -237,6 +239,28 @@ function storyForCategory(
   return category
     ? stories.find((story) => story.category === category)
     : stories[0];
+}
+
+function countSourceWords(value: string): number {
+  return value.match(/[\p{L}\p{N}]+(?:[’'-][\p{L}\p{N}]+)*/gu)?.length ?? 0;
+}
+
+function candidateStories(
+  stories: QueueStory[],
+  category: CategorySlug | undefined,
+  preferred: QueueStory,
+): QueueStory[] {
+  const matching = category
+    ? stories.filter((story) => story.category === category)
+    : stories;
+  const candidates = [preferred, ...matching];
+  const seen = new Set<string>();
+
+  return candidates.filter((story) => {
+    if (seen.has(story.sourceUrl)) return false;
+    seen.add(story.sourceUrl);
+    return true;
+  });
 }
 
 function contentHash(value: string): string {
@@ -568,13 +592,30 @@ export async function runLocalWriter(
           selectedStory ??= storyForCategory(queue, requestedCategory);
         }
         if (!selectedStory) return await humanRequired("discovery", "discovery-unavailable");
-        await persistAndEmit("discovery", "progress", "Selected a recent source story.");
-        if (options.signal?.aborted) return await cancelled("discovery");
 
-        sourceContext = await deps.enrichSource(selectedStory, {
-          signal: options.signal,
-        });
-        if (options.signal?.aborted) return await cancelled("discovery");
+        let groundedStory: QueueStory | undefined;
+        for (const candidate of candidateStories(queue, requestedCategory, selectedStory)) {
+          const candidateContext = await deps.enrichSource(candidate, {
+            signal: options.signal,
+          });
+          if (options.signal?.aborted) return await cancelled("discovery");
+
+          if (
+            candidateContext ||
+            countSourceWords(candidate.snippet) >= MIN_STANDALONE_SNIPPET_WORDS
+          ) {
+            groundedStory = candidate;
+            sourceContext = candidateContext;
+            break;
+          }
+        }
+
+        if (!groundedStory) {
+          return await humanRequired("generation", "needs-research");
+        }
+
+        selectedStory = groundedStory;
+        await persistAndEmit("discovery", "progress", "Selected a recent source story with enough verified detail.");
 
         let validationReason: string | undefined;
         for (let attempt = 1; attempt <= 3; attempt += 1) {
