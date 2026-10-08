@@ -126,6 +126,29 @@ describe("AdSense provider", () => {
     });
   });
 
+  it("reports every failed concurrent provider operation", async () => {
+    const fixture = responses();
+    const failures: unknown[] = [];
+    const provider = createAdsenseProvider({
+      publisherId: "pub-1234567890123456", blogOrigin: "https://omnilede.example",
+      request: async (url) => {
+        if (url.includes("/sites")) throw Object.assign(new Error("private sites detail"), { kind: "invalid-response", status: 400 });
+        if (url.includes("/alerts")) throw Object.assign(new Error("private alerts detail"), { kind: "invalid-response", status: 400 });
+        if (url.endsWith("accounts?pageSize=100")) return fixture.accounts;
+        if (url.includes("policyIssues")) return fixture.policyIssues;
+        return fixture.report;
+      },
+      fetchAdsTxt: async () => fixture.adsTxt,
+      cache: { read: async () => ({ source: "Google AdSense", range: { start: "2026-10-01", end: "2026-10-01" }, fetchedAt: null, state: "unavailable" as const, data: null }), success: async () => undefined, failure: async () => undefined },
+      onFailure: (error) => { failures.push(error); }
+    });
+    await provider("7d");
+    expect(failures.map((error) => safeProviderFailure("google-adsense", error).kind).sort()).toEqual([
+      "provider-request:adsense-alerts:invalid-response:http-400",
+      "provider-request:adsense-sites:invalid-response:http-400",
+    ]);
+  });
+
   it("uses bounded official endpoints and preserves stale cache data after a failed refresh", async () => {
     const urls: string[] = [];
     const fixture = responses();

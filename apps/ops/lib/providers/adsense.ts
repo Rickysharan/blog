@@ -264,7 +264,7 @@ export function createAdsenseProvider(dependencies: AdsenseDependencies) {
       }
     };
     try {
-      const [accounts, sites, policyIssues, alerts, report, adsTxt] = await Promise.all([
+      const results = await Promise.allSettled([
         request("accounts", "https://adsense.googleapis.com/v2/accounts?pageSize=100"),
         request("sites", `https://adsense.googleapis.com/v2/${account}/sites?pageSize=100`),
         request("policy", `https://adsense.googleapis.com/v2/${account}/policyIssues?pageSize=100`),
@@ -272,6 +272,13 @@ export function createAdsenseProvider(dependencies: AdsenseDependencies) {
         request("report", `https://adsense.googleapis.com/v2/${account}/reports:generate?${reportParams}`),
         dependencies.fetchAdsTxt()
       ]);
+      const failures = results.filter((result): result is PromiseRejectedResult => result.status === "rejected");
+      if (failures.length > 0) {
+        for (const failure of failures) dependencies.onFailure?.(failure.reason);
+        await dependencies.cache.failure("google-adsense", key, { source: "Google AdSense Management API", range });
+        return dependencies.cache.read<AdsenseReport>("google-adsense", key);
+      }
+      const [accounts, sites, policyIssues, alerts, report, adsTxt] = results.map((result) => (result as PromiseFulfilledResult<unknown>).value) as [unknown, unknown, unknown, unknown, unknown, AdsenseRawResponses["adsTxt"]];
       const data = transformAdsenseResponses({ accounts, sites, policyIssues, alerts, report, adsTxt }, dependencies);
       await dependencies.cache.success("google-adsense", key, { source: "Google AdSense Management API", range, fetchedAt: now.toISOString(), data });
     } catch (error) {
