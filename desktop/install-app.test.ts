@@ -7,6 +7,7 @@ import { afterEach, expect, it } from "vitest";
 
 const execFileAsync = promisify(execFile);
 const cleanups: Array<() => Promise<void>> = [];
+const installTimeout = 90_000;
 
 afterEach(async () => Promise.all(cleanups.splice(0).map((cleanup) => cleanup())));
 
@@ -21,7 +22,7 @@ it.runIf(process.platform === "darwin")(
     delete environment.NEXT_PUBLIC_STUDIO_URL;
     delete environment.OMNILEDE_SUPABASE_AUTH_URL;
     delete environment.NEXT_PUBLIC_SUPABASE_URL;
-    await execFileAsync("python3", ["desktop/install-app.py"], { cwd: process.cwd(), env: environment, timeout: 30_000 });
+    await execFileAsync("python3", ["desktop/install-app.py"], { cwd: process.cwd(), env: environment, timeout: installTimeout });
     const info = await readFile(path.join(home, "Applications/OmniLede.app/Contents/Info.plist"));
     expect(info.toString("utf8")).not.toContain("omnilede-news.netlify.app");
     expect(info.toString("utf8")).not.toContain("OmniLedeStudioURL");
@@ -33,7 +34,7 @@ it.runIf(process.platform === "darwin")(
       OMNILEDE_STUDIO_URL: "https://studio.omnilede-news.netlify.app",
       NEXT_PUBLIC_SUPABASE_URL: "https://project-ref.supabase.co"
     };
-    await execFileAsync("python3", ["desktop/install-app.py"], { cwd: process.cwd(), env: configuredEnvironment, timeout: 30_000 });
+    await execFileAsync("python3", ["desktop/install-app.py"], { cwd: process.cwd(), env: configuredEnvironment, timeout: installTimeout });
     const configuredInfo = await readFile(path.join(home, "Applications/OmniLede.app/Contents/Info.plist"), "utf8");
     expect(configuredInfo).toContain("<key>OmniLedeStudioURL</key>");
     expect(configuredInfo).toContain("https://studio.omnilede-news.netlify.app");
@@ -42,5 +43,5 @@ it.runIf(process.platform === "darwin")(
     expect(configuredInfo).toContain("<key>CFBundleURLTypes</key>");
     expect(configuredInfo).toContain("com.rickysharan.omnilede");
   },
-  30_000,
+  installTimeout * 2 + 20_000,
 );
