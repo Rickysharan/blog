@@ -28,16 +28,22 @@ test("reader can browse every desk and open an attributed article", async ({ pag
   await expect(page.locator("article p").filter({ hasText: /^Source:/ })).toBeVisible();
 });
 
-test("category archives keep the global desk navigation available", async ({ page }) => {
+test("category archives keep the global desk navigation available", async ({ page }, testInfo) => {
   await page.goto("/category/politics");
   await settleConsent(page);
   await expect(page.getByRole("heading", { name: "Politics", exact: true })).toBeVisible();
+  if (testInfo.project.name === "mobile-chrome") {
+    await page.getByRole("button", { name: "Open menu" }).click();
+    await expect(page.getByRole("navigation", { name: "Mobile navigation" }).getByRole("link", { name: "Anime", exact: true })).toBeVisible();
+    return;
+  }
   await page.getByRole("banner").hover();
   await expect(page.locator("#desktop-news-desks")).toHaveAttribute("aria-hidden", "false");
   await expect(page.locator("#desktop-news-desks").getByRole("link", { name: "Anime", exact: true })).toBeVisible();
 });
 
-test("desktop desk strip reveals without shifting content and can be pinned", async ({ page }) => {
+test("desktop desk strip reveals without shifting content and can be pinned", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name === "mobile-chrome", "Desktop navigation is replaced by the touch menu on phones.");
   await page.goto("/");
   await settleConsent(page);
   const desks = page.locator("#desktop-news-desks");

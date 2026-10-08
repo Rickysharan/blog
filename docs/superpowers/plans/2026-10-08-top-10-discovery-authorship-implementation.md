@@ -292,27 +292,27 @@ The implementer and reviewer must explicitly test these five failure modes:
 - The desktop grid reserves only rail width; the expanded rail overlays the workspace and never changes the main column width.
 - Phone shows Today, Categories, Content, and Overview plus an accessible `More` dialog containing Growth, Search, Revenue, Health, and Connections.
 
-- [ ] **Step 1: Write failing Studio navigation tests**
+- [x] **Step 1: Write failing Studio navigation tests**
 
   Test desktop compact default, visible marks/current destination, hover and focus expansion, pin/unpin, Escape and outside close, stable main-workspace grid width, prefetched links, the four phone destinations, every secondary destination in More, initial focus, tab containment, Escape, outside close, and destination-selection close.
 
-- [ ] **Step 2: Run the focused test and confirm failure**
+- [x] **Step 2: Run the focused test and confirm failure**
 
   Run: `npm test --workspace @omnilede/ops -- --run apps/ops/components/studio-shell.test.tsx`
 
-- [ ] **Step 3: Implement the compact desktop rail**
+- [x] **Step 3: Implement the compact desktop rail**
 
   Make the shell a focused client boundary or split client navigation from the server shell. Keep icon marks, current destination, and an accessible pin button available when compact. Expand width over the main area with transform/width styling while the grid remains fixed to compact rail width.
 
-- [ ] **Step 4: Implement the phone More dialog**
+- [x] **Step 4: Implement the phone More dialog**
 
   Use an accessible modal pattern with focus sent to the first secondary route, tab wrapping within the open menu, focus restoration to More, Escape/outside close, and route-selection close. Preserve one-tap access to the four primary destinations.
 
-- [ ] **Step 5: Verify route speed and interaction**
+- [x] **Step 5: Verify route speed and interaction**
 
   Assert all links retain `prefetch={true}` and no navigation handler blocks on fetch. Use the E2E test to click Today → Categories → Content and verify the route shell responds immediately without a loading overlay created by the navigation component.
 
-- [ ] **Step 6: Run Studio tests and E2E**
+- [x] **Step 6: Run Studio tests and E2E**
 
   Run: `npm test --workspace @omnilede/ops -- --run apps/ops/components/studio-shell.test.tsx`
 
@@ -320,7 +320,7 @@ The implementer and reviewer must explicitly test these five failure modes:
 
   Expected: PASS.
 
-- [ ] **Step 7: Commit Studio navigation**
+- [x] **Step 7: Commit Studio navigation**
 
   Commit: `feat: add compact studio navigation`
 
@@ -336,25 +336,25 @@ The implementer and reviewer must explicitly test these five failure modes:
 - The filter button label always exposes active filter count or a concise active-state summary.
 - Keep notices, working status, draft queue, editor, preview, Save, Publish, Discard, confirmation, and reconciliation receipts outside collapsed regions.
 
-- [ ] **Step 1: Write failing disclosure tests**
+- [x] **Step 1: Write failing disclosure tests**
 
   Assert filters and normal publication history may collapse; active filter count remains visible; opening and closing works with click and keyboard; current filter values persist; error/status/editor/review/Publish controls and unreconciled action receipts are never descendants of a collapsed region.
 
-- [ ] **Step 2: Run the focused test and confirm failure**
+- [x] **Step 2: Run the focused test and confirm failure**
 
   Run: `npm test --workspace @omnilede/ops -- --run apps/ops/components/content/content-workspace.test.tsx`
 
-- [ ] **Step 3: Implement controlled disclosures**
+- [x] **Step 3: Implement controlled disclosures**
 
   Use buttons rather than hover. Keep semantic labels, preserve all current editor state, and do not trigger refreshes when a disclosure opens. Show a compact summary such as `Filters · 2 active` while collapsed.
 
-- [ ] **Step 4: Re-run the focused test**
+- [x] **Step 4: Re-run the focused test**
 
   Run: `npm test --workspace @omnilede/ops -- --run apps/ops/components/content/content-workspace.test.tsx`
 
   Expected: PASS.
 
-- [ ] **Step 5: Commit Studio disclosures**
+- [x] **Step 5: Commit Studio disclosures**
 
   Commit: `feat: compact optional studio controls`
 
@@ -364,7 +364,7 @@ The implementer and reviewer must explicitly test these five failure modes:
 - Modify only files required to fix failures discovered by verification
 - Update: `docs/superpowers/plans/2026-10-08-top-10-discovery-authorship-implementation.md` checkbox state during execution
 
-- [ ] **Step 1: Self-review the final diff against every spec requirement**
+- [x] **Step 1: Self-review the final diff against every spec requirement**
 
   Run: `git diff --check`
 
@@ -372,7 +372,7 @@ The implementer and reviewer must explicitly test these five failure modes:
 
   Inspect for duplicate category lists, hidden primary actions, contributor migrations, fake claims, dead membership/shop controls, and route handlers that wait on network operations.
 
-- [ ] **Step 2: Run complete unit and native suites**
+- [x] **Step 2: Run complete unit and native suites**
 
   Run: `npm run test:all`
 
@@ -380,7 +380,7 @@ The implementer and reviewer must explicitly test these five failure modes:
 
   Expected: PASS.
 
-- [ ] **Step 3: Run static checks and production builds**
+- [x] **Step 3: Run static checks and production builds**
 
   Run: `npm run lint`
 
@@ -392,7 +392,7 @@ The implementer and reviewer must explicitly test these five failure modes:
 
   Expected: PASS with no warnings promoted by the repository's zero-warning lint rule.
 
-- [ ] **Step 4: Run public and Studio browser suites**
+- [x] **Step 4: Run public and Studio browser suites**
 
   Run: `npm run test:e2e`
 
@@ -400,7 +400,7 @@ The implementer and reviewer must explicitly test these five failure modes:
 
   Expected: PASS on desktop and configured phone projects.
 
-- [ ] **Step 5: Perform an explicit five-failure-mode review**
+- [x] **Step 5: Perform an explicit five-failure-mode review**
 
   Record evidence for the five items in Review Focus. Correct any failure with a focused regression test before changing implementation.
 
