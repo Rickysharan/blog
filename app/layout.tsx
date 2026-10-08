@@ -35,6 +35,9 @@ export const metadata: Metadata = {
   },
   description: SITE_CONFIG.description,
   applicationName: SITE_CONFIG.name,
+  other: {
+    "google-adsense-account": "ca-pub-8347168597721597",
+  },
   manifest: "/manifest.json",
   icons: {
     icon: [
