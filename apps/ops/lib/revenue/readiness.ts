@@ -19,8 +19,8 @@ export type AdsenseReadinessInput = {
   adsenseEnabled: boolean;
   publisherIdsMatch: boolean;
   slotsValid: boolean;
-  policyIssueCount: number;
-  configurationIssueCount: number;
+  policyIssueCount: number | null;
+  configurationIssueCount: number | null;
 };
 
 function finding(id: string, label: string, pass: boolean, good: string, bad: string, action: string): ReadinessFinding {
@@ -49,8 +49,8 @@ export function evaluateAdsenseReadiness(input: AdsenseReadinessInput): Readines
     finding("site-review", "Site review", input.siteStatus === "READY", "Google reports the site as Ready.", input.siteStatus ? `Google reports ${input.siteStatus}.` : "Site review status is unavailable.", "Submit or resolve the review in AdSense, then wait for an exact Ready status."),
     finding("configured-site-status", "Public blog site gate", input.configuredSiteStatus === "READY", "The public blog is configured with the exact Ready status.", input.configuredSiteStatus ? `The public blog gate is ${input.configuredSiteStatus}.` : "The public blog site-status gate is missing.", "Copy the exact current provider status; only uppercase READY can pass this gate."),
     finding("ads-txt", "ads.txt", input.adsTxtStatus === "valid", "The live seller record matches the configured publisher.", `ads.txt is ${input.adsTxtStatus}.`, "Publish the exact seller record at /ads.txt and wait for Google to recheck it."),
-    finding("policy", "Policy", input.providerState === "connected" && input.policyIssueCount === 0, "No current policy issues were returned.", input.providerState === "connected" ? `${input.policyIssueCount} policy issue${input.policyIssueCount === 1 ? "" : "s"} returned.` : "Current policy evidence is unavailable.", "Resolve the provider-reported policy issues after a successful refresh."),
-    finding("configuration", "Provider alerts", input.providerState === "connected" && input.configurationIssueCount === 0, "No current configuration alerts were returned.", input.providerState === "connected" ? `${input.configurationIssueCount} configuration alert${input.configurationIssueCount === 1 ? "" : "s"} returned.` : "Current provider alerts are unavailable.", "Review provider messages after a successful refresh."),
+    finding("policy", "Policy", input.providerState === "connected" && input.policyIssueCount === 0, "No current policy issues were returned.", input.providerState === "connected" && input.policyIssueCount !== null ? `${input.policyIssueCount} policy issue${input.policyIssueCount === 1 ? "" : "s"} returned.` : "Current policy evidence is unavailable.", "Resolve the provider-reported policy issues after a successful refresh."),
+    finding("configuration", "Provider alerts", input.providerState === "connected" && input.configurationIssueCount === 0, "No current configuration alerts were returned.", input.providerState === "connected" && input.configurationIssueCount !== null ? `${input.configurationIssueCount} configuration alert${input.configurationIssueCount === 1 ? "" : "s"} returned.` : "Current provider alerts are unavailable.", "Review provider messages after a successful refresh."),
     finding("consent", "Reader consent", input.consentConfigured, "Optional-cookie consent keeps advertising blocked until granted.", "Advertising consent behavior is not configured.", "Verify accept, decline, and withdrawal behavior before activation."),
     finding("publisher", "Publisher identifiers", input.publisherIdsMatch, "Publisher and client identifiers match.", "Publisher and client identifiers are missing, invalid, or mismatched.", "Copy the exact 16-digit publisher and client identifiers from AdSense."),
     finding("slots", "Ad placements", input.slotsValid, "Every configured placement has a valid slot identifier.", "One or more placement identifiers are missing or invalid.", "Add the exact 10-digit IDs for every enabled placement."),

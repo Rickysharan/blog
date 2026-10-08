@@ -27,13 +27,15 @@ export function RevenueReport({ data, source, fetchedAt, state }: { data: Adsens
       <h2 id="provider-facts-heading">Provider facts</h2>
       <dl className="source-grid">
         <div className="source-card"><dt>Account</dt><dd>{data.account.displayName} · {statusLabel(data.account.status)}</dd></div>
-        <div className="source-card"><dt>Site</dt><dd>{data.site.domain} · <span>{statusLabel(data.site.status)}</span></dd></div>
-        <div className="source-card"><dt>Ownership</dt><dd>{data.site.ownershipVerified ? "Verified by Ready status" : "Unavailable"}</dd></div>
+        <div className="source-card"><dt>Site</dt><dd>{data.site ? <>{data.site.domain} · <span>{statusLabel(data.site.status)}</span></> : "Site data unavailable for this account"}</dd></div>
+        <div className="source-card"><dt>Ownership</dt><dd>{data.site?.ownershipVerified ? "Verified by Ready status" : "Unavailable"}</dd></div>
         <div className="source-card"><dt>ads.txt</dt><dd>{statusLabel(data.adsTxt.status)} · <a href={data.adsTxt.url} rel="noreferrer" target="_blank">View live file</a></dd></div>
       </dl>
       {data.account.pendingTasks.length > 0 && <><h3>Account tasks</h3><ul>{data.account.pendingTasks.map((task) => <li key={task}>{task}</li>)}</ul></>}
       {data.policyMessages.length > 0 && <><h3>Policy issues</h3><ul>{data.policyMessages.map((message, index) => <li key={`${message.site}-${index}`}>{message.site}: {message.topics.join(", ")} ({statusLabel(message.action)})</li>)}</ul></>}
-      {data.configurationMessages.length > 0 && <><h3>Provider messages</h3><ul>{data.configurationMessages.map((message, index) => <li key={`${message.type}-${index}`}>{message.severity}: {message.message}</li>)}</ul></>}
+      {data.configurationMessages === null
+        ? <p>Provider alerts are unavailable for this account.</p>
+        : data.configurationMessages.length > 0 && <><h3>Provider messages</h3><ul>{data.configurationMessages.map((message, index) => <li key={`${message.type}-${index}`}>{message.severity}: {message.message}</li>)}</ul></>}
     </section>
   </>;
 }

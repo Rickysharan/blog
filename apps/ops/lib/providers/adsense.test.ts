@@ -126,9 +126,10 @@ describe("AdSense provider", () => {
     });
   });
 
-  it("reports every failed concurrent provider operation", async () => {
+  it("keeps verified account and report data when this account does not expose sites or alerts", async () => {
     const fixture = responses();
     const failures: unknown[] = [];
+    let stored: ReportEnvelope<unknown> | null = null;
     const provider = createAdsenseProvider({
       publisherId: "pub-1234567890123456", blogOrigin: "https://omnilede.example",
       request: async (url) => {
@@ -139,14 +140,24 @@ describe("AdSense provider", () => {
         return fixture.report;
       },
       fetchAdsTxt: async () => fixture.adsTxt,
-      cache: { read: async () => ({ source: "Google AdSense", range: { start: "2026-10-01", end: "2026-10-01" }, fetchedAt: null, state: "unavailable" as const, data: null }), success: async () => undefined, failure: async () => undefined },
+      cache: {
+        read: async <T,>() => (stored ?? { source: "Google AdSense", range: { start: "2026-10-01", end: "2026-10-01" }, fetchedAt: null, state: "unavailable" as const, data: null }) as ReportEnvelope<T>,
+        success: async (_provider, _key, report) => { stored = { ...report, state: "connected" }; },
+        failure: async () => undefined
+      },
       onFailure: (error) => { failures.push(error); }
     });
-    await provider("7d");
-    expect(failures.map((error) => safeProviderFailure("google-adsense", error).kind).sort()).toEqual([
-      "provider-request:adsense-alerts:invalid-response:http-400",
-      "provider-request:adsense-sites:invalid-response:http-400",
-    ]);
+    const result = await provider("7d");
+    expect(failures).toEqual([]);
+    expect(result).toMatchObject({
+      state: "connected",
+      data: {
+        account: { publisherId: "pub-1234567890123456", status: "READY" },
+        site: null,
+        metrics: { estimatedEarnings: 12.34, impressions: 2500 },
+        configurationMessages: null,
+      }
+    });
   });
 
   it("uses bounded official endpoints and preserves stale cache data after a failed refresh", async () => {

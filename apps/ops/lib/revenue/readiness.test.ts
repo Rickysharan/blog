@@ -30,7 +30,9 @@ describe("AdSense readiness", () => {
     ["invalid ads.txt", { adsTxtStatus: "invalid" }],
     ["missing consent behavior", { consentConfigured: false }],
     ["policy issue", { policyIssueCount: 1 }],
+    ["policy evidence unavailable", { policyIssueCount: null }],
     ["configuration issue", { configurationIssueCount: 1 }],
+    ["configuration evidence unavailable", { configurationIssueCount: null }],
     ["publisher mismatch", { publisherIdsMatch: false }],
     ["invalid slots", { slotsValid: false }],
     ["commercial disabled", { commercialEnabled: false }],
@@ -38,6 +40,12 @@ describe("AdSense readiness", () => {
   ])("fails closed for %s", (_label, override) => {
     const findings = evaluateAdsenseReadiness({ ...ready(), ...override } as AdsenseReadinessInput);
     expect(findings.some((finding) => finding.status === "block")).toBe(true);
+  });
+
+  it("names unavailable provider evidence without claiming that zero issues were returned", () => {
+    const findings = evaluateAdsenseReadiness({ ...ready(), policyIssueCount: null, configurationIssueCount: null });
+    expect(findings.find(({ id }) => id === "policy")).toMatchObject({ status: "block", summary: "Current policy evidence is unavailable." });
+    expect(findings.find(({ id }) => id === "configuration")).toMatchObject({ status: "block", summary: "Current provider alerts are unavailable." });
   });
 
   it("includes every provider pending task as separate blocking evidence", () => {

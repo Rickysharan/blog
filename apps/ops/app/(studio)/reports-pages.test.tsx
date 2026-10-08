@@ -28,3 +28,11 @@ it("renders provider facts without turning missing revenue into zero or claiming
   expect(screen.getByText(/submit the application yourself/i)).toBeVisible();
   expect(screen.queryByText(/approved/i)).toBeNull();
 });
+it("renders verified AdSense metrics while site and alert evidence remain unavailable", async () => {
+  d.adsense.mockResolvedValue({ source: "Google AdSense Management API", range: { start: "2026-09-07", end: "2026-10-04" }, fetchedAt, state: "connected", data: { account: { publisherId: "pub-1234567890123456", displayName: "OmniLede", status: "READY", pendingTasks: [] }, site: null, adsTxt: { status: "missing", url: "https://example.com/ads.txt" }, metrics: { estimatedEarnings: 1.25, impressions: 20, clicks: 2, pageRpm: 4.5, currency: "GBP" }, policyMessages: [], configurationMessages: null } });
+  render(await RevenuePage({ searchParams: Promise.resolve({ range: "28d" }) }));
+  expect(screen.getByText("£1.25", { selector: ".metric-value" })).toBeVisible();
+  expect(screen.getByText("Site data unavailable for this account")).toBeVisible();
+  expect(screen.getByText("Provider alerts are unavailable for this account.")).toBeVisible();
+  expect(screen.getByText("Current provider alerts are unavailable.")).toBeVisible();
+});

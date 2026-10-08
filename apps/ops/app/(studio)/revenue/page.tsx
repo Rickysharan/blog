@@ -28,18 +28,18 @@ export default async function RevenuePage({ searchParams }: { searchParams: Prom
   const findings = evaluateAdsenseReadiness({
     providerState: report.state === "delayed" ? "stale" : report.state,
     accountStatus: data?.account.status ?? null,
-    siteStatus: data?.site.status ?? null,
+    siteStatus: data?.site?.status ?? null,
     configuredSiteStatus: process.env.ADSENSE_SITE_STATUS ?? null,
     pendingTasks: data?.account.pendingTasks ?? null,
-    ownershipVerified: data?.site.ownershipVerified ?? null,
+    ownershipVerified: data?.site?.ownershipVerified ?? null,
     adsTxtStatus: data?.adsTxt.status ?? "unavailable",
     consentConfigured: true,
     commercialEnabled: process.env.COMMERCIAL_FEATURES_ENABLED === "true",
     adsenseEnabled: process.env.ADSENSE_ENABLED === "true",
     publisherIdsMatch: exactIdentifiersMatch(),
     slotsValid: slotsValid(),
-    policyIssueCount: data?.policyMessages.length ?? 0,
-    configurationIssueCount: data?.configurationMessages.length ?? 0
+    policyIssueCount: data?.policyMessages.length ?? null,
+    configurationIssueCount: data?.configurationMessages?.length ?? null
   });
 
   return <div className="studio-page">

@@ -23,11 +23,11 @@ type AccountStatus = (typeof ACCOUNT_STATES)[number];
 type SiteStatus = (typeof SITE_STATES)[number];
 export type AdsenseReport = {
   account: { publisherId: string; displayName: string; status: AccountStatus; pendingTasks: string[] };
-  site: { domain: string; status: SiteStatus; ownershipVerified: boolean; autoAdsEnabled: boolean };
+  site: { domain: string; status: SiteStatus; ownershipVerified: boolean; autoAdsEnabled: boolean } | null;
   adsTxt: { status: "valid" | "missing" | "invalid" | "unavailable"; url: string };
   metrics: { estimatedEarnings: number | null; impressions: number | null; clicks: number | null; pageRpm: number | null; currency: string | null };
   policyMessages: Array<{ site: string; action: string; topics: string[] }>;
-  configurationMessages: Array<{ severity: "INFO" | "WARNING" | "SEVERE"; type: string; message: string }>;
+  configurationMessages: Array<{ severity: "INFO" | "WARNING" | "SEVERE"; type: string; message: string }> | null;
 };
 
 type AdsenseRawResponses = { accounts: unknown; sites: unknown; policyIssues: unknown; alerts: unknown; report: unknown; adsTxt: { status: number; contentType: string | null; text: string } };
@@ -186,11 +186,13 @@ export function transformAdsenseResponses(input: AdsenseRawResponses, config: Ad
   const pendingTasks = account.pendingTasks ?? [];
   if (!Array.isArray(pendingTasks) || pendingTasks.length > 50 || pendingTasks.some((task) => typeof task !== "string" || task.length > 200)) throw new Error("Invalid AdSense account tasks");
 
-  const siteMatches = list(input.sites, "sites", 100).map((item) => record(item, "site")).filter((item) => item.domain === origin.hostname);
-  if (siteMatches.length !== 1) throw new Error("Configured AdSense site was not returned");
-  const site = siteMatches[0]!;
-  const siteStatus = enumValue(site.state, SITE_STATES, "site state");
-  if (typeof site.autoAdsEnabled !== "boolean") throw new Error("Invalid AdSense site configuration");
+  const returnedSites = input.sites === null ? [] : list(input.sites, "sites", 100).map((item) => record(item, "site"));
+  const siteMatches = returnedSites.filter((item) => item.domain === origin.hostname);
+  if (returnedSites.length > 0 && siteMatches.length === 0) throw new Error("Configured AdSense site was not returned");
+  if (siteMatches.length > 1) throw new Error("Configured AdSense site was returned more than once");
+  const site = siteMatches[0] ?? null;
+  const siteStatus = site ? enumValue(site.state, SITE_STATES, "site state") : null;
+  if (site && typeof site.autoAdsEnabled !== "boolean") throw new Error("Invalid AdSense site configuration");
 
   const policies = list(input.policyIssues, "policyIssues", 100).map((item) => {
     const issue = record(item, "policy issue");
@@ -206,7 +208,7 @@ export function transformAdsenseResponses(input: AdsenseRawResponses, config: Ad
       })
     };
   });
-  const alerts = list(input.alerts, "alerts", 100).map((item) => {
+  const alerts = input.alerts === null ? null : list(input.alerts, "alerts", 100).map((item) => {
     const alert = record(item, "alert");
     return { severity: enumValue(alert.severity, ALERT_SEVERITIES, "alert severity"), type: boundedString(alert.type, "alert type", 200), message: cleanMessage(alert.message) };
   });
@@ -218,7 +220,7 @@ export function transformAdsenseResponses(input: AdsenseRawResponses, config: Ad
       status: enumValue(account.state, ACCOUNT_STATES, "account state"),
       pendingTasks: pendingTasks as string[]
     },
-    site: { domain: origin.hostname, status: siteStatus, ownershipVerified: siteStatus === "READY", autoAdsEnabled: site.autoAdsEnabled },
+    site: site && siteStatus ? { domain: origin.hostname, status: siteStatus, ownershipVerified: siteStatus === "READY", autoAdsEnabled: site.autoAdsEnabled as boolean } : null,
     adsTxt: parseAdsTxt(input.adsTxt, config.publisherId, config.blogOrigin),
     metrics: parseMetrics(input.report),
     policyMessages: policies,
@@ -272,13 +274,19 @@ export function createAdsenseProvider(dependencies: AdsenseDependencies) {
         request("report", `https://adsense.googleapis.com/v2/${account}/reports:generate?${reportParams}`),
         dependencies.fetchAdsTxt()
       ]);
-      const failures = results.filter((result): result is PromiseRejectedResult => result.status === "rejected");
+      const tolerated = (index: number, reason: unknown) => {
+        const kind = safeProviderFailure("google-adsense", reason).kind;
+        return (index === 1 && kind === "provider-request:adsense-sites:invalid-response:http-400")
+          || (index === 3 && kind === "provider-request:adsense-alerts:invalid-response:http-400");
+      };
+      const failures = results.flatMap((result, index) => result.status === "rejected" && !tolerated(index, result.reason) ? [result.reason] : []);
       if (failures.length > 0) {
-        for (const failure of failures) dependencies.onFailure?.(failure.reason);
+        for (const failure of failures) dependencies.onFailure?.(failure);
         await dependencies.cache.failure("google-adsense", key, { source: "Google AdSense Management API", range });
         return dependencies.cache.read<AdsenseReport>("google-adsense", key);
       }
-      const [accounts, sites, policyIssues, alerts, report, adsTxt] = results.map((result) => (result as PromiseFulfilledResult<unknown>).value) as [unknown, unknown, unknown, unknown, unknown, AdsenseRawResponses["adsTxt"]];
+      const values = results.map((result) => result.status === "fulfilled" ? result.value : null);
+      const [accounts, sites, policyIssues, alerts, report, adsTxt] = values as [unknown, unknown, unknown, unknown, unknown, AdsenseRawResponses["adsTxt"]];
       const data = transformAdsenseResponses({ accounts, sites, policyIssues, alerts, report, adsTxt }, dependencies);
       await dependencies.cache.success("google-adsense", key, { source: "Google AdSense Management API", range, fetchedAt: now.toISOString(), data });
     } catch (error) {
