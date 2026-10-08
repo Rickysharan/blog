@@ -27,5 +27,6 @@ describe("sitemap", () => {
     expect(urls.some((url) => url.endsWith("/topic/one-off"))).toBe(false);
     expect(urls.some((url) => url.endsWith("/article/one"))).toBe(true);
     expect(urls.some((url) => url.endsWith("/category/anime"))).toBe(true);
+    expect(urls).toContain(`${SITE_CONFIG.url}/author/ricky-sharan`);
   });
 });

@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 
 import { CATEGORIES } from "@/lib/config/categories";
+import { getAuthorProfiles } from "@/lib/config/authors";
 import { SITE_CONFIG } from "@/lib/config/site";
 import { getAllArticles } from "@/lib/content/articles";
 import { getQualifiedTopics } from "@/lib/content/topics";
@@ -28,6 +29,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     changeFrequency: "daily",
     priority: 0.8,
   }));
+  const authorEntries: MetadataRoute.Sitemap = getAuthorProfiles().map(({ path }) => ({
+    url: `${SITE_CONFIG.url}${path}`,
+    changeFrequency: "monthly",
+    priority: 0.6,
+  }));
   const articleEntries: MetadataRoute.Sitemap = articles.map((article) => ({
     url: `${SITE_CONFIG.url}/article/${article.slug}`,
     lastModified: new Date(`${article.date}T00:00:00.000Z`),
@@ -40,5 +46,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     changeFrequency: "weekly",
     priority: 0.6,
   }));
-  return [...staticEntries, ...categoryEntries, ...topicEntries, ...articleEntries];
+  return [...staticEntries, ...categoryEntries, ...authorEntries, ...topicEntries, ...articleEntries];
 }
