@@ -419,6 +419,40 @@ describe("local Ollama drafting", () => {
     expect(result.created).toHaveLength(1);
   });
 
+  it("rejects a local draft that copies a long source passage verbatim", async () => {
+    const copied = "The company published a detailed timetable covering regional coordination, reporting duties, review dates, and the organisations responsible for each stage";
+    const body = `${copied}. ${Array(10).fill("The draft restates the report using additional neutral wording for readers.").join(" ")}\n\n## Why it matters\n\nThe published timetable identifies the stated coordination process.`;
+
+    await expect(requestOllamaDraft(queueStory(), {
+      model: "local-test",
+      sourceContext: `${copied}. The source continues with other confirmed details.`,
+      fetchImpl: async () => Response.json({
+        done: true,
+        done_reason: "stop",
+        response: JSON.stringify(generatedDraft({ body })),
+      }),
+    })).rejects.toMatchObject({
+      name: "GenerationValidationError",
+      category: "source-copy",
+    });
+  });
+
+  it("rejects generic market and audience claims that are not source facts", async () => {
+    const body = `${Array(12).fill("The supplied report describes the film and its confirmed release details.").join(" ")}\n\n## Why it matters\n\nThe acquisition highlights the growing importance of anime films in the global market and is part of a broader strategy to reach a wider audience and strengthen the franchise's global appeal.`;
+
+    await expect(requestOllamaDraft(queueStory(), {
+      model: "local-test",
+      fetchImpl: async () => Response.json({
+        done: true,
+        done_reason: "stop",
+        response: JSON.stringify(generatedDraft({ body })),
+      }),
+    })).rejects.toMatchObject({
+      name: "GenerationValidationError",
+      category: "unsupported-analysis",
+    });
+  });
+
   it("adds the prior validation failure to a corrected local retry prompt", async () => {
     let prompt = "";
     await requestOllamaDraft(queueStory(), {

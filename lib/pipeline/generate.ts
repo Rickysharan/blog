@@ -59,6 +59,7 @@ export type GenerationValidationCategory =
   | "unsafe-mdx"
   | "missing-analysis"
   | "unsupported-analysis"
+  | "source-copy"
   | "needs-research"
   | "length";
 
@@ -138,8 +139,36 @@ function countWords(value: string): number {
   return value.match(/[\p{L}\p{N}]+(?:[’'-][\p{L}\p{N}]+)*/gu)?.length ?? 0;
 }
 
+function normalizedWordString(value: string): string {
+  return (value.match(/[\p{L}\p{N}]+(?:[’'-][\p{L}\p{N}]+)*/gu) ?? [])
+    .map((word) => word.toLocaleLowerCase())
+    .join(" ");
+}
+
+function assertOriginalWording(
+  body: string,
+  sourceValues: Array<string | undefined>,
+): void {
+  const normalizedBody = normalizedWordString(body);
+  const phraseWords = 12;
+
+  for (const sourceValue of sourceValues) {
+    if (!sourceValue) continue;
+    const sourceWords = normalizedWordString(sourceValue).split(" ").filter(Boolean);
+    for (let index = 0; index <= sourceWords.length - phraseWords; index += 1) {
+      const phrase = sourceWords.slice(index, index + phraseWords).join(" ");
+      if (normalizedBody.includes(phrase)) {
+        throw new GenerationValidationError(
+          "source-copy",
+          "Draft repeats a long source passage verbatim",
+        );
+      }
+    }
+  }
+}
+
 const unsupportedBriefAnalysisPattern =
-  /\b(?:could|might|potentially|likely|probably|perhaps|possibly)\b|\bmay\s+(?:be|have|lead|result|affect|impact|change|increase|decrease|improve|reduce|bring|create|cause|make|help|signal|mean)\b/i;
+  /\b(?:could|might|potentially|likely|probably|perhaps|possibly)\b|\bmay\s+(?:be|have|lead|result|affect|impact|change|increase|decrease|improve|reduce|bring|create|cause|make|help|signal|mean)\b|\bexpected\s+to\b|\b(?:highlights?|underscores?|demonstrates?|signals?)\s+the\b|\bbroader\s+strategy\b|\b(?:growing|global)\s+(?:importance|appeal|market|popularity)\b|\bwider\s+audience\b|\bcement(?:s|ing|ed)?\b/i;
 
 function plainSourceText(value: string): string {
   return value
@@ -321,7 +350,9 @@ Requirements:
 - Markdown prose with useful section headings.
 - Include the exact heading "## Why it matters" followed by careful analysis grounded only in the supplied facts.
 - In "## Why it matters", explain significance only from concrete facts already established by the supplied source. Do not forecast or speculate about future effects. Avoid unsupported modal claims such as could, might, potentially, likely, probably, perhaps, possibly, or "may" used to predict an effect.
+- Do not add generic claims about market growth, audience reach, company strategy, popularity, cultural impact, or global appeal unless the source explicitly states that exact fact.
 - Do not include a Source line, frontmatter, HTML, JSX, MDX imports, images, or code fences in the body.
+- Do not repeat any sequence of 12 or more source words verbatim; paraphrase in original wording.
 - Return only valid JSON with exactly these keys: "title", "excerpt", "tags", and "body".
 ${topTenRequirements}
 
@@ -480,10 +511,12 @@ The corrected body MUST satisfy all of these conditions simultaneously:
 - Put factual prose immediately after that heading.
 - Keep the full body within the requested brief length.
 - Use only facts present in the supplied source material.
+- Do not repeat any sequence of 12 or more source words verbatim.
 - Do not forecast or speculate about future effects.
 - Do not use "could", "might", "potentially", "likely", "probably", "perhaps", or "possibly".
 - Do not use predictive "may" claims.
 - Do not replace those words with synonymous speculation.
+- Do not add generic claims about market growth, audience reach, company strategy, popularity, cultural impact, or global appeal.
 - If significance cannot be stated without forecasting, make "## Why it matters" short and factual instead.
 - Preserve the required JSON keys: "title", "excerpt", "tags", and "body".
 
@@ -559,7 +592,7 @@ Before returning the JSON, silently verify that the body contains the exact head
     parsedGenerated.data.title,
     parsedGenerated.data.body,
   );
-  return validateGeneratedDraft(
+  const validated = validateGeneratedDraft(
     {
       ...parsedGenerated.data,
       body: stabilizeRetryAnalysis(story, normalized.body, config.validationReason),
@@ -567,6 +600,8 @@ Before returning the JSON, silently verify that the body contains the exact head
     true,
     story.category,
   );
+  assertOriginalWording(validated.body, [story.snippet, config.sourceContext]);
+  return validated;
 }
 
 async function slugExists(contentRoot: string, slug: string): Promise<boolean> {

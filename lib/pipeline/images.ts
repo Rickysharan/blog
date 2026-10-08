@@ -103,7 +103,7 @@ type CommonsPage = {
   }>;
 };
 
-const genericSubject = /^(?:news|sports?|politics|finance|movies?|anime|share market|team update|club update|high street)$/i;
+const genericSubject = /^(?:news|sports?|politics|finance|movies?|anime|share market|team update|club update|high street|season\s+\d+|magical girls?|anime series|tv anime|opening theme song)$/i;
 const genericPlaceToken = new Set([
   "los", "angeles", "san", "new", "york", "city", "united", "states", "north", "south",
 ]);
@@ -121,7 +121,8 @@ function namedEntityQueries(
   tags: string[],
   sourceContext?: string,
 ): string[] {
-  const context = `${story.title} ${story.snippet} ${sourceContext ?? ""}`;
+  const subjectContext = `${story.title} ${story.snippet}`;
+  const context = `${subjectContext} ${sourceContext ?? ""}`;
   const lowerContext = context.toLocaleLowerCase();
   const contextTokens = new Set(
     lowerContext
@@ -164,13 +165,13 @@ function namedEntityQueries(
   });
 
   const extracted = [
-    ...context.matchAll(
+    ...subjectContext.matchAll(
       /\b[A-Z][\p{L}'’-]+(?:\s+[A-Z][\p{L}'’-]+){1,4}\b/gu,
     ),
   ].map((match) => match[0]);
 
   const acronyms =
-    context.match(/\b[A-Z]{3,6}\b/g) ?? [];
+    subjectContext.match(/\b[A-Z]{3,6}\b/g) ?? [];
 
   const qualifiedSet =
     new Set(qualifiedSingleWordTags);

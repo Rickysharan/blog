@@ -31,13 +31,27 @@ export function normalizeGeneratedBody(title: string, body: string): NormalizedB
   }
 
   const canonicalAnalysisHeading = "## Why it matters";
+  const inlineAnalysisHeading = /[ \t]+##[ \t]+why[ \t]+it[ \t]+matters(?=[ \t]|$)[ \t]*/gi;
+  const withoutInlineHeading = normalized.replace(
+    inlineAnalysisHeading,
+    `\n\n${canonicalAnalysisHeading}\n\n`,
+  );
+  if (withoutInlineHeading !== normalized) {
+    normalized = withoutInlineHeading;
+    repairs.push("Normalized the Why it matters heading");
+  }
   const headingPattern = /^##[ \t]+why[ \t]+it[ \t]+matters[ \t]*$/gim;
   let headingChanged = false;
   normalized = normalized.replace(headingPattern, (heading) => {
     if (heading !== canonicalAnalysisHeading) headingChanged = true;
     return canonicalAnalysisHeading;
   });
-  if (headingChanged) repairs.push("Normalized the Why it matters heading");
+  if (
+    headingChanged &&
+    !repairs.includes("Normalized the Why it matters heading")
+  ) {
+    repairs.push("Normalized the Why it matters heading");
+  }
 
   return {
     body: normalized.replace(/\n{3,}/g, "\n\n").trim(),

@@ -371,6 +371,59 @@ describe("required article photo policy", () => {
     expect(fetcher).not.toHaveBeenCalled();
   });
 
+  it("does not treat a season number or genre label as a named image subject", async () => {
+    const searches: string[] = [];
+    const fetcher = vi.fn(async (input: string | URL | Request) => {
+      searches.push(
+        new URL(String(input)).searchParams.get("gsrsearch") ?? "",
+      );
+      return Response.json({ query: { pages: {} } });
+    });
+
+    await findRequiredArticlePhotos(
+      {
+        ...namedStory,
+        title: "Magilumiere Magical Girls Inc. Season 2 Anime Series Review",
+        snippet: "The second season received a positive review.",
+        category: "anime",
+      },
+      ["Magilumiere Magical Girls Inc.", "Magical Girls", "season 2"],
+      { fetchImpl: fetcher },
+    );
+
+    expect(searches.some((query) => /"season 2"/i.test(query))).toBe(false);
+    expect(searches.some((query) => /"magical girls"/i.test(query))).toBe(false);
+  });
+
+  it("does not use a different title mentioned only in source context as the image subject", async () => {
+    const searches: string[] = [];
+    const fetcher = vi.fn(async (input: string | URL | Request) => {
+      searches.push(
+        new URL(String(input)).searchParams.get("gsrsearch") ?? "",
+      );
+      return Response.json({ query: { pages: {} } });
+    });
+
+    await findRequiredArticlePhotos(
+      {
+        ...namedStory,
+        title: "Magilumiere Magical Girls Inc. Season 2 Anime Series Review",
+        snippet: "The second season received a positive review.",
+        category: "anime",
+      },
+      ["Magilumiere Magical Girls Inc."],
+      {
+        fetchImpl: fetcher,
+        sourceContext:
+          "Magical Girl Lyrical Nanoha returned in the same season.",
+      },
+    );
+
+    expect(
+      searches.some((query) => /Magical Girl Lyrical Nanoha/i.test(query)),
+    ).toBe(false);
+  });
+
   it("uses a named tag when its distinctive subject appears in the source URL", async () => {
     const queries: string[] = [];
     const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
