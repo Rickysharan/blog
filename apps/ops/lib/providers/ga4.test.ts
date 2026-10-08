@@ -14,6 +14,11 @@ function fixture() { return {
 }; }
 describe("GA4 transforms", () => {
   it("parses official-shaped reports without inventing rows", () => expect(transformGa4Reports(fixture())).toMatchObject({ summary: { activeUsers: 10, sessions: 12, views: 30, engagementRate: .5 }, trend: [{ date: "2026-10-04" }], channels: [{ name: "Organic Search", views: 20, sessions: 8 }] }));
+  it("accepts a summary row when Google omits the empty dimensionValues field", () => {
+    const input = fixture();
+    delete (input.summary.rows[0] as { dimensionValues?: unknown }).dimensionValues;
+    expect(transformGa4Reports(input).summary).toEqual({ activeUsers: 10, sessions: 12, views: 30, engagementRate: .5 });
+  });
   it("accepts a valid empty property without inventing zero metrics", () => {
     const empty = (dimensions: string[], metrics: string[]) => {
       void dimensions;

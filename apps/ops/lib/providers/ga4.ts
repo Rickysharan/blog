@@ -64,12 +64,13 @@ function parseReport(value: unknown, dimensions: string[], metrics: string[], pa
   if (!Array.isArray(rows)) throw invalidReport(part, "rows", "GA4 response columns do not match the request");
   if (rows.length > 500) throw invalidReport(part, "row-limit", "GA4 response exceeds row limit");
   return rows.map((row) => {
-    if (row.dimensionValues?.length !== dimensions.length || row.metricValues?.length !== metrics.length) throw invalidReport(part, "row", "GA4 row is incomplete");
-    const dimensionValues = row.dimensionValues.map(({ value: item }) => {
+    const dimensionValues = row.dimensionValues ?? (dimensions.length === 0 ? [] : undefined);
+    if (!Array.isArray(dimensionValues) || dimensionValues.length !== dimensions.length || !Array.isArray(row.metricValues) || row.metricValues.length !== metrics.length) throw invalidReport(part, "row", "GA4 row is incomplete");
+    const parsedDimensions = dimensionValues.map(({ value: item }) => {
       if (typeof item !== "string" || item.length > 2048) throw new Error("Invalid GA4 dimension");
       return item;
     });
-    return { dimensionValues, metricValues: row.metricValues.map(({ value: item }, index) => {
+    return { dimensionValues: parsedDimensions, metricValues: row.metricValues.map(({ value: item }, index) => {
       const metric = metrics[index]!; const parsed = finite(item, metric);
       if (metric === "engagementRate" && parsed > 1) throw new Error("Invalid GA4 engagementRate");
       return parsed;

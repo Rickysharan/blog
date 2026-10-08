@@ -6,7 +6,7 @@ import { parseGoogleProviderEnv } from "../env";
 import { readGoogleRefreshToken, readGoogleResourceId } from "../google/connections";
 import { markReportFailure, readReport, writeSuccessfulReport } from "./cache";
 import { createGoogleHttpClient } from "./google-http";
-import { logProviderFailure } from "./provider-error";
+import { logProviderFailure, safeProviderFailure } from "./provider-error";
 import { resolveReportRange, type ReportPreset } from "./report-range";
 
 const PUBLISHER_PATTERN = /^pub-\d{16}$/;
@@ -251,13 +251,25 @@ export function createAdsenseProvider(dependencies: AdsenseDependencies) {
       "endDate.year": range.end.slice(0, 4), "endDate.month": String(Number(range.end.slice(5, 7))), "endDate.day": String(Number(range.end.slice(8, 10))), limit: "1"
     });
     for (const metric of METRICS) reportParams.append("metrics", metric);
+    const request = async (part: "accounts" | "sites" | "policy" | "alerts" | "report", url: string) => {
+      try {
+        return await dependencies.request(url);
+      } catch (error) {
+        const base = safeProviderFailure("google-adsense", error).kind;
+        const status = error && typeof error === "object" && "status" in error && Number.isInteger((error as { status?: unknown }).status)
+          ? Number((error as { status: number }).status)
+          : null;
+        const suffix = status !== null && status >= 400 && status <= 599 ? `:http-${status}` : "";
+        throw Object.assign(new Error("AdSense provider request failed"), { kind: `provider-request:adsense-${part}:${base}${suffix}` });
+      }
+    };
     try {
       const [accounts, sites, policyIssues, alerts, report, adsTxt] = await Promise.all([
-        dependencies.request("https://adsense.googleapis.com/v2/accounts?pageSize=100"),
-        dependencies.request(`https://adsense.googleapis.com/v2/${account}/sites?pageSize=100`),
-        dependencies.request(`https://adsense.googleapis.com/v2/${account}/policyIssues?pageSize=100`),
-        dependencies.request(`https://adsense.googleapis.com/v2/${account}/alerts?languageCode=en`),
-        dependencies.request(`https://adsense.googleapis.com/v2/${account}/reports:generate?${reportParams}`),
+        request("accounts", "https://adsense.googleapis.com/v2/accounts?pageSize=100"),
+        request("sites", `https://adsense.googleapis.com/v2/${account}/sites?pageSize=100`),
+        request("policy", `https://adsense.googleapis.com/v2/${account}/policyIssues?pageSize=100`),
+        request("alerts", `https://adsense.googleapis.com/v2/${account}/alerts?languageCode=en`),
+        request("report", `https://adsense.googleapis.com/v2/${account}/reports:generate?${reportParams}`),
         dependencies.fetchAdsTxt()
       ]);
       const data = transformAdsenseResponses({ accounts, sites, policyIssues, alerts, report, adsTxt }, dependencies);

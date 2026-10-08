@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { ReportEnvelope } from "@omnilede/contracts";
 
 import { createAdsenseProvider, createAdsTxtFetcher, transformAdsenseResponses } from "./adsense";
+import { safeProviderFailure } from "./provider-error";
 
 const responses = () => ({
   accounts: { accounts: [{ name: "accounts/pub-1234567890123456", displayName: "OmniLede", state: "READY", pendingTasks: [] }] },
@@ -104,6 +105,27 @@ describe("AdSense transforms", () => {
 });
 
 describe("AdSense provider", () => {
+  it("identifies the failed provider operation without exposing response data", async () => {
+    const fixture = responses();
+    const queue: unknown[] = [fixture.accounts, fixture.sites, fixture.policyIssues, fixture.alerts];
+    let failure: unknown;
+    const provider = createAdsenseProvider({
+      publisherId: "pub-1234567890123456", blogOrigin: "https://omnilede.example",
+      request: async (url) => {
+        if (url.includes("reports:generate")) throw Object.assign(new Error("private upstream detail"), { kind: "invalid-response", status: 400 });
+        return queue.shift();
+      },
+      fetchAdsTxt: async () => fixture.adsTxt,
+      cache: { read: async () => ({ source: "Google AdSense", range: { start: "2026-10-01", end: "2026-10-01" }, fetchedAt: null, state: "unavailable" as const, data: null }), success: async () => undefined, failure: async () => undefined },
+      onFailure: (error) => { failure = error; }
+    });
+    await provider("7d");
+    expect(safeProviderFailure("google-adsense", failure)).toEqual({
+      provider: "google-adsense",
+      kind: "provider-request:adsense-report:invalid-response:http-400",
+    });
+  });
+
   it("uses bounded official endpoints and preserves stale cache data after a failed refresh", async () => {
     const urls: string[] = [];
     const fixture = responses();

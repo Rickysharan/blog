@@ -43,10 +43,11 @@ function parseRows(value: unknown, dimensions: number): Array<{ keys: string[]; 
   return rows.map((item) => {
     if (!item || typeof item !== "object" || Array.isArray(item)) throw new Error("Invalid Search Console row");
     const row = item as Record<string, unknown>;
-    if (!Array.isArray(row.keys) || row.keys.length !== dimensions || row.keys.some((key) => typeof key !== "string" || key.length > 2048)) throw new Error("Missing Search Console dimension");
+    const keys = row.keys ?? (dimensions === 0 ? [] : undefined);
+    if (!Array.isArray(keys) || keys.length !== dimensions || keys.some((key) => typeof key !== "string" || key.length > 2048)) throw new Error("Missing Search Console dimension");
     const ctr = finite(row.ctr, "ctr");
     if (ctr > 1) throw new Error("Invalid Search Console ctr");
-    return { keys: row.keys as string[], metric: { clicks: finite(row.clicks, "clicks"), impressions: finite(row.impressions, "impressions"), ctr, position: finite(row.position, "position") } };
+    return { keys: keys as string[], metric: { clicks: finite(row.clicks, "clicks"), impressions: finite(row.impressions, "impressions"), ctr, position: finite(row.position, "position") } };
   });
 }
 

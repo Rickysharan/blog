@@ -28,4 +28,14 @@ describe("safeProviderFailure", () => {
       kind: "invalid-report:ga4-summary-columns",
     });
   });
+
+  it("keeps a bounded provider operation and HTTP status without exposing messages", () => {
+    const error = Object.assign(new Error("private upstream detail"), {
+      kind: "provider-request:adsense-report:invalid-response:http-400",
+    });
+    expect(safeProviderFailure("google-adsense", error)).toEqual({
+      provider: "google-adsense",
+      kind: "provider-request:adsense-report:invalid-response:http-400",
+    });
+  });
 });

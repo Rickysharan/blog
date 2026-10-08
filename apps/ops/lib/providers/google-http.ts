@@ -15,6 +15,7 @@ export class GoogleProviderError extends Error {
   constructor(
     public readonly kind: "reconnect-required" | "rate-limited" | "upstream" | "invalid-response" | "configuration",
     message = "Google report is temporarily unavailable",
+    public readonly status: number | null = null,
   ) { super(message); }
 }
 
@@ -104,10 +105,10 @@ export function createGoogleHttpClient(options: GoogleHttpOptions) {
         });
       } catch { throw new GoogleProviderError("upstream"); }
       if (response.status === 401 && attempt === 0) { accessToken = await refresh(); continue; }
-      if (response.status === 401 || response.status === 403) throw new GoogleProviderError("reconnect-required");
-      if (response.status === 429) throw new GoogleProviderError("rate-limited");
-      if (response.status >= 500) throw new GoogleProviderError("upstream");
-      if (!response.ok) throw new GoogleProviderError("invalid-response");
+      if (response.status === 401 || response.status === 403) throw new GoogleProviderError("reconnect-required", undefined, response.status);
+      if (response.status === 429) throw new GoogleProviderError("rate-limited", undefined, response.status);
+      if (response.status >= 500) throw new GoogleProviderError("upstream", undefined, response.status);
+      if (!response.ok) throw new GoogleProviderError("invalid-response", undefined, response.status);
       return readBoundedJson(response);
     }
     throw new GoogleProviderError("reconnect-required");

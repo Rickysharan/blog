@@ -17,7 +17,7 @@ export function safeProviderFailure(provider: ReportProvider, error: unknown): {
     : null;
   return {
     provider,
-    kind: typeof kind === "string" && (upstreamKinds.has(kind) || /^invalid-report:[a-z0-9-]{1,80}$/.test(kind))
+    kind: typeof kind === "string" && (upstreamKinds.has(kind) || /^invalid-report:[a-z0-9-]{1,80}$/.test(kind) || /^provider-request:adsense-(?:accounts|sites|policy|alerts|report):(?:reconnect-required|rate-limited|upstream|invalid-response|configuration|invalid-report)(?::http-[45]\d\d)?$/.test(kind))
       ? kind
       : "invalid-report",
   };
