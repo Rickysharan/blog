@@ -8,7 +8,11 @@ import { IosInstallBanner } from "@/components/pwa/ios-install-banner";
 import { InstallProvider } from "@/components/pwa/install-provider";
 import { ConsentManager } from "@/components/privacy/consent-manager";
 import { THEME_BOOTSTRAP } from "@/components/theme/theme-script";
-import { adsenseServingConfig, commercialFeaturesEnabled } from "@/lib/config/commercial";
+import {
+  adsenseServingConfig,
+  commercialFeaturesEnabled,
+  OMNILEDE_ADSENSE_PUBLISHER_ID,
+} from "@/lib/config/commercial";
 import { SITE_CONFIG } from "@/lib/config/site";
 import { serializeJsonLd } from "@/lib/seo/json-ld";
 import { buildOrganizationJsonLd, buildWebsiteJsonLd } from "@/lib/seo/site-json-ld";
@@ -36,7 +40,7 @@ export const metadata: Metadata = {
   description: SITE_CONFIG.description,
   applicationName: SITE_CONFIG.name,
   other: {
-    "google-adsense-account": "ca-pub-8347168597721597",
+    "google-adsense-account": `ca-${OMNILEDE_ADSENSE_PUBLISHER_ID}`,
   },
   manifest: "/manifest.json",
   icons: {

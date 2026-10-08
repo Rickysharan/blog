@@ -9,6 +9,7 @@ export function commercialFeaturesEnabled(
 export const ADSENSE_PUBLISHER_ID_PATTERN = /^pub-\d{16}$/;
 export const ADSENSE_CLIENT_ID_PATTERN = /^ca-pub-\d{16}$/;
 export const ADSENSE_SLOT_ID_PATTERN = /^\d{10}$/;
+export const OMNILEDE_ADSENSE_PUBLISHER_ID = "pub-8347168597721597";
 
 export type AdsenseServingConfig = {
   enabled: boolean;

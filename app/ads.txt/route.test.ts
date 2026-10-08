@@ -13,7 +13,14 @@ it("serves the exact validated Google seller record as root plain text", async (
   await expect(response.text()).resolves.toBe("google.com, pub-1234567890123456, DIRECT, f08c47fec0942fa0\n");
 });
 
-it.each([undefined, "pub-test", "ca-pub-1234567890123456", "pub-12345678901234567"])("returns not found rather than a placeholder for invalid publisher id %s", async (publisherId) => {
-  if (publisherId === undefined) delete process.env.ADSENSE_PUBLISHER_ID; else process.env.ADSENSE_PUBLISHER_ID = publisherId;
+it("serves OmniLede's verified public seller record when hosting has no override", async () => {
+  delete process.env.ADSENSE_PUBLISHER_ID;
+  const response = await GET();
+  expect(response.status).toBe(200);
+  await expect(response.text()).resolves.toBe("google.com, pub-8347168597721597, DIRECT, f08c47fec0942fa0\n");
+});
+
+it.each(["pub-test", "ca-pub-1234567890123456", "pub-12345678901234567"])("returns not found rather than a placeholder for invalid publisher id %s", async (publisherId) => {
+  process.env.ADSENSE_PUBLISHER_ID = publisherId;
   expect((await GET()).status).toBe(404);
 });
