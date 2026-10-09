@@ -42,6 +42,27 @@ describe("auditPublicSite", () => {
     expect(fixture.calls.length).toBeLessThanOrEqual(28);
   });
 
+  it("accepts a visible linked person author that matches NewsArticle authorship", async () => {
+    const personAuthor = {
+      ...JSON.parse(articleLd),
+      author: { "@type": "Person", name: "Ricky Sharan", url: `${origin}/author/ricky-sharan` },
+    };
+    const body = articleBody.replace(
+      '<span itemprop="author">OmniLede Editorial</span>',
+      '<a itemprop="author" rel="author" href="/author/ricky-sharan">Ricky Sharan</a>',
+    );
+    const fixture = fixtureFetch({
+      [`${origin}/article/story`]: new Response(html({
+        canonical: `${origin}/article/story`,
+        body,
+        jsonLd: JSON.stringify(personAuthor),
+      }), { status: 200 }),
+    });
+
+    expect((await auditPublicSite(origin, { fetchImpl: fixture.fetch }))
+      .find(({ check }) => check === "structured-data")?.state).toBe("pass");
+  });
+
   it("reports actionable page-specific evidence and maps only warnings to stable Today suggestions", async () => {
     const broken = html({ canonical: `${origin}/wrong`, title: "", description: "", body: `<a href="/missing">Missing</a><img src="/image.jpg">`, jsonLd: "{}" });
     const fixture = fixtureFetch({ [`${origin}/article/story`]: new Response(broken, { status: 200 }) });

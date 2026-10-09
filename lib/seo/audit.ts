@@ -318,7 +318,10 @@ function structuredArticleProblem(html: string, pageUrl: string, origin: string,
   if (!validOrganization(publisher, origin) || !siteOrganization || publisher?.name !== siteOrganization.name) {
     return "NewsArticle publisher does not match the site Organization identity.";
   }
-  const visibleAuthor = markedElements(metadata, "span", "author")[0]?.text;
+  const visibleAuthor = (
+    markedElements(metadata, "span", "author")[0] ??
+    markedElements(metadata, "a", "author")[0]
+  )?.text;
   if (!visibleAuthor || !author || !["Person", "Organization"].includes(String(author["@type"])) || author.name !== visibleAuthor ||
     (author["@type"] === "Organization" && (author["@id"] !== `${origin}/#organization` || author.name !== publisher?.name))) {
     return "NewsArticle author does not match the visible author and canonical Organization identity.";
