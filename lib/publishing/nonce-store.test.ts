@@ -38,7 +38,7 @@ describe("claimPublicationNonce", () => {
 
   test("uses an exposed service-only gateway while retaining a private nonce table and database-clock cleanup", async () => {
     const migration = await readFile(
-      path.join(process.cwd(), "supabase/migrations/20260828161632_publication_nonces.sql"),
+      path.join(process.cwd(), "supabase/migrations/20260910133229_publication_nonces.sql"),
       "utf8",
     );
 
