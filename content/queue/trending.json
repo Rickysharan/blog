@@ -1,5 +1,693 @@
 [
   {
+    "title": "Russian strikes kill civilians, injure dozens across Ukraine",
+    "source": "Al Jazeera",
+    "sourceUrl": "https://www.aljazeera.com/video/newsfeed/2026/10/17/russian-strikes-kill-civilians-injure-dozens-across-ukraine?traffic_source=rss",
+    "date": "2026-10-17T11:22:41.000Z",
+    "snippet": "At least eight people have been killed and nearly 60 injured in the latest wave of Russian strikes across Ukraine.",
+    "category": "politics"
+  },
+  {
+    "title": "Nationwide protests spread across France as ‘yellow vests’ set to join",
+    "source": "Al Jazeera",
+    "sourceUrl": "https://www.aljazeera.com/news/2026/10/17/france-braces-for-nationwide-protests-with-yellow-vest-members-set-to-join?traffic_source=rss",
+    "date": "2026-10-17T11:21:32.000Z",
+    "snippet": "Demonstrations began in mid-September at schools and have expanded, tapping into wider grievances.",
+    "category": "politics"
+  },
+  {
+    "title": "Trump eases Russia oil sanctions, but is Europe still buying Moscow’s gas?",
+    "source": "Al Jazeera",
+    "sourceUrl": "https://www.aljazeera.com/news/2026/10/17/trump-eases-russia-oil-sanctions-but-is-europe-still-buying-moscows-gas?traffic_source=rss",
+    "date": "2026-10-17T11:10:22.000Z",
+    "snippet": "Analysts say Russia will benefit most from US sanctions waiver.",
+    "category": "politics"
+  },
+  {
+    "title": "England stunned by Tonga in World Cup opener",
+    "source": "BBC Sport",
+    "sourceUrl": "https://www.bbc.co.uk/sport/rugby-league/articles/c83vqd73k0xlo?at_campaign=rss&at_medium=RSS",
+    "date": "2026-10-17T11:04:05.000Z",
+    "snippet": "England 's men fall to defeat in the Rugby League World Cup opener as Tonga take their chances in Perth.",
+    "category": "sports"
+  },
+  {
+    "title": "J.K. Rowling’s Agent Slams Trans Rights Protest at ‘Harry Potter and the Cursed Child’ in London: It Put ‘Others at Risk’",
+    "source": "Variety",
+    "sourceUrl": "https://variety.com/2026/legit/news/jk-rowling-trans-protest-harry-potter-and-the-cursed-child-1236914728",
+    "date": "2026-10-17T11:03:38.000Z",
+    "snippet": "J.K. Rowling’s agent Neil Blair has slammed the transgender rights activists who staged a dramatic protest before a gala performance of “Harry Potter and the Cursed Child” on Thursday in London’s West End. The protesters, many wearing masks, hats and goggles to hide their identity, stormed the red carpet as celebrities were arriving for a […]",
+    "category": "movies"
+  },
+  {
+    "title": "Sally Rooney’s books pulled from UK over Palestine Action support",
+    "source": "Al Jazeera",
+    "sourceUrl": "https://www.aljazeera.com/video/newsfeed/2026/10/17/sally-rooneys-books-pulled-from-uk-over-palestine-action-support-2?traffic_source=rss",
+    "date": "2026-10-17T10:50:39.000Z",
+    "snippet": "We asked students what they think.",
+    "category": "politics"
+  },
+  {
+    "title": "Taylor Swift Heroine Clara Bow’s Breakout Movie ‘It’ Leads Carlotta Films, Artcraft Pictures French Distribution Deal of Hollywood Classics",
+    "source": "Variety",
+    "sourceUrl": "https://variety.com/2026/film/news/taylor-swift-heroine-clara-bow-it-in-carlotta-artcraft-deal-1236914724",
+    "date": "2026-10-17T10:37:17.000Z",
+    "snippet": "LYON, France — “It,” the 1927 breakout movie of silent film star Clara Bow, to whom Taylor Swift paid tribute in a song named after her in “The Tortured Poets Department,” leads a deal between French classic film distributor Carlotta Films and U.S. restoration company Artcraft Pictures. Under the terms of the deal, Carlotta will […]",
+    "category": "movies"
+  },
+  {
+    "title": "Solar power booms in Philippines as war on Iran spikes energy costs",
+    "source": "Al Jazeera",
+    "sourceUrl": "https://www.aljazeera.com/news/2026/10/17/solar-power-booms-in-philippines-as-war-on-iran-spikes-energy-costs?traffic_source=rss",
+    "date": "2026-10-17T10:12:01.000Z",
+    "snippet": "With Southeast Asia's largest electricity bills rising even higher, Filipinos invest in rooftop panels.",
+    "category": "politics"
+  },
+  {
+    "title": "Guardiola receives standing ovation on return to Barcelona",
+    "source": "BBC Sport",
+    "sourceUrl": "https://www.bbc.co.uk/sport/videos/cm9dzg38n6j7o?at_campaign=rss&at_medium=RSS",
+    "date": "2026-10-17T10:00:10.000Z",
+    "snippet": "Former Manchester City and Barcelona manager Pep Guardiola received a standing ovation from the crowd while attending Barcelona's EuroLeague basketball match against Olympiacos.",
+    "category": "sports"
+  },
+  {
+    "title": "LIVE: India vs West Indies – fifth T20 International",
+    "source": "Al Jazeera",
+    "sourceUrl": "https://www.aljazeera.com/sports/liveblog/2026/10/17/live-india-vs-west-indies-fifth-t20-international?traffic_source=rss",
+    "date": "2026-10-17T09:54:49.000Z",
+    "snippet": "Follow updates, including toss and team news, from our live text commentary stream of the series decider.",
+    "category": "politics"
+  },
+  {
+    "title": "As Israel blocks PA funding, the West Bank’s healthcare system is failing",
+    "source": "Al Jazeera",
+    "sourceUrl": "https://www.aljazeera.com/news/2026/10/17/as-israel-blocks-pa-funding-the-west-banks-healthcare-system-is-failing?traffic_source=rss",
+    "date": "2026-10-17T09:47:55.000Z",
+    "snippet": "Hospitals across the occupied West Bank have been hit by a funding shortage.",
+    "category": "politics"
+  },
+  {
+    "title": "Sudan’s army claims dozens of RSF fighters killed in Nyala attack",
+    "source": "Al Jazeera",
+    "sourceUrl": "https://www.aljazeera.com/news/2026/10/17/2550?traffic_source=rss",
+    "date": "2026-10-17T09:44:47.000Z",
+    "snippet": "Rapid Support Forces accuse army of killing 30 civilians in attack on Nyala's busy livestock market.",
+    "category": "politics"
+  },
+  {
+    "title": "IMF urges support for poorer nations facing high inflation, war spillovers",
+    "source": "Al Jazeera",
+    "sourceUrl": "https://www.aljazeera.com/economy/2026/10/17/war-spillovers-debt-threaten-low-income-nations-imf-chief-warns?traffic_source=rss",
+    "date": "2026-10-17T09:31:47.000Z",
+    "snippet": "Low-income countries spend up to 14 percent of their revenue on debt repayments, IMF chief says.",
+    "category": "politics"
+  },
+  {
+    "title": "Aikatsu Stars 10th Anniversary Film's Trailer Unveils Theme Song, January 22 Debut",
+    "source": "Anime News Network",
+    "sourceUrl": "https://www.animenewsnetwork.com/news/2026-10-17/aikatsu-stars-10th-anniversary-film-trailer-unveils-theme-song-january-22-debut/.242937",
+    "date": "2026-10-17T09:31:32.000Z",
+    "snippet": "Yume & company invited to \"Venus Jamboree\" with world's top idols",
+    "category": "anime"
+  },
+  {
+    "title": "Coen Brothers Bring Laughs to Lumière Award Ceremony as Javier Bardem Recalls ‘No Country for Old Men’: ‘They Gave Me One Masterpiece’",
+    "source": "Variety",
+    "sourceUrl": "https://variety.com/2026/film/news/coen-brothers-profane-thank-you-lumiere-award-1236914700",
+    "date": "2026-10-17T09:20:02.000Z",
+    "snippet": "To the sound of the Gipsy Kings’ Spanish-language rendition of “Hotel California,” Joel and Ethan Coen took the stage at Lyon’s Lumière Film Festival on Friday evening to receive the Lumière Award, celebrating four decades of filmmaking with a characteristically irreverent tribute to the inventors of cinema. “Thank you to the Lumières for inventing the […]",
+    "category": "movies"
+  },
+  {
+    "title": "Houthis strike Yemen’s Aden: What that means",
+    "source": "Al Jazeera",
+    "sourceUrl": "https://www.aljazeera.com/news/2026/10/17/iran-backed-houthis-strike-yemens-aden-what-that-means?traffic_source=rss",
+    "date": "2026-10-17T09:16:48.000Z",
+    "snippet": "What we know about the Houthi strikes on Aden’s presidential palace and airport, and why they matter.",
+    "category": "politics"
+  },
+  {
+    "title": "Murder in Malaysia: Justice for Altantuya Shaariibuu",
+    "source": "Al Jazeera",
+    "sourceUrl": "https://www.aljazeera.com/video/101-east/2026/10/17/murder-in-malaysia-justice-for-altantuya-shaariibuu?traffic_source=rss",
+    "date": "2026-10-17T08:40:47.000Z",
+    "snippet": "101 East investigates if power and politics are shielding those behind the 2006 murder of a Mongolian woman in Malaysia.",
+    "category": "politics"
+  },
+  {
+    "title": "England crush Women's World Cup debutants Wales",
+    "source": "BBC Sport",
+    "sourceUrl": "https://www.bbc.co.uk/sport/rugby-league/articles/c6djvxmx0z1po?at_campaign=rss&at_medium=RSS",
+    "date": "2026-10-17T08:39:22.000Z",
+    "snippet": "England scored seven tries before the break, and 13 in total on their way to a comprehensive victory over Wales in their Group A opener.",
+    "category": "sports"
+  },
+  {
+    "title": "Rubio’s Uzbekistan trip underlines Central Asia’s hunt for diverse partners",
+    "source": "Al Jazeera",
+    "sourceUrl": "https://www.aljazeera.com/news-analysis/2026/10/17/rubios-uzbekistan-trip-underlines-central-asias-hunt-for-diverse-partners?traffic_source=rss",
+    "date": "2026-10-17T08:27:28.000Z",
+    "snippet": "Can the United States reassert influence with pragmatic, transactional approach to Central Asia?",
+    "category": "politics"
+  },
+  {
+    "title": "Eight-try Australia send Scotland to eighth straight defeat",
+    "source": "BBC Sport",
+    "sourceUrl": "https://www.bbc.co.uk/sport/rugby-union/articles/cxg5jz4epr1po?at_campaign=rss&at_medium=RSS",
+    "date": "2026-10-17T08:13:13.000Z",
+    "snippet": "Scotland suffer a chastening eight-try defeat by Australia in their WXV Global Series match in Sydney.",
+    "category": "sports"
+  },
+  {
+    "title": "Oregon school shooter was former special-needs student, police say",
+    "source": "Al Jazeera",
+    "sourceUrl": "https://www.aljazeera.com/video/newsfeed/2026/10/17/oregon-school-shooter-was-former-special-needs-student-police-say-2?traffic_source=rss",
+    "date": "2026-10-17T08:04:35.000Z",
+    "snippet": "Oregon school shooter was former special-needs student, police say",
+    "category": "politics"
+  },
+  {
+    "title": "Wildfire prompts thousands of evacuation orders in Orange County",
+    "source": "Al Jazeera",
+    "sourceUrl": "https://www.aljazeera.com/video/newsfeed/2026/10/17/wildfire-prompts-thousands-of-evacuation-orders-in-orange-county?traffic_source=rss",
+    "date": "2026-10-17T08:03:26.000Z",
+    "snippet": "Firefighters are battling fast-moving wildfires in Orange County as Santa Ana winds fan the flames.",
+    "category": "politics"
+  },
+  {
+    "title": "Arrests made for pro-Nazi chants at Hajduk Split-Ajax match in Croatia",
+    "source": "Al Jazeera",
+    "sourceUrl": "https://www.aljazeera.com/sports/2026/10/17/pro-nazi-arrests-made-for-chants-at-hajduk-split-ajax-in-uefa-europa-league?traffic_source=rss",
+    "date": "2026-10-17T07:45:31.000Z",
+    "snippet": "Croatian football fans arrested over slurs before and during UEFA Conference League game in Split.",
+    "category": "politics"
+  },
+  {
+    "title": "Stranger Than Heaven Game Streams Story Trailer for 1st Act 'Kokura'",
+    "source": "Anime News Network",
+    "sourceUrl": "https://www.animenewsnetwork.com/news/2026-10-17/stranger-than-heaven-game-streams-story-trailer-for-1st-act-kokura/.242936",
+    "date": "2026-10-17T07:45:00.000Z",
+    "snippet": "Game launches on January 15 for Xbox Series X|S, PlayStation 5, PC via Steam",
+    "category": "anime"
+  },
+  {
+    "title": "Senegal-sized Antarctic glacier melting faster than thought: Why it matters",
+    "source": "Al Jazeera",
+    "sourceUrl": "https://www.aljazeera.com/news/2026/10/17/senegal-sized-antarctic-glacier-melting-faster-than-thought-why-it-matters?traffic_source=rss",
+    "date": "2026-10-17T07:43:19.000Z",
+    "snippet": "Thwaites glacier has been losing ice for decades. Now there are concerns of rapidly accelerating loss.",
+    "category": "politics"
+  },
+  {
+    "title": "11-year old flying car company mocks Tesla Roadster",
+    "source": "Al Jazeera",
+    "sourceUrl": "https://www.aljazeera.com/video/newsfeed/2026/10/17/11-year-old-flying-car-company-mocks-tesla-roadster?traffic_source=rss",
+    "date": "2026-10-17T07:32:42.000Z",
+    "snippet": "California-based Alef Aeronautics mocked Tesla, releasing a video of its flying car soaring over a Tesla Roadster.",
+    "category": "politics"
+  },
+  {
+    "title": "England's 41-match unbeaten run ended by Canada",
+    "source": "BBC Sport",
+    "sourceUrl": "https://www.bbc.co.uk/sport/rugby-union/articles/cknv0m61l9e4o?at_campaign=rss&at_medium=RSS",
+    "date": "2026-10-17T07:25:54.000Z",
+    "snippet": "England's 41-match unbeaten streak ends in dramatic fashion as Shoshanah Seumanutafa's late try hands Canada a thrilling 24-21 victory in Toronto.",
+    "category": "sports"
+  },
+  {
+    "title": "Israeli raids and arrests in southern Syria push population to the brink",
+    "source": "Al Jazeera",
+    "sourceUrl": "https://www.aljazeera.com/features/2026/10/17/israeli-raids-and-arrests-in-southern-syria-push-population-to-the-brink?traffic_source=rss",
+    "date": "2026-10-17T07:17:06.000Z",
+    "snippet": "Survivors recount brutal prison conditions, enduring beatings, restraints and psychological abuse by Israeli soldiers.",
+    "category": "politics"
+  },
+  {
+    "title": "'I had so many medals under the bed' - Green on Chelsea success",
+    "source": "BBC Sport",
+    "sourceUrl": "https://www.bbc.co.uk/sport/football/articles/cj5ynpgzly7no?at_campaign=rss&at_medium=RSS",
+    "date": "2026-10-17T07:16:49.000Z",
+    "snippet": "When Paul Green left Chelsea after 13 years, he had achieved so much success that the majority of his medals were hidden away in a box under the bed.",
+    "category": "sports"
+  },
+  {
+    "title": "Bleach: Thousand-Year Blood War - The Calamity Anime Streams 'Last' Promo Video",
+    "source": "Anime News Network",
+    "sourceUrl": "https://www.animenewsnetwork.com/news/2026-10-17/bleach-thousand-year-blood-war-the-calamity-anime-streams-last-promo-video/.242935",
+    "date": "2026-10-17T06:51:02.000Z",
+    "snippet": "Episodes 49, 50 air on October 19, 26",
+    "category": "anime"
+  },
+  {
+    "title": "Can Yemen’s government forces sustain their offensive against the Houthis?",
+    "source": "Al Jazeera",
+    "sourceUrl": "https://www.aljazeera.com/news-analysis/2026/10/17/can-yemens-government-forces-sustain-their-offensive-against-the-houthis?traffic_source=rss",
+    "date": "2026-10-17T06:41:34.000Z",
+    "snippet": "Houthi missile strikes threaten key supply routes on Yemen's Red Sea coast, intensifying pressure on government forces.",
+    "category": "politics"
+  },
+  {
+    "title": "Ukraine and Europe have little choice but to work with Trump",
+    "source": "Al Jazeera",
+    "sourceUrl": "https://www.aljazeera.com/opinions/2026/10/17/ukraine-and-europe-have-little-choice-but-to-work-with-trump?traffic_source=rss",
+    "date": "2026-10-17T06:36:03.000Z",
+    "snippet": "Despite growing tensions over Russia, Kyiv and European leaders remain dependent on US support.",
+    "category": "politics"
+  },
+  {
+    "title": "Dubois v Wardley 2 - heavyweight title fight predictions",
+    "source": "BBC Sport",
+    "sourceUrl": "https://www.bbc.co.uk/sport/boxing/articles/cwz0vdmyvrx8o?at_campaign=rss&at_medium=RSS",
+    "date": "2026-10-17T06:28:03.000Z",
+    "snippet": "Figures from the boxing world give their predictions for Saturday's heavyweight world title rematch between Fabio Wardley and Daniel Dubois.",
+    "category": "sports"
+  },
+  {
+    "title": "AI fears are being weaponised",
+    "source": "Al Jazeera",
+    "sourceUrl": "https://www.aljazeera.com/opinions/2026/10/17/ai-fears-are-being-weaponised?traffic_source=rss",
+    "date": "2026-10-17T06:21:39.000Z",
+    "snippet": "Tech giants are fighting to protect their monopolies from cheap open-source models. Fear is their weapon.",
+    "category": "politics"
+  },
+  {
+    "title": "Matos on tactics, Klopp's influence, and taking Swans to top of the league",
+    "source": "BBC Sport",
+    "sourceUrl": "https://www.bbc.co.uk/sport/football/articles/crp3gq832gqxo?at_campaign=rss&at_medium=RSS",
+    "date": "2026-10-17T05:56:25.000Z",
+    "snippet": "Swansea boss Vitor Matos spent five years as an elite development coach at Liverpool, but it would be unfair to paint him with a Jurgen Klopp-shaped brush entirely.",
+    "category": "sports"
+  },
+  {
+    "title": "OceanVeil to Add 19 Anime Titles from Media Blasters",
+    "source": "Anime News Network",
+    "sourceUrl": "https://www.animenewsnetwork.com/news/2026-10-17/oceanveil-to-add-19-anime-titles-from-media-blasters/.242934",
+    "date": "2026-10-17T05:54:28.000Z",
+    "snippet": "Magical Witch Punie-chan, CODE-E, EIken, Gakuen Heaven , more to stream on service",
+    "category": "anime"
+  },
+  {
+    "title": "The chatbot murder guide: AI’s struggle between privacy, reporting violence",
+    "source": "Al Jazeera",
+    "sourceUrl": "https://www.aljazeera.com/news/2026/10/17/the-chatbot-murder-guide-ais-struggle-between-privacy-reporting-violence?traffic_source=rss",
+    "date": "2026-10-17T05:50:37.000Z",
+    "snippet": "Experts say balancing the need to govern AI for public safety with user privacy is 'extraordinarily difficult'.",
+    "category": "politics"
+  },
+  {
+    "title": "‘Renoir’ Producers Join Asia-Europe Co-Production Panel at Tokyo Market as Japanese Accelerator Atmovie Global Track Partners With Ties That Bind",
+    "source": "Variety",
+    "sourceUrl": "https://variety.com/2026/film/news/renoir-producers-asia-europe-co-production-panel-tiffcom-1236914637",
+    "date": "2026-10-17T05:37:19.000Z",
+    "snippet": "Producers behind Hayakawa Chie’s Cannes competition title “Renoir” are among the speakers at a session on Asia-Europe co-production at Tokyo’s TIFFCOM market on Oct. 30, as Japanese accelerator Atmovie Global Track formalizes a partnership with Europe-based workshop Ties That Bind. The open panel, titled “Building Creative Partnerships,” will examine how producers and directors work together […]",
+    "category": "movies"
+  },
+  {
+    "title": "Comikey Adds Mato Kauta's The Wolf King's Bride Manga",
+    "source": "Anime News Network",
+    "sourceUrl": "https://www.animenewsnetwork.com/news/2026-10-17/comikey-adds-mato-kauta-the-wolf-king-bride-manga/.242933",
+    "date": "2026-10-17T05:31:42.000Z",
+    "snippet": "Hakusensha serialized shōjo manga from 2009 to 2018",
+    "category": "anime"
+  },
+  {
+    "title": "Russian attacks in Ukraine kill at least 8, cut power to 1 million",
+    "source": "Al Jazeera",
+    "sourceUrl": "https://www.aljazeera.com/news/2026/10/17/russian-attacks-in-ukraine-kill-at-least-8-cut-power-to-1-million?traffic_source=rss",
+    "date": "2026-10-17T05:19:19.000Z",
+    "snippet": "Russia strikes Kharkiv, Kramatorsk, Volyn and Rivne as Moscow presses its campaign against Ukraine's power grid.",
+    "category": "politics"
+  },
+  {
+    "title": "Who am I? Plus today's other quizzes",
+    "source": "BBC Sport",
+    "sourceUrl": "https://www.bbc.co.uk/sport/football/articles/cw1l3dz2ppe0o?at_campaign=rss&at_medium=RSS",
+    "date": "2026-10-17T05:15:17.000Z",
+    "snippet": "Test your football knowledge against today's Who Am I?, Five in Five and Brainteaser.",
+    "category": "sports"
+  },
+  {
+    "title": "Peow2 Licenses Jyoshikohei, Alien 9, Phantom Core Manga",
+    "source": "Anime News Network",
+    "sourceUrl": "https://www.animenewsnetwork.com/news/2026-10-17/peow2-licenses-jyoshikohei-alien-9-phantom-core-manga/.242932",
+    "date": "2026-10-17T05:08:19.000Z",
+    "snippet": "Company to release all 3 manga next year",
+    "category": "anime"
+  },
+  {
+    "title": "Three Mexicans jailed for 158 years each for killing Australian, US surfers",
+    "source": "Al Jazeera",
+    "sourceUrl": "https://www.aljazeera.com/news/2026/10/17/three-mexicans-jailed-for-158-years-each-for-killing-australian-us-surfers?traffic_source=rss",
+    "date": "2026-10-17T05:01:14.000Z",
+    "snippet": "A Mexican judge sentenced the three men for the 2024 murders a week after they were found guilty.",
+    "category": "politics"
+  },
+  {
+    "title": "The Israeli politicians seeking to replace Netanyahu",
+    "source": "Al Jazeera",
+    "sourceUrl": "https://www.aljazeera.com/news/2026/10/17/the-israeli-politicians-seeking-to-replace-netanyahu?traffic_source=rss",
+    "date": "2026-10-17T05:00:58.000Z",
+    "snippet": "A look at Israel's main opposition leaders, their parties and their largely shared positions on Gaza and other wars.",
+    "category": "politics"
+  },
+  {
+    "title": "Japan Actors Union Develops Guidelines for Generative AI Use",
+    "source": "Anime News Network",
+    "sourceUrl": "https://www.animenewsnetwork.com/interest/2026-10-16/japan-actors-union-develops-guidelines-for-generative-ai-use/.242861",
+    "date": "2026-10-17T03:59:00.000Z",
+    "snippet": "Dragon Ball cast members discuss how generative AI affects them in press conference",
+    "category": "anime"
+  },
+  {
+    "title": "Viz Media Licenses Jojolion, His Sweet Solace, Under Doctor, More Manga for Summer 2027",
+    "source": "Anime News Network",
+    "sourceUrl": "https://www.animenewsnetwork.com/news/2026-10-16/viz-media-licenses-jojolion-his-sweet-solace-under-doctor-more-manga-for-summer-2027/.242929",
+    "date": "2026-10-17T02:58:10.000Z",
+    "snippet": "Someone Hertz, Belladonna's Lover, Bus for Two manga; more works slated for next summer",
+    "category": "anime"
+  },
+  {
+    "title": "GROW UP SHOW -Sunflower Circus- Anime Streams Opening, Ending Song Music Videos",
+    "source": "Crunchyroll News",
+    "sourceUrl": "https://crunchyroll.com/news/latest/2026/10/17/grow-up-show-sunflower-circus-anime-opening-ending-song-music-videos",
+    "date": "2026-10-17T02:41:00.000Z",
+    "snippet": "The original TV anime series is available on Crunchyroll",
+    "category": "anime"
+  },
+  {
+    "title": "Late Canada fightback ends Red Roses' unbeaten streak",
+    "source": "BBC Sport",
+    "sourceUrl": "https://www.bbc.co.uk/sport/rugby-union/videos/cq77pv1jdxxpo?at_campaign=rss&at_medium=RSS",
+    "date": "2026-10-17T02:20:43.000Z",
+    "snippet": "Canada fight back to beat England 24-21 in Toronto in the WXV Global Series, with Shoshanah Seumanutafa's 77th-minute try ending the Red Roses' unbeaten run, stretching back to the 2022 Rugby World Cup final.",
+    "category": "sports"
+  },
+  {
+    "title": "Kyary Pamyu Pamyu Shares Pan Dorobo TV Anime Ending Song Music Video",
+    "source": "Crunchyroll News",
+    "sourceUrl": "https://crunchyroll.com/news/latest/2026/10/17/pan-dorobo-tv-anime-ending-song-music-video-kyary-pamyu-pamyu",
+    "date": "2026-10-17T01:33:00.000Z",
+    "snippet": "The video includes a homage to her debut song, \"PONPONPON\"",
+    "category": "anime"
+  },
+  {
+    "title": "How Netflix’s Messy Transition Will Rock Hollywood: Looking at You, NBCU",
+    "source": "Variety",
+    "sourceUrl": "https://variety.com/2026/film/news/netflix-peter-rice-bajaria-messy-dan-lin-jinny-howe-nbcu-1236914573",
+    "date": "2026-10-17T01:13:04.000Z",
+    "snippet": "It started with a dinner. Peter Rice and Ynon Kreiz met for a meal in late September, days before Kreiz surprised the industry by jumping from the CEO job at Mattel to become co-chief executive of Skydance with David Ellison. The report of the Kreiz-Rice meeting came in the New York Post’s Page Six after […]",
+    "category": "movies"
+  },
+  {
+    "title": "Aikatsu! TV Anime Reveals New Creditless Opening and Ending Videos for Rebroadcast",
+    "source": "Crunchyroll News",
+    "sourceUrl": "https://crunchyroll.com/news/latest/2026/10/17/aikatsu-tv-anime-rebroadcast-new-creditless-opening-ending-videos",
+    "date": "2026-10-17T00:39:00.000Z",
+    "snippet": "\"Aikatsu! Encore\" arcade game began operating on October 8",
+    "category": "anime"
+  },
+  {
+    "title": "James Gunn Shoots Down Milly Alcock Supergirl Rumors, Shares Man of Tomorrow Update",
+    "source": "IGN Movies",
+    "sourceUrl": "https://www.ign.com/articles/james-gunn-shoots-down-milly-alcock-supergirl-rumors-shares-man-of-tomorrow-update",
+    "date": "2026-10-16T22:48:07.000Z",
+    "snippet": "James Gunn has shot down rumors that Milly Alcock was fired as Supergirl and confirmed that he'll show Peter Safran an early cut of Man of Tomorrow later today.",
+    "category": "movies"
+  },
+  {
+    "title": "Elizabeth Holmes’ Partner Billy Evans Admits ‘She Looks Insane’ in ‘You Can See Everything’ Trailer but Defends Making the Doc: ‘Make Up Your Own Mind’",
+    "source": "Variety",
+    "sourceUrl": "https://variety.com/2026/film/news/billy-evans-defends-you-can-see-everything-elizabeth-holmes-insane-1236914043",
+    "date": "2026-10-16T22:00:54.000Z",
+    "snippet": "Elizabeth Holmes’ partner Billy Evans appeared on the “All-In” podcast just as Nathan Fielder and Lance Oppenheim’s documentary “You Can See Everything” started its theatrical release to explain why the couple allowed a camera crew inside their home in the days leading up to Holmes going to prison. Evans has not yet seen the movie, […]",
+    "category": "movies"
+  },
+  {
+    "title": "Street Fighter: How Can There Be an Ending Explained When There Is No Ending?",
+    "source": "IGN Movies",
+    "sourceUrl": "https://www.ign.com/articles/street-fighter-how-can-there-be-an-ending-explained-when-there-is-no-ending",
+    "date": "2026-10-16T21:38:55.000Z",
+    "snippet": "Street Fighter is in theaters now, so this is our ending explained... or rather, non-ending explained. Plus, are there any post-credits scenes in the new movie?",
+    "category": "movies"
+  },
+  {
+    "title": "‘Red Rising’ Movie in the Works at Paramount With ‘Hunger Games’ Director Francis Lawrence",
+    "source": "Variety",
+    "sourceUrl": "https://variety.com/2026/film/news/red-rising-movie-paramount-hunger-games-director-books-1236914459",
+    "date": "2026-10-16T21:34:22.000Z",
+    "snippet": "Hail Reaper! The rights to the popular “Red Rising” book series have been picked up at Paramount with “Hunger Games” director Francis Lawrence attached to a movie based on the first novel. Justin Rhodes will write the script, based on the original 2014 novel by author Pierce Brown. Lawrence and Cameron MacConomy will produce for […]",
+    "category": "movies"
+  },
+  {
+    "title": "Ranking the Premier League's all-time greatest super subs",
+    "source": "BBC Sport",
+    "sourceUrl": "https://www.bbc.co.uk/sport/football/articles/cqn73xe5eelgo?at_campaign=rss&at_medium=RSS",
+    "date": "2026-10-16T21:15:47.000Z",
+    "snippet": "Some players are destined to make their biggest impact off the bench, but who are the top 10 Premier League super subs of all time?",
+    "category": "sports"
+  },
+  {
+    "title": "Gloucester and holders Bordeaux draw Champions Cup thriller",
+    "source": "BBC Sport",
+    "sourceUrl": "https://www.bbc.co.uk/sport/rugby-union/articles/c674pwkv3e87o?at_campaign=rss&at_medium=RSS",
+    "date": "2026-10-16T20:51:35.000Z",
+    "snippet": "Gloucester and holders Bordeaux Begles begin this season's Champions Cup with a thrilling 36-36 draw at Kingsholm.",
+    "category": "sports"
+  },
+  {
+    "title": "‘I Play Rocky’ Surprise Screens at London Film Festival",
+    "source": "Variety",
+    "sourceUrl": "https://variety.com/2026/film/news/i-play-rocky-surprise-movie-london-film-festival-1236914385",
+    "date": "2026-10-16T20:32:24.000Z",
+    "snippet": "London Film Festival’s surprise film on Friday night was “I Play Rocky,” Peter Farrelly’s biographical drama about the beginnings of Sylvester Stallone’s beloved boxing franchise. Farrelly was on hand to introduce the movie and shouted out his star, newcomer Anthony Ippolito, who has already earned praise for his portrayal of Stallone. “I could do a […]",
+    "category": "movies"
+  },
+  {
+    "title": "The Best Horror Movies of 2026 (So Far), Ranked: ‘Obsession,’ ‘Resident Evil,’ ‘Backrooms’ and More",
+    "source": "Variety",
+    "sourceUrl": "https://variety.com/lists/best-horror-movies-2026-ranked",
+    "date": "2026-10-16T20:23:42.000Z",
+    "snippet": "2026 has already been a wild year for horror, from low-budget box office hits (“Backrooms,” “Obsession”) to sequels the world could have lived without (“Scream 7,” “The Strangers – Chapter 3”). In a year loaded with scary movies, many of them were good-to-great, a welcome surprise that kept multiplexes busy. Below are the year’s standouts, […]",
+    "category": "movies"
+  },
+  {
+    "title": "Bleach: Thousand-Year Blood War - The Calamity Anime Goes Out with a Bang in Final Trailer",
+    "source": "Crunchyroll News",
+    "sourceUrl": "https://crunchyroll.com/news/latest/2026/10/16/bleach-thousand-year-blood-war-the-calamity-anime-final-trailer",
+    "date": "2026-10-16T20:01:00.000Z",
+    "snippet": "Final two episodes close out the saga this month",
+    "category": "anime"
+  },
+  {
+    "title": "JoJolion Manga, DAN DA DAN Character Guide and More Set for Summer 2027",
+    "source": "Crunchyroll News",
+    "sourceUrl": "https://crunchyroll.com/news/latest/2026/10/16/jojolion-manga-dandadan-character-guide-summer-2027-viz-media",
+    "date": "2026-10-16T19:52:00.000Z",
+    "snippet": "VIZ Media reveals a bunch of print plans for next summer’s releases",
+    "category": "anime"
+  },
+  {
+    "title": "Selma Blair’s Rep Speaks Out After Actress’ Arrest and Plane Incident: ‘Selma Did Not Intend to Harm Anyone’",
+    "source": "Variety",
+    "sourceUrl": "https://variety.com/2026/film/news/selma-blair-rep-speaks-out-arrest-plane-incident-1236909381",
+    "date": "2026-10-16T19:15:45.000Z",
+    "snippet": "Selma Blair’s spokesperson has spoken out after the actress was charged with second-degree assault following a violent incident on a Delta flight on Sunday. “Since Sunday night, the public account of what happened to Selma aboard a flight to New York has been built almost entirely on a police statement and a decade-old headline,” her […]",
+    "category": "movies"
+  },
+  {
+    "title": "Dubois and Wardley at career-heaviest for rematch",
+    "source": "BBC Sport",
+    "sourceUrl": "https://www.bbc.co.uk/sport/boxing/articles/cm4g1e65y3d0o?at_campaign=rss&at_medium=RSS",
+    "date": "2026-10-16T18:42:22.000Z",
+    "snippet": "Britons Daniel Dubois and Fabio Wardley both weigh in at their career-heaviest for Saturday's heavyweight world-title rematch in London.",
+    "category": "sports"
+  },
+  {
+    "title": "Rahm sacrifices £75m to secure exit from LIV Golf",
+    "source": "BBC Sport",
+    "sourceUrl": "https://www.bbc.co.uk/sport/golf/articles/cq80zpk1xgxpo?at_campaign=rss&at_medium=RSS",
+    "date": "2026-10-16T17:52:10.000Z",
+    "snippet": "Jon Rahm sacrifices a reported $100m (£75m) still owed to him by LIV Golf to secure his exit from the league.",
+    "category": "sports"
+  },
+  {
+    "title": "James McAvoy Reveals He Once Pitched a Young Picard Star Trek Show",
+    "source": "IGN Movies",
+    "sourceUrl": "https://www.ign.com/articles/james-mcavoy-reveals-he-once-pitched-a-young-picard-star-trek-show",
+    "date": "2026-10-16T17:26:31.000Z",
+    "snippet": "James McAvoy revealed he pitched a Picard Star Trek show that would have seen him yet again star as a young Patrick Stewart.",
+    "category": "movies"
+  },
+  {
+    "title": "Grab the Nightmare on Elm Street 7-Film 4K Collection at a New Low From Amazon Ahead of Halloween",
+    "source": "IGN Movies",
+    "sourceUrl": "https://www.ign.com/articles/nightmare-on-elm-street-7-film-4k-collection-new-low-price",
+    "date": "2026-10-16T16:58:09.000Z",
+    "snippet": "The seven-film 4K box set for A Nightmare on Elm Street has hit a new low price at Amazon of $58.99. That's a huge 41% discount off its original list price, and perfectly timed ahead of Halloween.",
+    "category": "movies"
+  },
+  {
+    "title": "Magical Girl Raising Project restart Anime Shares Creditless Opening and Ending Videos",
+    "source": "Crunchyroll News",
+    "sourceUrl": "https://crunchyroll.com/news/latest/2026/10/16/magical-girl-raising-project-restart-anime-creditless-opening-ending-videos",
+    "date": "2026-10-16T16:50:00.000Z",
+    "snippet": "Crunchyroll streams the original series",
+    "category": "anime"
+  },
+  {
+    "title": "U.S. presses China on Mastercard, Citigroup market access in bilateral Bangkok talks, official says",
+    "source": "CNBC Markets",
+    "sourceUrl": "https://www.cnbc.com/2026/10/16/us-china-mastercard-citigroup-market-access.html",
+    "date": "2026-10-16T16:46:18.000Z",
+    "snippet": "The U.S. raised market access issues for Mastercard and Citigroup in China during bilateral meetings in Bangkok this week, a U.S. Treasury official says.",
+    "category": "share-market"
+  },
+  {
+    "title": "Do Manchester City have any grounds to win their appeal?",
+    "source": "BBC Sport",
+    "sourceUrl": "https://www.bbc.co.uk/sport/football/articles/c6je5lwxk5l0o?at_campaign=rss&at_medium=RSS",
+    "date": "2026-10-16T16:17:01.000Z",
+    "snippet": "Manchester City face \"substantial hurdles\" to overcome if they are to have any chance of winning their appeal after being found guilty of breaking the Premier League's financial rules, a leading lawyer has told BBC Sport.",
+    "category": "sports"
+  },
+  {
+    "title": "The Irregular at Magic High School THE MOVIE -Yotsuba Succession Arc- Tickets Now on Sale",
+    "source": "Crunchyroll News",
+    "sourceUrl": "https://crunchyroll.com/news/announcements/2026/10/16/the-irregular-at-magic-high-school-the-movie-yotsuba-succession-arc-tickets-now-on-sale",
+    "date": "2026-10-16T16:00:00.000Z",
+    "snippet": "The movie will release theatrically in the United States, Canada on November 1, 3 and 4",
+    "category": "anime"
+  },
+  {
+    "title": "Trails in the Sky 2nd Chapter Game Review",
+    "source": "Anime News Network",
+    "sourceUrl": "https://www.animenewsnetwork.com/review/game/pc/trails-in-the-sky-2nd-chapter/.242469",
+    "date": "2026-10-16T16:00:00.000Z",
+    "snippet": "Like Sky 1st, Daybreak , and every other Trails that I have had the good fortune to enjoy so far, Sky 2nd is a darn good RPG and a darn good game.",
+    "category": "anime"
+  },
+  {
+    "title": "Elon Musk's Tesla Flying Car Reveal Met With Mix of Astonishment and Skepticism",
+    "source": "IGN Movies",
+    "sourceUrl": "https://www.ign.com/articles/elon-musks-tesla-flying-car-reveal-met-with-mix-of-astonishment-and-skepticism",
+    "date": "2026-10-16T15:49:19.000Z",
+    "snippet": "Last night, Tesla CEO Elon Musk unveiled a car that he claims can fly, followed by a short demonstration of its ability to go airborne — and it's hard to think of a Tesla vehicle that's sparked more online reaction since the Cybertruck.",
+    "category": "movies"
+  },
+  {
+    "title": "Final Love Live! Nijigasaki High School Idol Club Anime Film's Teaser Unveils February 5 Opening",
+    "source": "Anime News Network",
+    "sourceUrl": "https://www.animenewsnetwork.com/news/2026-10-16/final-love-live-nijigasaki-high-school-idol-club-anime-film-teaser-unveils-february-5-opening/.242898",
+    "date": "2026-10-16T15:33:12.000Z",
+    "snippet": "3rd film features theme song \"Dreaming Free\"",
+    "category": "anime"
+  },
+  {
+    "title": "Happy Kanako's Killer Life Anime Announced for April 2027",
+    "source": "Crunchyroll News",
+    "sourceUrl": "https://crunchyroll.com/news/latest/2026/10/16/happy-kanakos-killer-life-anime-announced-for-april-2027",
+    "date": "2026-10-16T15:14:00.000Z",
+    "snippet": "Main cast and more revealed for adaptation based on Toshiya Wakabayashi's manga",
+    "category": "anime"
+  },
+  {
+    "title": "Happy Kanako's Killer Life Manga Gets TV Anime Next April",
+    "source": "Anime News Network",
+    "sourceUrl": "https://www.animenewsnetwork.com/news/2026-10-16/happy-kanako-killer-life-manga-gets-tv-anime-next-april/.242881",
+    "date": "2026-10-16T15:05:48.000Z",
+    "snippet": "Gintama's Shinji Takamatsu helms comedy about woman's new gig as contract killer",
+    "category": "anime"
+  },
+  {
+    "title": "Bôa, \"Duvet\" and the Prophetic Legacy of Serial Experiments Lain",
+    "source": "Crunchyroll News",
+    "sourceUrl": "https://crunchyroll.com/news/interviews/2026/10/16/boa-serial-experiments-lain-interview",
+    "date": "2026-10-16T15:00:00.000Z",
+    "snippet": "It was kind of ahead of its time and yes, in some ways prophetic",
+    "category": "anime"
+  },
+  {
+    "title": "The Celebration of Haruhi Suzumiya's 20th Anime Anniversary",
+    "source": "Crunchyroll News",
+    "sourceUrl": "https://crunchyroll.com/news/features/2026/10/16/haruhi-suzumiya-anime-20th-anniversary-exhibit-photos",
+    "date": "2026-10-16T15:00:00.000Z",
+    "snippet": "Check out photos from the Haruhi Suzumiya anniversary exhibit held in Japan!",
+    "category": "anime"
+  },
+  {
+    "title": "7 Things We Learned Visiting the Set of Street Fighter",
+    "source": "IGN Movies",
+    "sourceUrl": "https://www.ign.com/articles/7-things-we-learned-visiting-the-set-of-street-fighter",
+    "date": "2026-10-16T15:00:00.000Z",
+    "snippet": "We visited the set of Street Fighter and discovered plenty about how a gigantic ensemble action movie comes together.",
+    "category": "movies"
+  },
+  {
+    "title": "Former Sale Sharks lock Andrews dies at team hotel in La Rochelle",
+    "source": "BBC Sport",
+    "sourceUrl": "https://www.bbc.co.uk/sport/rugby-union/articles/cqdjvxynj2kyo?at_campaign=rss&at_medium=RSS",
+    "date": "2026-10-16T14:33:04.000Z",
+    "snippet": "Hyron Andrews dies at his Johannesburg Lions' team hotel before their Champions Cup match at La Rochelle on Saturday.",
+    "category": "sports"
+  },
+  {
+    "title": "This Week in Games - Retro Jets, and EVO Reveals",
+    "source": "Anime News Network",
+    "sourceUrl": "https://www.animenewsnetwork.com/this-week-in-games/2026-10-16/retro-jets-and-evo-reveals/.242734",
+    "date": "2026-10-16T14:00:00.000Z",
+    "snippet": "Even AI-generated nonsense can't rain on Portland Retro Gaming Expo's parade. Plus some reveals from EVO France!",
+    "category": "anime"
+  },
+  {
+    "title": "Expelled from Paradise: Resonance of the Heart Anime Film Collaborates with Rascal Does Not Dream of a Dear Friend in New Visual",
+    "source": "Crunchyroll News",
+    "sourceUrl": "https://crunchyroll.com/news/latest/2026/10/16/expelled-from-paradise-resonance-of-the-heart-rascal-does-not-dream-of-a-dear-friend-collab-visual",
+    "date": "2026-10-16T13:40:00.000Z",
+    "snippet": "Latest film in Rascal Does Not Dream series opens in Japan today",
+    "category": "anime"
+  },
+  {
+    "title": "Street Fighter’s 4K Steelbook Is Up for Preorder, and Comes in Champion or Villain Variants",
+    "source": "IGN Movies",
+    "sourceUrl": "https://www.ign.com/articles/street-fighter-4k-steelbook-where-to-buy",
+    "date": "2026-10-16T13:36:18.000Z",
+    "snippet": "Street Fighter’s 4K Steelbook Edition asks fans to choose between a special edition champion or villain variant cover, with preorders now live at Amazon.",
+    "category": "movies"
+  },
+  {
+    "title": "Golden Kamuy Live-Action Drama Continues with Karafuto Pursuit Arc in January",
+    "source": "Crunchyroll News",
+    "sourceUrl": "https://crunchyroll.com/news/latest/2026/10/16/golden-kamuy-live-action-drama-karafuto-pursuit-arc",
+    "date": "2026-10-16T13:26:00.000Z",
+    "snippet": "Kenji Katagiri returns to direct TV series that will broadcast on WOWOW",
+    "category": "anime"
+  },
+  {
+    "title": "Love Live! Nijigasaki High School Idol Club Anime Film Final Part Debuts on February 5, 2027",
+    "source": "Crunchyroll News",
+    "sourceUrl": "https://crunchyroll.com/news/latest/2026/10/16/love-live-nijigasaki-high-school-idol-club-anime-film-final-part-premiere-date",
+    "date": "2026-10-16T13:05:00.000Z",
+    "snippet": "Teaser trailer published for upcoming third film in latest Love Live! trilogy",
+    "category": "anime"
+  },
+  {
+    "title": "Morris wins omnium gold for Great Britain",
+    "source": "BBC Sport",
+    "sourceUrl": "https://www.bbc.co.uk/sport/cycling/videos/c6pvgjmv1y07o?at_campaign=rss&at_medium=RSS",
+    "date": "2026-10-16T12:58:44.000Z",
+    "snippet": "Great Britain's Anna Morris wins gold in the women's omnium at the Track Cycling World Championships in Shanghai.",
+    "category": "sports"
+  },
+  {
+    "title": "Watch: Did Tesla really just unveil a flying car?",
+    "source": "BBC Business",
+    "sourceUrl": "https://www.bbc.co.uk/news/videos/ckly4mj1g3n9o?at_campaign=rss&at_medium=RSS",
+    "date": "2026-10-16T12:32:31.000Z",
+    "snippet": "Tesla CEO Elon Musk showcased the vehicle at a facility owned by his SpaceX company, which helped develop the model.",
+    "category": "finance"
+  },
+  {
     "title": "BanG Dream! Ave Mujica prima aurora Anime Film Shares Second Trailer",
     "source": "Crunchyroll News",
     "sourceUrl": "https://crunchyroll.com/news/latest/2026/10/16/bang-dream-ave-mujica-prima-aurora-anime-film-second-trailer",
@@ -8,44 +696,12 @@
     "category": "anime"
   },
   {
-    "title": "‘Trying to dominate’: How Israel is embedding itself in the Cypriot state",
-    "source": "Al Jazeera",
-    "sourceUrl": "https://www.aljazeera.com/features/2026/10/16/an-easy-target-how-israel-is-embedding-itself-in-the-cypriot-state?traffic_source=rss",
-    "date": "2026-10-16T11:54:10.000Z",
-    "snippet": "Israel now reaches into Cyprus’s water, gas, health and defence and many Cypriots fear their island is losing control.",
-    "category": "politics"
-  },
-  {
-    "title": "Spain handed partial stadium closure after discriminatory chants v Egypt",
-    "source": "BBC Sport",
-    "sourceUrl": "https://www.bbc.co.uk/sport/football/articles/cr86zg3w2lg2o?at_campaign=rss&at_medium=RSS",
-    "date": "2026-10-16T11:48:33.000Z",
-    "snippet": "Spain must play their next international friendly with a partial stadium closure after supporters sang a discriminatory chant about Muslims multiple times during a game against Egypt on 31 March.",
-    "category": "sports"
-  },
-  {
-    "title": "Why is China buying up gold?",
-    "source": "Al Jazeera",
-    "sourceUrl": "https://www.aljazeera.com/news-analysis/2026/10/16/why-is-china-buying-up-gold?traffic_source=rss",
-    "date": "2026-10-16T11:38:11.000Z",
-    "snippet": "Beijing’s gold purchases reflect a shift away from reliance on US dollar assets, experts say.",
-    "category": "politics"
-  },
-  {
-    "title": "Malaysia’s welcome for Min Aung Hlaing undermines its stand on justice",
-    "source": "Al Jazeera",
-    "sourceUrl": "https://www.aljazeera.com/opinions/2026/10/16/malaysias-welcome-for-min-aung-hlaing-undermines-its-stand-on-justice?traffic_source=rss",
-    "date": "2026-10-16T11:32:50.000Z",
-    "snippet": "As the US attacks the ICC, Kuala Lumpur welcomes a leader the court’s prosecutor wants arrested.",
-    "category": "politics"
-  },
-  {
-    "title": "US in ‘denuclearisation’ talks with Russia and China: Trump",
-    "source": "Al Jazeera",
-    "sourceUrl": "https://www.aljazeera.com/news/2026/10/16/us-in-denuclearisation-talks-with-russia-and-china-trump?traffic_source=rss",
-    "date": "2026-10-16T11:28:12.000Z",
-    "snippet": "US and Russia each have more than 4,000 warheads. China set to catch up with them within five years, Trump says.",
-    "category": "politics"
+    "title": "Record of Lodoss War: The Crown of the Covenant Novel Series Resumes",
+    "source": "Anime News Network",
+    "sourceUrl": "https://www.animenewsnetwork.com/news/2026-10-16/record-of-lodoss-war-the-crown-of-the-covenant-novel-series-resumes/.242895",
+    "date": "2026-10-16T12:05:58.000Z",
+    "snippet": "Kadokawa to publish portion of manuscript on Kakuyomu website on October 22",
+    "category": "anime"
   },
   {
     "title": "BanG Dream! Ave Mujica prima aurora Anime Film Reveals 2nd Promo Video",
@@ -56,76 +712,12 @@
     "category": "anime"
   },
   {
-    "title": "‘It was fake’: Indian villagers allege forgery behind Adani mine project",
-    "source": "Al Jazeera",
-    "sourceUrl": "https://www.aljazeera.com/news/2026/10/16/tribals-in-indias-odisha-allege-forgery-behind-lands-taken-for-adani-mine?traffic_source=rss",
-    "date": "2026-10-16T11:05:45.000Z",
-    "snippet": "Forged signatures and thumbprints - even of dead and fictitious people - allegedly used to obtain land for bauxite mine.",
-    "category": "politics"
-  },
-  {
-    "title": "Poland scrambles fighter jets as Russia strikes western Ukraine",
-    "source": "Al Jazeera",
-    "sourceUrl": "https://www.aljazeera.com/news/2026/10/16/poland-scrambles-fighter-jets-as-russia-strikes-western-ukraine?traffic_source=rss",
-    "date": "2026-10-16T10:56:20.000Z",
-    "snippet": "Countries along NATO’s eastern flank growing increasingly concerned about the risk of escalation of the war in Ukraine.",
-    "category": "politics"
-  },
-  {
-    "title": "India vs West India: Fifth T20 International – teams, start, lineups, Hope",
-    "source": "Al Jazeera",
-    "sourceUrl": "https://www.aljazeera.com/sports/2026/10/16/india-vs-west-india-firth-t20-international-teams-prediction-lineups?traffic_source=rss",
-    "date": "2026-10-16T10:37:48.000Z",
-    "snippet": "India host West Indies in the final match of the tour on Saturday with an all-time classic T20 series level at 2-2.",
-    "category": "politics"
-  },
-  {
-    "title": "Rew, 18, to captain England Lions in West Indies",
-    "source": "BBC Sport",
-    "sourceUrl": "https://www.bbc.co.uk/sport/cricket/articles/cjn5vk4qe6g1o?at_campaign=rss&at_medium=RSS",
-    "date": "2026-10-16T10:33:59.000Z",
-    "snippet": "The elevation of teenager Thomas Rew to Lions captain is a further sign of the high regard he is held in by the England hierarchy and follows him being given his first senior call-up and central contract.",
-    "category": "sports"
-  },
-  {
     "title": "GB's Stewart wins gold in thrilling points race",
     "source": "BBC Sport",
     "sourceUrl": "https://www.bbc.co.uk/sport/cycling/videos/c6j9kv0p343do?at_campaign=rss&at_medium=RSS",
     "date": "2026-10-16T10:33:49.000Z",
     "snippet": "Great Britain's Mark Stewart wins gold after a thrilling end to the men's points race at the 2026 Track Cycling World Championships.",
     "category": "sports"
-  },
-  {
-    "title": "Palestinian olive trees torched as settler pogroms escalate during harvest",
-    "source": "Al Jazeera",
-    "sourceUrl": "https://www.aljazeera.com/video/newsfeed/2026/10/16/palestinian-olive-trees-torched-as-settler-pogroms-escalate-during-harvest?traffic_source=rss",
-    "date": "2026-10-16T10:27:20.000Z",
-    "snippet": "It is Palestine’s olive harvest, but settlers have set their trees and vehicles on fire.",
-    "category": "politics"
-  },
-  {
-    "title": "'Not about me' - Arbeloa dismisses future questions",
-    "source": "BBC Sport",
-    "sourceUrl": "https://www.bbc.co.uk/sport/football/articles/c615jw414vypo?at_campaign=rss&at_medium=RSS",
-    "date": "2026-10-16T10:24:57.000Z",
-    "snippet": "Fulham head coach Alvaro Arbeloa says the focus should not be on him as his side searches for a first Premier League win this season against Hull City this weekend.",
-    "category": "sports"
-  },
-  {
-    "title": "Trump rules out using a nuclear bomb on Iran: Why that matters",
-    "source": "Al Jazeera",
-    "sourceUrl": "https://www.aljazeera.com/news/2026/10/16/trump-rules-out-using-a-nuclear-bomb-on-iran-why-that-matters?traffic_source=rss",
-    "date": "2026-10-16T10:21:12.000Z",
-    "snippet": "It is the first time the president has addressed nuclear weapons, but he didn't deny US could use 'mother of all bombs'.",
-    "category": "politics"
-  },
-  {
-    "title": "Sundance Winners Blerta Basholli and Myrsini Aristidou Compete in Thessaloniki’s Meet the Neighbors+ Competition (EXCLUSIVE)",
-    "source": "Variety",
-    "sourceUrl": "https://variety.com/2026/film/news/thessaloniki-meet-the-neighbors-1236913838",
-    "date": "2026-10-16T10:20:00.000Z",
-    "snippet": "The 67th Thessaloniki Intl. Film Festival, which runs from Nov. 5 to 15, has revealed the lineups of its Meet the Neighbors+ and >>Film Forward competition sections. Among the films in the Meet the Neighbors+ section are Blerta Basholli, who won at Sundance with “Hive,” and comes to Thessaloniki with Kosovan War coming-of-age drama “Dua,” […]",
-    "category": "movies"
   },
   {
     "title": "Banks expect to be hit with higher taxes in Budget",
@@ -136,124 +728,12 @@
     "category": "finance"
   },
   {
-    "title": "UN warns nearly 1 million in Gaza face flood risks as winter approaches",
-    "source": "Al Jazeera",
-    "sourceUrl": "https://www.aljazeera.com/video/newsfeed/2026/10/16/un-warns-nearly-1-million-in-gaza-face-flood-risks-as-winter-approaches?traffic_source=rss",
-    "date": "2026-10-16T10:12:34.000Z",
-    "snippet": "The UN is warning that nearly one million displaced Palestinians face flooding risks as winter approaches.",
-    "category": "politics"
-  },
-  {
-    "title": "Broncos beat Superbowl champions Seahawks in overtime",
+    "title": "Broncos beat Super Bowl champions Seahawks in overtime",
     "source": "BBC Sport",
     "sourceUrl": "https://www.bbc.co.uk/sport/american-football/videos/cm87z38014p1o?at_campaign=rss&at_medium=RSS",
     "date": "2026-10-16T10:02:21.000Z",
     "snippet": "A Wil Lutz 53-yard game-winning field goal sees the Denver Broncos beat defending champions Seattle Seahawks 17-14 in overtime in the NFL.",
     "category": "sports"
-  },
-  {
-    "title": "India’s mass voter purge is hollowing out democracy",
-    "source": "Al Jazeera",
-    "sourceUrl": "https://www.aljazeera.com/opinions/2026/10/16/indias-mass-voter-purge-is-hollowing-out-democracy?traffic_source=rss",
-    "date": "2026-10-16T10:00:01.000Z",
-    "snippet": "The SIR is disenfranchising marginalised communities and advancing the Hindu nationalist project.",
-    "category": "politics"
-  },
-  {
-    "title": "China-North Korea border bridge may do little to spur trade, experts say",
-    "source": "Al Jazeera",
-    "sourceUrl": "https://www.aljazeera.com/economy/2026/10/16/china-north-korea-border-bridge-may-do-little-to-spur-trade-experts-say?traffic_source=rss",
-    "date": "2026-10-16T09:21:40.000Z",
-    "snippet": "Sanctions and a North Korean leadership that prioritises security dim prospects for trade, analysts say.",
-    "category": "politics"
-  },
-  {
-    "title": "Man Utd veering towards crisis as Man City cloud hangs over Premier League",
-    "source": "Al Jazeera",
-    "sourceUrl": "https://www.aljazeera.com/sports/2026/10/16/man-utd-veering-towards-crisis-as-man-city-cloud-hangs-over-premier-league?traffic_source=rss",
-    "date": "2026-10-16T09:17:50.000Z",
-    "snippet": "Lisandro Martinez apologises for his criticism after on-field spotlight shifts to Manchester United from City.",
-    "category": "politics"
-  },
-  {
-    "title": "Golden Kamuy's Live-Action Adaptation Continues With 'Karafuto Pursuit Arc' Series in January",
-    "source": "Anime News Network",
-    "sourceUrl": "https://www.animenewsnetwork.com/news/2026-10-16/golden-kamuy-live-action-adaptation-continues-with-karafuto-pursuit-arc-series-in-january/.242891",
-    "date": "2026-10-16T09:17:47.000Z",
-    "snippet": "New series features returning, new staff",
-    "category": "anime"
-  },
-  {
-    "title": "Indian police launch New Delhi clampdown for Cockroach Party rally",
-    "source": "Al Jazeera",
-    "sourceUrl": "https://www.aljazeera.com/news/2026/10/16/indian-police-launch-new-delhi-clampdown-for-cockroach-party-rally?traffic_source=rss",
-    "date": "2026-10-16T09:17:47.000Z",
-    "snippet": "Cockroach Janta Party standoff with government extended as youth-led movement calls protest over jailing of activists.",
-    "category": "politics"
-  },
-  {
-    "title": "'I'm fortunate to be alive' - Merino relives bus attack",
-    "source": "BBC Sport",
-    "sourceUrl": "https://www.bbc.co.uk/sport/football/articles/c8dx3l9r5lqlo?at_campaign=rss&at_medium=RSS",
-    "date": "2026-10-16T09:16:31.000Z",
-    "snippet": "Arsenal and Spain midfielder Mikel Merino reflects on the attack on Dortmund's team bus in 2017, when he was 20 years old.",
-    "category": "sports"
-  },
-  {
-    "title": "The England keeper set to face his dad at a World Cup",
-    "source": "BBC Sport",
-    "sourceUrl": "https://www.bbc.co.uk/sport/football/articles/cw98z1v08vg4o?at_campaign=rss&at_medium=RSS",
-    "date": "2026-10-16T09:14:05.000Z",
-    "snippet": "Colin Gordon will be coaching Argentina at the World Cup, while son Chris will be playing for England.",
-    "category": "sports"
-  },
-  {
-    "title": "‘The Mandalorian and Grogu’ VFX Veteran Hal Hickel on Rotta’s Redesign, Phil Tippett and Jon Favreau’s ‘Less James Bond, More Jackass’ Approach",
-    "source": "Variety",
-    "sourceUrl": "https://variety.com/2026/film/news/the-mandalorian-and-grogu-vfx-hal-hickel-phil-tippett-1236913822",
-    "date": "2026-10-16T09:08:16.000Z",
-    "snippet": "Industrial Light & Magic animation supervisor Hal Hickel approached Jon Favreau’s “The Mandalorian and Grogu” with a deceptively simple question: “What would Phil do?” The Phil in question was stop-motion pioneer Phil Tippett, whose work on the original “Star Wars” trilogy provided a template for everything from lumbering AT-AT walkers to a spectacular battle involving […]",
-    "category": "movies"
-  },
-  {
-    "title": "Chelsea's James out for three months after knee surgery",
-    "source": "BBC Sport",
-    "sourceUrl": "https://www.bbc.co.uk/sport/football/articles/cq073d9l0ly9o?at_campaign=rss&at_medium=RSS",
-    "date": "2026-10-16T09:02:20.000Z",
-    "snippet": "Chelsea captain Reece James is set to miss three months of action after undergoing knee surgery.",
-    "category": "sports"
-  },
-  {
-    "title": "Under-pressure Dionisi addresses sacking 'fake news'",
-    "source": "BBC Sport",
-    "sourceUrl": "https://www.bbc.co.uk/sport/football/articles/cvrly0n268xwo?at_campaign=rss&at_medium=RSS",
-    "date": "2026-10-16T08:59:43.000Z",
-    "snippet": "Under pressure Watford manager Alessio Dionisi says reports he would lose his job after Tuesday's heavy defeat at Cardiff were \"fake news\".",
-    "category": "sports"
-  },
-  {
-    "title": "Kartal enjoys 'best week of career' after diving into deep end",
-    "source": "BBC Sport",
-    "sourceUrl": "https://www.bbc.co.uk/sport/tennis/articles/cmpwgq52y22zo?at_campaign=rss&at_medium=RSS",
-    "date": "2026-10-16T08:45:06.000Z",
-    "snippet": "Sonay Kartal's winning streak following a long injury lay-off continues as she seals a hard-fought victory over fifth seed Elina Svitolina in the quarter-finals of the Wuhan Open.",
-    "category": "sports"
-  },
-  {
-    "title": "Asian Cup in Saudi Arabia still on, organisers say, but golf tour postponed",
-    "source": "Al Jazeera",
-    "sourceUrl": "https://www.aljazeera.com/sports/2026/10/16/asian-cup-in-saudi-arabia-still-on-say-organisers-but-golf-tour-postponed?traffic_source=rss",
-    "date": "2026-10-16T08:36:54.000Z",
-    "snippet": "Asian Cup preparations continue for January, but Asian Tour delays golf's Saudi Invitational after Houthi attacks.",
-    "category": "politics"
-  },
-  {
-    "title": "Norway wealth fund urged to ease nuclear arms ban after Gaza investment row",
-    "source": "Al Jazeera",
-    "sourceUrl": "https://www.aljazeera.com/news/2026/10/16/norway-wealth-fund-urged-to-ease-nuclear-arms-ban-after-gaza-investment-row?traffic_source=rss",
-    "date": "2026-10-16T08:36:13.000Z",
-    "snippet": "The review called for Norway's sovereign wealth fund to lift ethical risk limitations on its investments.",
-    "category": "politics"
   },
   {
     "title": "Wound & Bandage TV Anime Reveals Main Cast, January 9 Debut in Teaser Video",
@@ -288,22 +768,6 @@
     "category": "anime"
   },
   {
-    "title": "Getting to know Man Utd boss Olid",
-    "source": "BBC Sport",
-    "sourceUrl": "https://www.bbc.co.uk/sport/football/articles/c6qxneqry885o?at_campaign=rss&at_medium=RSS",
-    "date": "2026-10-16T07:47:56.000Z",
-    "snippet": "It has been a whirlwind 10 weeks for Eva Olid since she became manager of Manchester United.",
-    "category": "sports"
-  },
-  {
-    "title": "Busan Takeaways: Record Crowds Meet a Political Storm as Asia’s Producers Close Ranks",
-    "source": "Variety",
-    "sourceUrl": "https://variety.com/2026/film/news/busan-film-festival-2026-takeaways-record-crowds-political-storm-1236913812",
-    "date": "2026-10-16T07:44:36.000Z",
-    "snippet": "The Busan International Film Festival drew its largest film audience in more than a decade at its 31st edition, which ran Oct. 6–15, while a political firestorm over a Korean box office hit and an Iranian director’s war speech kept politics in the spotlight. These are Variety’s takeaways from the festival and its Asian Contents […]",
-    "category": "movies"
-  },
-  {
     "title": "'It feels like you're days away from death' - the Olympian living with ME",
     "source": "BBC Sport",
     "sourceUrl": "https://www.bbc.co.uk/sport/olympics/videos/cmgqw3j7eqqwo?at_campaign=rss&at_medium=RSS",
@@ -312,44 +776,12 @@
     "category": "sports"
   },
   {
-    "title": "Are De Cuyper and Gross essential? FPL gameweek seven dilemmas",
+    "title": "EFL preview: Shining lights and dark nights",
     "source": "BBC Sport",
-    "sourceUrl": "https://www.bbc.co.uk/sport/football/articles/cqy7l51e80p0o?at_campaign=rss&at_medium=RSS",
-    "date": "2026-10-16T07:28:45.000Z",
-    "snippet": "BBC Sport's FPL expert Gianni Buttice looks at some of the biggest dilemmas facing Fantasy Premier League managers heading into gameweek seven.",
+    "sourceUrl": "https://www.bbc.co.uk/sport/football/articles/cq62yn3r4nk7o?at_campaign=rss&at_medium=RSS",
+    "date": "2026-10-16T07:03:45.000Z",
+    "snippet": "BBC Sport picks out five things across the EFL that you should be keeping your eyes on this weekend.",
     "category": "sports"
-  },
-  {
-    "title": "Tesla unveils car that can drive upside down and jump through the air",
-    "source": "Al Jazeera",
-    "sourceUrl": "https://www.aljazeera.com/video/newsfeed/2026/10/16/10-16-tesla-flying-car-clip?traffic_source=rss",
-    "date": "2026-10-16T07:10:42.000Z",
-    "snippet": "Tesla has unveiled an electric car that can drive upside down and use rocket-like thrusters to jump and turn mid-air.",
-    "category": "politics"
-  },
-  {
-    "title": "How Israel’s elections will affect Palestinians",
-    "source": "Al Jazeera",
-    "sourceUrl": "https://www.aljazeera.com/video/newsfeed/2026/10/16/how-israels-elections-will-affect-palestinians?traffic_source=rss",
-    "date": "2026-10-16T07:04:54.000Z",
-    "snippet": "How Israel votes this month will shape the future of over 5.5 million Palestinians who have no say in the election.",
-    "category": "politics"
-  },
-  {
-    "title": "In Israel, Netanyahu’s ultimate legacy is the opposition he has forged",
-    "source": "Al Jazeera",
-    "sourceUrl": "https://www.aljazeera.com/news/2026/10/16/in-israel-netanyahus-ultimate-legacy-is-the-opposition-he-has-forged?traffic_source=rss",
-    "date": "2026-10-16T06:41:15.000Z",
-    "snippet": "As Israel heads to the polls, PM Netanyahu’s most enduring domestic legacy may be the right-wing opposition he faces.",
-    "category": "politics"
-  },
-  {
-    "title": "Which countries waste the most food, and how to reduce waste at home",
-    "source": "Al Jazeera",
-    "sourceUrl": "https://www.aljazeera.com/news/2026/10/16/which-countries-waste-the-most-food-and-how-to-reduce-waste-at-home?traffic_source=rss",
-    "date": "2026-10-16T06:31:57.000Z",
-    "snippet": "This World Food Day, 645 million people are going hungry, yet more than a billion tonnes of food is wasted annually.",
-    "category": "politics"
   },
   {
     "title": "Magical DoReMi, Star Detective Precure! Anime Get Crossover Episode on October 25",
@@ -358,102 +790,6 @@
     "date": "2026-10-16T06:29:05.000Z",
     "snippet": "Crossover episode will be anime's 39th episode",
     "category": "anime"
-  },
-  {
-    "title": "The rapid rise of a former art dealer to Europe's hottest young manager",
-    "source": "BBC Sport",
-    "sourceUrl": "https://www.bbc.co.uk/sport/football/articles/cmde8l07569no?at_campaign=rss&at_medium=RSS",
-    "date": "2026-10-16T06:28:10.000Z",
-    "snippet": "How Brighton's Fabian Hurzeler has gone from Germany's fifth tier to being reportedly of interest to Manchester United.",
-    "category": "sports"
-  },
-  {
-    "title": "‘Avatar: Fire and Ash’ Composer and More Speak Out About AI at Ghent’s WSA Film Music Days: ‘We Must Continue to Defend Our Art’",
-    "source": "Variety",
-    "sourceUrl": "https://variety.com/2026/artisans/news/avatar-ai-ghent-wsa-film-music-days-1236910224",
-    "date": "2026-10-16T06:28:01.000Z",
-    "snippet": "At a recent World Soundtrack Awards industry panel, composer Simon Franglen struck a common chord when talking about his work on “Avatar: Fire and Ash.” “We had hundreds of musicians in a room, pouring their emotion out in that precise second,” he recalled. “How can that ever be replicated by AI?” This year’s WSA Film […]",
-    "category": "movies"
-  },
-  {
-    "title": "Carmouche shaves head to make weight for world title fight",
-    "source": "BBC Sport",
-    "sourceUrl": "https://www.bbc.co.uk/sport/mixed-martial-arts/articles/c6y0ewlnwgnlo?at_campaign=rss&at_medium=RSS",
-    "date": "2026-10-16T06:23:12.000Z",
-    "snippet": "Liz Carmouche fights for the PFL flyweight world title on Friday and was taking no chances before stepping on the scales.",
-    "category": "sports"
-  },
-  {
-    "title": "Who am I? Plus today's other quizzes",
-    "source": "BBC Sport",
-    "sourceUrl": "https://www.bbc.co.uk/sport/football/articles/cqp8gymplmvdo?at_campaign=rss&at_medium=RSS",
-    "date": "2026-10-16T06:09:52.000Z",
-    "snippet": "Test your ball knowledge against today's Who Am I?, Five in Five and Brainteaser.",
-    "category": "sports"
-  },
-  {
-    "title": "Vibe coding: Game-changer or risky business?",
-    "source": "Al Jazeera",
-    "sourceUrl": "https://www.aljazeera.com/video/newsfeed/2026/10/16/vibe-coding-game-changer-or-risky-business?traffic_source=rss",
-    "date": "2026-10-16T06:01:34.000Z",
-    "snippet": "Vibe coding lets users build software with AI, but free alternatives to popular programmes raise security concerns.",
-    "category": "politics"
-  },
-  {
-    "title": "Alone in Gaza: Genocide leaves Palestinian man without family or a home",
-    "source": "Al Jazeera",
-    "sourceUrl": "https://www.aljazeera.com/features/2026/10/16/alone-in-gaza-genocide-leaves-palestinian-man-without-family-or-a-home?traffic_source=rss",
-    "date": "2026-10-16T05:55:23.000Z",
-    "snippet": "One man wanders Gaza in search of somewhere to sleep, having lost his family in an Israeli strike.",
-    "category": "politics"
-  },
-  {
-    "title": "Does the Premier League 'Big Six' still exist?",
-    "source": "BBC Sport",
-    "sourceUrl": "https://www.bbc.co.uk/sport/football/articles/ckj0lrjzjgqno?at_campaign=rss&at_medium=RSS",
-    "date": "2026-10-16T05:53:57.000Z",
-    "snippet": "For years the Premier League has had a defined 'Big Six', comprised of Arsenal, Chelsea, Liverpool, Manchester City, Manchester United and Tottenham Hotspur., but could this era be coming to an end?",
-    "category": "sports"
-  },
-  {
-    "title": "US sanctions leave Iranians facing flight cancellations and soaring costs",
-    "source": "Al Jazeera",
-    "sourceUrl": "https://www.aljazeera.com/news-analysis/2026/10/16/us-sanctions-leave-iranians-facing-flight-cancellations-and-soaring-costs?traffic_source=rss",
-    "date": "2026-10-16T05:51:40.000Z",
-    "snippet": "New US aviation sanctions force Iranians to take longer, costlier journeys as international flight routes disappear.",
-    "category": "politics"
-  },
-  {
-    "title": "The Olympic sprinter now bedbound for 22 hours a day",
-    "source": "BBC Sport",
-    "sourceUrl": "https://www.bbc.co.uk/sport/athletics/articles/crd6dj26v4e4o?at_campaign=rss&at_medium=RSS",
-    "date": "2026-10-16T05:31:22.000Z",
-    "snippet": "Beth Dobbin ran for Great Britain at the Tokyo Olympics in 2021. Five years on, she is largely bedbound after being diagnosed with ME, a devastating illness for which there is no cure.",
-    "category": "sports"
-  },
-  {
-    "title": "Nawazuddin Siddiqui to Star as Delhi Street Detective in ‘Kabootar’ (EXCLUSIVE)",
-    "source": "Variety",
-    "sourceUrl": "https://variety.com/2026/film/news/nawazuddin-siddiqui-delhi-street-detective-kabootar-1236913102",
-    "date": "2026-10-16T05:30:00.000Z",
-    "snippet": "Indian thespian Nawazuddin Siddiqui is attached to lead “Kabootar,” the debut feature from writer-director Ishan Sharma, produced by Nikhil Chaudhary of MDC Filmworks. The film is structured as a co-production between MDC Filmworks in India, Haiku Films in France, and Rein Film in Norway, with Rohit Saxena serving as co-producer on the Indian side. Principal […]",
-    "category": "movies"
-  },
-  {
-    "title": "Rubio presses Lebanon on confiscation of weapons from Hezbollah",
-    "source": "Al Jazeera",
-    "sourceUrl": "https://www.aljazeera.com/news/2026/10/16/rubio-presses-lebanon-on-confiscation-of-weapons-from-hezbollah?traffic_source=rss",
-    "date": "2026-10-16T05:28:29.000Z",
-    "snippet": "Lebanon's president reaffirms the commitment to bring all arms under state control.",
-    "category": "politics"
-  },
-  {
-    "title": "Four killed as Indonesia battles worst forest fires in more than a decade",
-    "source": "Al Jazeera",
-    "sourceUrl": "https://www.aljazeera.com/news/2026/10/16/four-killed-as-indonesia-battles-worst-forest-fires-in-more-than-a-decade?traffic_source=rss",
-    "date": "2026-10-16T05:15:09.000Z",
-    "snippet": "The deaths come as Jakarta says it will accept foreign help to tackle its worst forest fires in more than a decade.",
-    "category": "politics"
   },
   {
     "title": "Ship attack reports near Hormuz reach record high as oil exports slow",
@@ -496,14 +832,6 @@
     "category": "anime"
   },
   {
-    "title": "Cynthia Erivo’s ‘Bad Fairies’ Adds Kylie Minogue, Jonathan Groff and Catherine Tate to Voice Cast",
-    "source": "Variety",
-    "sourceUrl": "https://variety.com/2026/film/news/cynthia-erivo-bad-fairies-kylie-minogue-jonathan-groff-1236913639",
-    "date": "2026-10-16T04:00:00.000Z",
-    "snippet": "“Bad Fairies,” the Warner Bros. Picture Animation and Locksmith Animation musical comedy led by Cynthia Erivo, has added Kylie Minogue, Jonathan Groff and Catherine Tate to its voice cast. Minogue will voice Clowder the Cat Witch, Groff will voice Robin Goodfellow and Tate will voice the Fairy Gothmother, joining Erivo as Jayne Staplegun in the […]",
-    "category": "movies"
-  },
-  {
     "title": "Singer Kenshi Yonezu Goes on World Tour in Early 2027",
     "source": "Anime News Network",
     "sourceUrl": "https://www.animenewsnetwork.com/news/2026-10-15/singer-kenshi-yonezu-goes-on-world-tour-in-early-2027/.242870",
@@ -544,14 +872,6 @@
     "category": "anime"
   },
   {
-    "title": "Why Did Netflix Boot Bela Bajaria?",
-    "source": "Variety",
-    "sourceUrl": "https://variety.com/2026/film/news/netflix-bela-bajaria-why-did-she-leave-1236913635",
-    "date": "2026-10-16T01:43:38.000Z",
-    "snippet": "Fear and loathing are running high as Hollywood processes Thursday’s shock firing of Bela Bajaria from her post as Netflix chief content officer. Yes, the company that popularized the “Keeper Test” is known for abrupt exits. But despite Netflix’s recent stock struggles, many considered Bajaria too big to fail. Word of her ouster leaked before […]",
-    "category": "movies"
-  },
-  {
     "title": "Kodansha USA Licenses Jackpot Girls, Powerless Without You, Occult Times, 7 Other Manga",
     "source": "Anime News Network",
     "sourceUrl": "https://www.animenewsnetwork.com/news/2026-10-15/kodansha-usa-licenses-jackpot-girls-powerless-without-you-occult-times-7-other-manga/.242866",
@@ -584,14 +904,6 @@
     "category": "finance"
   },
   {
-    "title": "O'Neill defiant in defeat, but Celtic's 'flat-track bullies' fail another big test",
-    "source": "BBC Sport",
-    "sourceUrl": "https://www.bbc.co.uk/sport/football/articles/cwm243rxn1pxo?at_campaign=rss&at_medium=RSS",
-    "date": "2026-10-15T23:04:37.000Z",
-    "snippet": "Celtic have now lost two Europa League group games, as well as two derbies - but Martin O'Neill is adamant he can see positive signs.",
-    "category": "sports"
-  },
-  {
     "title": "People in China are spending nearly as much of their income as Americans on healthcare",
     "source": "CNBC Markets",
     "sourceUrl": "https://www.cnbc.com/2026/10/15/chinese-spending-nearly-as-much-of-income-as-americans-on-healthcare.html",
@@ -600,27 +912,11 @@
     "category": "share-market"
   },
   {
-    "title": "Jenna Ortega Says She Hopes ‘Klara and the Sun’ Encourages People to ‘Put Down the Computers and Phones’ as Dystopian Film World Premieres in London",
-    "source": "Variety",
-    "sourceUrl": "https://variety.com/2026/film/news/jenna-ortega-klara-and-the-sun-put-down-phones-london-premiere-1236912808",
-    "date": "2026-10-15T22:43:11.000Z",
-    "snippet": "Jenna Ortega hopes that her new film, the dystopian sci-fi “Klara and the Sun,” can remind people to live in the moment in the age of AI and all-consuming technology. “I think we gotta put our focus on one another and put down the computers and phones,” the star told Variety on the red carpet […]",
-    "category": "movies"
-  },
-  {
-    "title": "The Batman Part 2 Brings in Director Steven Soderbergh to Finish Film in Place of Matt Reeves, Reeves Responds With New Statement",
+    "title": "The Batman Part 2 Brings in Steven Soderbergh to Help Director Matt Reeves Finish Film",
     "source": "IGN Movies",
     "sourceUrl": "https://www.ign.com/articles/the-batman-part-2-brings-in-director-steven-soderbergh-to-finish-film-in-place-of-matt-reeves",
     "date": "2026-10-15T22:38:02.000Z",
-    "snippet": "Ocean's 11 director Steven Soderbergh has been hired to finish filming The Batman Part 2 while Matt Reeves attends to a family matter.",
-    "category": "movies"
-  },
-  {
-    "title": "Steven Soderbergh to Help Finish ‘The Batman 2’ Filming After Matt Reeves Stepped Away for Family Matter",
-    "source": "Variety",
-    "sourceUrl": "https://variety.com/2026/film/news/steven-soderbergh-finish-batman-2-matt-reeves-stepped-away-1236913552",
-    "date": "2026-10-15T22:33:01.000Z",
-    "snippet": "Steven Soderbergh is stepping in to help complete “The Batman Part II” while director Matt Reeves is on hiatus dealing with a personal matter, Variety has confirmed. “As Matt Reeves continues to attend to an ongoing family matter, Steven Soderbergh, as an admirer of Matt’s work, approached Matt and will step in, with the full […]",
+    "snippet": "Ocean's 11 director Steven Soderbergh has been drafted in to help Matt Reeves finish The Batman Part 2.",
     "category": "movies"
   },
   {
@@ -629,14 +925,6 @@
     "sourceUrl": "https://www.ign.com/articles/mortal-kombat-creator-ed-boon-responds-to-street-fighter-cast-saying-they-want-a-crossover-movie",
     "date": "2026-10-15T21:38:28.000Z",
     "snippet": "Mortal Kombat co-creator Ed Boon has responded after the cast of the Street Fighter movie were vocally enthusiastic about the idea of a crossover film with Mortal Kombat, and it looks like he’s open to the possibility, too — as long as a game gets made first.",
-    "category": "movies"
-  },
-  {
-    "title": "Netflix Shocker: Bela Bajaria Leaving After 10 Years Amid Layoffs, Peter Rice to Replace as Chief Content Officer",
-    "source": "Variety",
-    "sourceUrl": "https://variety.com/2026/film/news/netflix-bela-bajaria-leaving-layoffs-1236913504",
-    "date": "2026-10-15T21:37:29.000Z",
-    "snippet": "In a major executive shake-up, Bela Bajaria is out at Netflix after 10 years at the streamer, most recently serving as its chief content officer. She will be replaced by former Disney and Fox executive Peter Rice, as first reported by Puck. As chief content officer, Rice will lead Netflix’s global content organization, overseeing scripted […]",
     "category": "movies"
   },
   {
@@ -662,14 +950,6 @@
     "date": "2026-10-15T19:45:25.000Z",
     "snippet": "Chris Evans and Anya Taylor-Joy lead this semi-satirical and surprisingly melancholy Netflix movie.",
     "category": "movies"
-  },
-  {
-    "title": "Sutton's predictions v boxer & Ipswich fan Fabio Wardley",
-    "source": "BBC Sport",
-    "sourceUrl": "https://www.bbc.co.uk/sport/football/articles/crgqwvnnyv30o?at_campaign=rss&at_medium=RSS",
-    "date": "2026-10-15T19:26:51.000Z",
-    "snippet": "BBC Sport football expert Chris Sutton takes on boxer and Ipswich fan Fabio Wardley, plus the BBC readers and AI with his predictions for this weekend's Premier League fixtures.",
-    "category": "sports"
   },
   {
     "title": "Sony Explores Unconventional Release and Box Office Strategy for Beatles Biopics",
@@ -720,14 +1000,6 @@
     "category": "sports"
   },
   {
-    "title": "Cregger's Resident Evil Opens at #2 in Japan, 5th Girls und Panzer das Finale Film Opens at #5",
-    "source": "Anime News Network",
-    "sourceUrl": "https://www.animenewsnetwork.com/news/2026-10-15/cregger-resident-evil-opens-at-no.2-in-japan-5th-girls-und-panzer-das-finale-film-opens-at-no.5/.242827",
-    "date": "2026-10-15T16:15:00.000Z",
-    "snippet": "Chiikawa movie back at #1, Madoka Magica Walpurgisnacht: Rising at #10",
-    "category": "anime"
-  },
-  {
     "title": "The Apothecary Diaries Season 3 English Dub Reveals Release Date, Cast and Crew",
     "source": "Crunchyroll News",
     "sourceUrl": "https://crunchyroll.com/news/announcements/2026/10/15/the-apothecary-diaries-season-3-anime-english-dub-release-date-cast-crew",
@@ -741,14 +1013,6 @@
     "sourceUrl": "https://crunchyroll.com/news/features/2026/10/15/dragon-ball-super-beerus-battle-language",
     "date": "2026-10-15T16:00:00.000Z",
     "snippet": "Dragon Ball Super: Beerus’ first episode flashback perfectly displays one of Dragon Ball’s greatest features",
-    "category": "anime"
-  },
-  {
-    "title": "Narumi's Week at Work Anime Series Review",
-    "source": "Anime News Network",
-    "sourceUrl": "https://www.animenewsnetwork.com/review/narumi-week-at-work-anime-series/.242529",
-    "date": "2026-10-15T16:00:00.000Z",
-    "snippet": "Kaiju No. 8: Narumi’s Week at Work is a charming set of shorts that hits a bit above its weight class without being a total knockout.",
     "category": "anime"
   },
   {
@@ -808,22 +1072,6 @@
     "category": "sports"
   },
   {
-    "title": "Japanese Animation TV Ranking, September 28-October 4",
-    "source": "Anime News Network",
-    "sourceUrl": "https://www.animenewsnetwork.com/news/2026-10-15/japanese-animation-tv-ranking-september-28-october-4/.242842",
-    "date": "2026-10-15T14:15:00.000Z",
-    "snippet": "The Apothecary Diaries season 3 debuts with 4.8% rating, Tougen Anki: Nikko Kegon Falls Arc with 2.7% rating",
-    "category": "anime"
-  },
-  {
-    "title": "This Week in Anime - Incomprehensible Legend Toshiki Inoue",
-    "source": "Anime News Network",
-    "sourceUrl": "https://www.animenewsnetwork.com/this-week-in-anime/2026-10-15/.242803",
-    "date": "2026-10-15T14:00:00.000Z",
-    "snippet": "Come meet the man behind L and Light's homoerotic foot massage scene.",
-    "category": "anime"
-  },
-  {
     "title": "Healey says surprise UK growth is 'sign of resilience' ahead of Budget",
     "source": "BBC Business",
     "sourceUrl": "https://www.bbc.co.uk/news/articles/ck8dz1me439no?at_campaign=rss&at_medium=RSS",
@@ -836,39 +1084,7 @@
     "source": "Crunchyroll News",
     "sourceUrl": "https://crunchyroll.com/news/latest/2026/10/15/are-you-a-landmine-chihara-san-anime-premiere-date",
     "date": "2026-10-15T13:17:00.000Z",
-    "snippet": "The staff for the television anime of Ryon's Are You a Landmine, Chihara-san? (Jirai nandesu ka? Chihara-san) manga announced on Thursday the anime's...",
-    "category": "anime"
-  },
-  {
-    "title": "Gundam Blitz Order Mobile Game Announced",
-    "source": "Anime News Network",
-    "sourceUrl": "https://www.animenewsnetwork.com/news/2026-10-15/gundam-blitz-order-mobile-game-announced/.242852",
-    "date": "2026-10-15T13:15:00.000Z",
-    "snippet": "Network test for 1st idle game in Gundam franchise will host network test in November",
-    "category": "anime"
-  },
-  {
-    "title": "Bless Anime Introduces Akiharu Nakano in New Character Trailer",
-    "source": "Crunchyroll News",
-    "sourceUrl": "https://crunchyroll.com/news/latest/2026/10/15/bless-anime-introduces-akiharu-nakano-in-new-character-trailer",
-    "date": "2026-10-15T13:13:00.000Z",
-    "snippet": "Adaptation based on manga by Yukino Sonoyama broadcasts in January 2027",
-    "category": "anime"
-  },
-  {
-    "title": "The Seven Knights of the Marronnier Kingdom Anime Adds Shoya Ishige as Johann",
-    "source": "Crunchyroll News",
-    "sourceUrl": "https://crunchyroll.com/news/latest/2026/10/15/the-seven-knights-of-the-marronnier-kingdom-anime-adds-shoya-ishige-as-johann",
-    "date": "2026-10-15T13:11:00.000Z",
-    "snippet": "Adaptation based on Nao Iawamoto's manga is currently broadcasting in Japan",
-    "category": "anime"
-  },
-  {
-    "title": "Shangri-La Frontier Season 3 Anime Chooses Its Fighters in 1st Exhibition Match Visual",
-    "source": "Crunchyroll News",
-    "sourceUrl": "https://crunchyroll.com/news/latest/2026/10/15/shangri-la-frontier-season-3-anime-exhibition-match-visual",
-    "date": "2026-10-15T13:08:00.000Z",
-    "snippet": "The upcoming series will stream on Crunchyroll next year",
+    "snippet": "Yasuaki Fujii directs adaptation based on Ryon's romcom manga at SynergySP",
     "category": "anime"
   },
   {
@@ -888,44 +1104,12 @@
     "category": "sports"
   },
   {
-    "title": "Firefly Wedding Anime Casts Kanon Amane as Yukari",
-    "source": "Crunchyroll News",
-    "sourceUrl": "https://crunchyroll.com/news/latest/2026/10/15/firefly-wedding-anime-kanon-amane-cast-as-yukari",
-    "date": "2026-10-15T12:20:00.000Z",
-    "snippet": "Crunchyroll streams adaptation based on historical romance manga by Oreco Tachibana",
-    "category": "anime"
-  },
-  {
     "title": "GB's Bostock wins 'fantastic' scratch race gold",
     "source": "BBC Sport",
     "sourceUrl": "https://www.bbc.co.uk/sport/cycling/videos/cx7vp7jed2ero?at_campaign=rss&at_medium=RSS",
     "date": "2026-10-15T12:15:05.000Z",
     "snippet": "Great Britain's Matthew Bostock puts in a commanding performance to win the men's scratch race at the Track Cycling World Championships in Shanghgai.",
     "category": "sports"
-  },
-  {
-    "title": "Crunchyroll Adds English Dub for Saga of Tanya the Evil the Movie Anime",
-    "source": "Anime News Network",
-    "sourceUrl": "https://www.animenewsnetwork.com/news/2026-10-15/crunchyroll-adds-english-dub-for-saga-of-tanya-the-evil-the-movie-anime/.242851",
-    "date": "2026-10-15T12:15:00.000Z",
-    "snippet": "Film opened in Japan in February 2019",
-    "category": "anime"
-  },
-  {
-    "title": "Matsurika Kanriden Anime Adds Two Cast Members",
-    "source": "Crunchyroll News",
-    "sourceUrl": "https://crunchyroll.com/news/latest/2026/10/15/matsurika-kanriden-anime-two-new-cast-members",
-    "date": "2026-10-15T12:14:00.000Z",
-    "snippet": "Adaptation based on historical fantasy light novel series debuts in January 2027",
-    "category": "anime"
-  },
-  {
-    "title": "Voice Actors Kōji Yusa, Miyari Nemoto Announce Marriage",
-    "source": "Anime News Network",
-    "sourceUrl": "https://www.animenewsnetwork.com/interest/2026-10-15/voice-actors-koji-yusa-miyari-nemoto-announce-marriage/.242848",
-    "date": "2026-10-15T12:10:33.000Z",
-    "snippet": "Yusa creates X/Twitter account just to make announcement, will deactivate it next week",
-    "category": "anime"
   },
   {
     "title": "You Can See Everything Review",
@@ -936,14 +1120,6 @@
     "category": "movies"
   },
   {
-    "title": "Fate/Extra Record Game Highlights Opponents in New Character Promo Video",
-    "source": "Anime News Network",
-    "sourceUrl": "https://www.animenewsnetwork.com/news/2026-10-15/fate-extra-record-game-highlights-opponents-in-new-character-promo-video/.242844",
-    "date": "2026-10-15T11:51:23.000Z",
-    "snippet": "Also: Game to hold special hands-on event in Tokyo on November 7-8",
-    "category": "anime"
-  },
-  {
     "title": "AI giant Anthropic woos potential investors ahead of stock market debut",
     "source": "BBC Business",
     "sourceUrl": "https://www.bbc.co.uk/news/articles/cqzjx448vxkgo?at_campaign=rss&at_medium=RSS",
@@ -952,84 +1128,12 @@
     "category": "finance"
   },
   {
-    "title": "Bless TV Anime Casts Kōki Uchiyama",
-    "source": "Anime News Network",
-    "sourceUrl": "https://www.animenewsnetwork.com/news/2026-10-15/bless-tv-anime-casts-koki-uchiyama/.242855",
-    "date": "2026-10-15T11:23:04.000Z",
-    "snippet": "Uchiyama voices Akiharu Nakano in series debuting in January",
-    "category": "anime"
-  },
-  {
-    "title": "Kei Urana's Gachiakuta Manga Resumes on November 11",
-    "source": "Anime News Network",
-    "sourceUrl": "https://www.animenewsnetwork.com/news/2026-10-15/kei-urana-gachiakuta-manga-resumes-on-november-11/.242853",
-    "date": "2026-10-15T11:08:14.000Z",
-    "snippet": "Manga has been on hiatus since August 5 so author could do research",
-    "category": "anime"
-  },
-  {
-    "title": "I Got a Cheat Skill in Another World 2nd Season Anime Reveals Teaser Video, New, Returning Cast & Staff, January 2027 Debut",
-    "source": "Anime News Network",
-    "sourceUrl": "https://www.animenewsnetwork.com/news/2026-10-15/i-got-a-cheat-skill-in-another-world-2nd-season-anime-reveals-teaser-video-new-returning-cast-and-/.242845",
-    "date": "2026-10-15T09:58:23.000Z",
-    "snippet": "Ikumi Hasegawa, Sora Amamiya join anime's cast",
-    "category": "anime"
-  },
-  {
-    "title": "I Got a Cheat Skill in Another World and Became Unrivaled in The Real World, Too Season 2 Anime Debuts in January 2027",
-    "source": "Crunchyroll News",
-    "sourceUrl": "https://crunchyroll.com/news/latest/2026/10/15/i-got-a-cheat-skill-in-another-world-and-became-unrivaled-in-the-real-world-too-season-2-anime-trailer-key-visual-january-2027-release-date",
-    "date": "2026-10-15T09:05:00.000Z",
-    "snippet": "A new trailer and a key visual were unveiled today",
-    "category": "anime"
-  },
-  {
     "title": "China indicates rare earths will keep flowing to EU, regardless of U.S. trade deal expiration",
     "source": "CNBC Markets",
     "sourceUrl": "https://www.cnbc.com/2026/10/15/china-rare-earth-exports-europe.html",
     "date": "2026-10-15T09:02:31.000Z",
     "snippet": "European trade commissioner Maroš Sefčovič met with Chinese Commerce Minister Wang Wentao in Beijing last week.",
     "category": "share-market"
-  },
-  {
-    "title": "I Lost My Adventurer's License, but It's Fine Because I Have an Adorable Daughter Now Anime Unveils January 2027 Premiere, Teaser Trailer and Visual",
-    "source": "Crunchyroll News",
-    "sourceUrl": "https://crunchyroll.com/news/latest/2026/10/15/i-lost-my-adventurers-license-but-its-fine-because-i-have-an-adorable-daughter-now-anime-january-2027-premiere-teaser-trailer-visual",
-    "date": "2026-10-15T04:34:00.000Z",
-    "snippet": "Hiroki Yasumoto and Yuka Iguchi voice the two lead roles",
-    "category": "anime"
-  },
-  {
-    "title": "MADKID Shares Sasaki and Peeps Season 2 Anime Opening Song Music Video",
-    "source": "Crunchyroll News",
-    "sourceUrl": "https://crunchyroll.com/news/latest/2026/10/15/sasaki-and-peeps-season-2-anime-opening-song-music-video-madkid",
-    "date": "2026-10-15T02:05:00.000Z",
-    "snippet": "The new season is now available on Crunchyroll",
-    "category": "anime"
-  },
-  {
-    "title": "Voice Actor Unit DayRe: Drops Dandivine Anime Ending Song Music Video",
-    "source": "Crunchyroll News",
-    "sourceUrl": "https://crunchyroll.com/news/latest/2026/10/15/dandivine-anime-ending-song-music-video-voice-actor-unit-dayre",
-    "date": "2026-10-15T01:25:00.000Z",
-    "snippet": "Crunchyroll streams the original robot anime series",
-    "category": "anime"
-  },
-  {
-    "title": "Yurina Kawaguchi Releases New Magic Knight Rayearth Anime Ending Song Music Video",
-    "source": "Crunchyroll News",
-    "sourceUrl": "https://crunchyroll.com/news/latest/2026/10/15/new-magic-knight-rayearth-anime-ending-song-music-video-yurina-kawaguchi",
-    "date": "2026-10-15T00:31:00.000Z",
-    "snippet": "The reboot series is now available on Crunchyroll",
-    "category": "anime"
-  },
-  {
-    "title": "DC Studios Co-Boss Peter Safran Reaffirms Franchise Slate After Skydance Acquisition",
-    "source": "IGN Movies",
-    "sourceUrl": "https://www.ign.com/articles/peter-safran-dc-studios-slate-post-merger",
-    "date": "2026-10-14T23:42:57.000Z",
-    "snippet": "IGN spoke with DC Studios’ co-CEO and co-chairman Peter Safran this week about the status of the studio’s future projects now that Warner Bros. has been acquired by Skydance. Our discussion ranged from Clayface to their upcoming feature film, television and animated projects.",
-    "category": "movies"
   },
   {
     "title": "How backlash against data centres could shape the US midterm elections",
@@ -1056,38 +1160,6 @@
     "category": "finance"
   },
   {
-    "title": "Callina Liang Says She Felt 'A Lot of Pressure' After Seeing How Reddit Reacted to Her Being Cast as Chun-Li",
-    "source": "IGN Movies",
-    "sourceUrl": "https://www.ign.com/articles/callina-liang-says-she-felt-a-lot-of-pressure-after-seeing-how-reddit-reacted-to-her-being-cast-as-chun-li",
-    "date": "2026-10-14T22:50:00.000Z",
-    "snippet": "Callina Liang admitted that she felt a ton of pressure after she saw fans’ reactions to her getting cast as Chun-Li in the Street Fighter movie, specifically mentioning a thread she saw on Reddit.",
-    "category": "movies"
-  },
-  {
-    "title": "The Street Fighter Cast Would Love to Make a Mortal Kombat Crossover Movie",
-    "source": "IGN Movies",
-    "sourceUrl": "https://www.ign.com/articles/the-street-fighter-cast-would-love-to-make-a-mortal-kombat-crossover-movie",
-    "date": "2026-10-14T22:12:58.000Z",
-    "snippet": "I got the chance to chat with the cast of the Street Fighter movie ahead of its theatrical release, and almost all of them are game for a crossover film with Mortal Kombat.",
-    "category": "movies"
-  },
-  {
-    "title": "Andrew Schulz Explains His Viral Mortal Kombat Movie Callout at the Game Awards",
-    "source": "IGN Movies",
-    "sourceUrl": "https://www.ign.com/articles/andrew-schulz-explains-his-viral-mortal-kombat-movie-callout-at-the-game-awards",
-    "date": "2026-10-14T21:02:51.000Z",
-    "snippet": "Andrew Schulz explained the viral moment when he called out the cast of the Mortal Kombat II movie, saying he was hoping for a 'Barbenheimer' moment and a possible collaboration between the two fighting game franchises.",
-    "category": "movies"
-  },
-  {
-    "title": "Jeremy Renner Is Teasing the West Coast Avengers in the MCU, and It's About Time",
-    "source": "IGN Movies",
-    "sourceUrl": "https://www.ign.com/articles/jeremy-renner-hawkeye-west-coast-avengers-mcu-teaser",
-    "date": "2026-10-14T20:31:54.000Z",
-    "snippet": "Jeremy Renner has teased the return of Hawkeye to the MCU in a West Coast Avengers project. Here's why we think that's an excellent idea.",
-    "category": "movies"
-  },
-  {
     "title": "Morgan Stanley tops estimates as equities trading revenue beats expectations by $909 million",
     "source": "CNBC Markets",
     "sourceUrl": "https://www.cnbc.com/2026/10/14/morgan-stanley-ms-q3-2026-earnings.html",
@@ -1112,36 +1184,12 @@
     "category": "share-market"
   },
   {
-    "title": "Zangief Actor Olivier Richters Really Wants to Play Tyr in the Live-Action God of War Show",
-    "source": "IGN Movies",
-    "sourceUrl": "https://www.ign.com/articles/zangief-actor-olivier-richters-really-wants-to-play-tyr-in-the-live-action-god-of-war-show",
-    "date": "2026-10-14T19:04:38.000Z",
-    "snippet": "We got the chance to chat with Olivier Richters on the Street Fighter red carpet, who told us that he would love to play Tyr in Prime Video’s live-action God of War series.",
-    "category": "movies"
-  },
-  {
-    "title": "How to Rob a Bank: Exclusive Sneak Peek at Nicholas Hoult's Heist Movie | IGN Fall Fan Fest 2026",
-    "source": "IGN Movies",
-    "sourceUrl": "https://www.ign.com/articles/how-to-rob-a-bank-movie-sneak-peek",
-    "date": "2026-10-14T19:00:00.000Z",
-    "snippet": "Get an exclusive sneak peek at How to Rob a Bank from IGN Fall Fan Fest. Nicholas Hoult and Zoë Kravitz star in David Leitch's upcoming viral heist movie.",
-    "category": "movies"
-  },
-  {
     "title": "Drop-off charges at UK airports to be reviewed after sharp increase",
     "source": "BBC Business",
     "sourceUrl": "https://www.bbc.co.uk/news/articles/cwp8gynk13rro?at_campaign=rss&at_medium=RSS",
     "date": "2026-10-14T17:46:30.000Z",
     "snippet": "Confirming the review, the government said it was \"vital to ensure travel remains accessible and that passengers are treated fairly\".",
     "category": "finance"
-  },
-  {
-    "title": "Nintendo Classics Adds Monster Rancher Advance and More to GBA Lineup",
-    "source": "Crunchyroll News",
-    "sourceUrl": "https://crunchyroll.com/news/latest/2026/10/14/nintendo-classics-monster-rancher-advance-metal-slug-kururin-paradise-gba",
-    "date": "2026-10-14T17:38:00.000Z",
-    "snippet": "Other titles joining include Metal Slug Advance, Kururin Paradise",
-    "category": "anime"
   },
   {
     "title": "Netflix to shed 1,000 jobs in steepest cuts since 2022",
@@ -1168,36 +1216,12 @@
     "category": "finance"
   },
   {
-    "title": "See More of The Legend of Zelda: Ocarina of Time Remake in Overview Trailer",
-    "source": "Crunchyroll News",
-    "sourceUrl": "https://crunchyroll.com/news/latest/2026/10/14/legend-of-zelda-ocarina-of-time-remake-overview-trailer",
-    "date": "2026-10-14T15:13:00.000Z",
-    "snippet": "Nintendo shows off the new look and features ahead of November launch",
-    "category": "anime"
-  },
-  {
-    "title": "Witch on the Holy Night Anime Film Teams Up with Puella Magi Madoka Magica Movie in Collaboration Illustration",
-    "source": "Crunchyroll News",
-    "sourceUrl": "https://crunchyroll.com/news/latest/2026/10/14/witch-on-the-holy-night-anime-film-puella-magi-madoka-magica-movie-collaboration-illustration",
-    "date": "2026-10-14T15:01:00.000Z",
-    "snippet": "Adaptation hits Japanese cinemas on November 20, worldwide in January 2027",
-    "category": "anime"
-  },
-  {
     "title": "Driving test waits fall to two-year low - but still average 20 weeks",
     "source": "BBC Business",
     "sourceUrl": "https://www.bbc.co.uk/news/articles/c94g1kvz006ko?at_campaign=rss&at_medium=RSS",
     "date": "2026-10-14T13:45:34.000Z",
     "snippet": "Learner drivers in September had to wait an average of 19.7 weeks, or around five months, for a practical test.",
     "category": "finance"
-  },
-  {
-    "title": "China beat GB to women's team sprint gold",
-    "source": "BBC Sport",
-    "sourceUrl": "https://www.bbc.co.uk/sport/cycling/videos/c3dxwkl8k728o?at_campaign=rss&at_medium=RSS",
-    "date": "2026-10-14T12:16:34.000Z",
-    "snippet": "Great Britain's women have to settle for silver after being beaten by China in the women's team sprint final at the Track Cycling World Championships in Shanghai.",
-    "category": "sports"
   },
   {
     "title": "Wayfair among firms fined millions for misleading sales tactics",
